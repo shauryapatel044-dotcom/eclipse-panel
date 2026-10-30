@@ -185,7 +185,7 @@ if [ -f "$SCRIPT_DIR/package.json" ]; then
     cp -r "$SCRIPT_DIR/"* "$INSTALL_DIR/"
 else
     print_step "Downloading latest Eclipse Panel codebase..."
-    git clone https://github.com/example/eclipse-panel.git "$INSTALL_DIR" 2>/dev/null || true
+    git clone https://github.com/shauryapatel044-dotcom/eclipse-panel.git "$INSTALL_DIR" 2>/dev/null || true
 fi
 
 cd "$INSTALL_DIR"

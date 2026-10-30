@@ -9,7 +9,7 @@ A lightweight, high-performance hosting panel engine and process supervisor buil
 Run this command on your Linux VPS (Ubuntu, Debian, CentOS, AlmaLinux, Rocky):
 
 ```bash
-git clone https://github.com/your-username/eclipse-panel.git /opt/eclipse-panel
+git clone https://github.com/shauryapatel044-dotcom/eclipse-panel.git /opt/eclipse-panel
 cd /opt/eclipse-panel
 sudo bash install.sh
 ```
