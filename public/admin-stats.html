@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>VPS System Telemetry & MariaDB - ECLIPSE PANEL Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=JetBrains+Mono:wght@100..900&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @layer base {
+      html, body { margin: 0; padding: 0; }
+      body { overscroll-behavior: none; }
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: #292a2d; border-radius: 3px; }
+    .crimson-glow { box-shadow: 0 0 25px rgba(255, 84, 81, 0.25); }
+    .emerald-glow { box-shadow: 0 0 20px rgba(78, 222, 163, 0.25); }
+    .amber-glow { box-shadow: 0 0 20px rgba(245, 158, 11, 0.25); }
+    .animate-pulse-slow { animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+  </style>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface": "#121316",
+            "surface-low": "#1b1b1f",
+            "surface-lowest": "#0d0e11",
+            "surface-high": "#292a2d",
+            "surface-highest": "#343538",
+            "on-surface": "#e3e2e6",
+            "on-surface-variant": "#e4beba",
+            "outline-variant": "#5b403e",
+            "primary": "#ffb3ad",
+            "primary-container": "#ff5451",
+            "tertiary": "#4edea3",
+            "secondary": "#c4c6d0",
+          },
+          fontFamily: {
+            "body": ["Geist", "sans-serif"],
+            "mono": ["JetBrains Mono", "monospace"]
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="bg-surface font-body text-on-surface antialiased min-h-screen">
+
+  <!-- Sidebar -->
+  <aside class="fixed left-0 top-0 h-screen w-64 bg-surface-lowest/95 backdrop-blur-xl z-50 flex flex-col justify-between border-r border-outline-variant/30 shadow-[0_4px_30px_rgba(0,0,0,0.5)]">
+    <div class="flex flex-col">
+      <!-- Logo Header -->
+      <div class="h-16 px-4 flex items-center justify-between border-b border-outline-variant/20">
+        <a href="/" class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-red-600 to-red-950 flex items-center justify-center text-white crimson-glow">
+            <span class="material-symbols-outlined text-lg">local_fire_department</span>
+          </div>
+          <span class="font-bold tracking-wider text-on-surface uppercase text-sm">ECLIPSE PANEL</span>
+        </a>
+        <span class="font-mono text-xs px-2 py-0.5 rounded bg-primary-container/20 text-primary border border-primary-container/40">Port 8090</span>
+      </div>
+
+      <div class="px-4 pt-4 pb-1">
+        <span class="font-mono text-[10px] uppercase tracking-widest text-secondary/70">Control Matrix</span>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="flex flex-col gap-1 px-2 font-mono text-xs">
+        <a href="/" class="flex items-center gap-2 px-3 py-2 rounded text-secondary hover:bg-surface-low hover:text-on-surface transition-all">
+          <span class="material-symbols-outlined text-lg">monitoring</span>
+          <span>Overview</span>
+        </a>
+        <a href="/app.html" class="flex items-center gap-2 px-3 py-2 rounded text-secondary hover:bg-surface-low hover:text-on-surface transition-all">
+          <span class="material-symbols-outlined text-lg">rocket_launch</span>
+          <span>Applications</span>
+        </a>
+        <a href="/admin.html" class="flex items-center gap-2 px-3 py-2 rounded text-secondary hover:bg-surface-low hover:text-on-surface transition-all">
+          <span class="material-symbols-outlined text-lg">shield</span>
+          <span>Admin Center</span>
+        </a>
+        <a href="/admin-stats.html" aria-current="page" class="flex items-center justify-between px-3 py-2 rounded bg-surface-high text-primary border-l-2 border-primary-container shadow-[inset_0_0_12px_rgba(255,84,81,0.15)] font-semibold">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-lg text-primary">speed</span>
+            <span>VPS Telemetry</span>
+          </div>
+          <span class="w-2 h-2 rounded-full bg-primary-container animate-pulse"></span>
+        </a>
+      </nav>
+    </div>
+
+    <!-- Bottom User Bar -->
+    <div class="p-3 border-t border-outline-variant/20 bg-surface-lowest/80 font-mono text-xs">
+      <div class="flex items-center justify-between p-2 rounded bg-surface-low/60 border border-outline-variant/20 mb-2">
+        <div class="flex items-center gap-2 truncate">
+          <span class="w-2 h-2 rounded-full bg-tertiary shadow-[0_0_8px_#4edea3]"></span>
+          <span class="text-on-surface truncate" id="hostBadge">Detecting...</span>
+        </div>
+      </div>
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2 truncate">
+          <div class="w-7 h-7 rounded-full bg-primary-container/20 border border-primary-container/40 flex items-center justify-center text-primary font-bold">
+            A
+          </div>
+          <div class="flex flex-col truncate">
+            <span class="font-semibold text-on-surface truncate" id="userNameLabel">Admin</span>
+            <span class="text-[10px] text-primary uppercase">SUPERADMIN</span>
+          </div>
+        </div>
+        <button onclick="logout()" class="p-1.5 text-secondary hover:text-primary transition-colors rounded hover:bg-surface-high" title="Sign out">
+          <span class="material-symbols-outlined text-base">logout</span>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <div class="pl-64">
+    <!-- Top Header -->
+    <header class="fixed top-0 left-64 right-0 h-16 bg-surface/85 backdrop-blur-xl border-b border-outline-variant/20 z-40 flex items-center justify-between px-6">
+      <div class="flex items-center gap-3 font-mono text-xs">
+        <span class="material-symbols-outlined text-base text-primary">dns</span>
+        <span class="text-secondary">Infrastructure</span>
+        <span class="text-outline-variant">/</span>
+        <span class="text-on-surface font-semibold">Real-Time VPS Telemetry & MariaDB</span>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <!-- MariaDB Status -->
+        <div class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-surface-lowest border border-outline-variant/30 font-mono text-xs text-primary">
+          <span class="material-symbols-outlined text-xs">database</span>
+          <span>MariaDB :3306</span>
+        </div>
+        <!-- Live WebSocket Status Badge -->
+        <div class="flex items-center gap-2 px-3 py-1 rounded bg-surface-lowest border border-tertiary/30 font-mono text-xs text-tertiary">
+          <span class="w-2 h-2 rounded-full bg-tertiary animate-pulse shadow-[0_0_8px_#4edea3]"></span>
+          <span id="wsStatus">WS: Port 8090</span>
+        </div>
+        <button onclick="refreshStats()" class="p-2 text-secondary hover:text-on-surface hover:bg-surface-high rounded transition-all" title="Force Refresh">
+          <span class="material-symbols-outlined text-lg leading-none" id="refreshIcon">refresh</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="w-full pt-20 px-6 pb-12 space-y-6">
+
+      <!-- Top Master Gauges (RAM, CPU, DISK) -->
+      <section class="grid grid-cols-1 md:grid-cols-3 gap-5">
+
+        <!-- Card 1: VPS RAM Telemetry -->
+        <div class="bg-surface-low border border-outline-variant/30 rounded-xl p-5 shadow-xl relative overflow-hidden transition-all hover:border-primary-container/40">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <span class="p-1.5 rounded bg-surface-highest text-primary">
+                <span class="material-symbols-outlined text-base leading-none">memory</span>
+              </span>
+              <span class="font-semibold text-sm text-on-surface">Memory Subsystem (RAM)</span>
+            </div>
+            <span class="font-mono text-xs px-2 py-0.5 rounded bg-surface-high text-secondary" id="ramDdrBadge">DDR4 ECC</span>
+          </div>
+
+          <div class="flex items-baseline justify-between mt-2">
+            <div>
+              <div class="flex items-baseline gap-1 font-mono">
+                <span class="text-4xl font-bold text-white tracking-tight" id="ramPercentVal">--</span>
+                <span class="text-xl text-primary font-semibold">%</span>
+              </div>
+              <p class="font-mono text-xs text-secondary mt-1" id="ramDetail">Used: -- GB / Total: -- GB</p>
+            </div>
+            <div class="text-right font-mono text-xs">
+              <span class="text-secondary uppercase">Available</span>
+              <p class="font-bold text-tertiary text-sm" id="ramFreeGB">-- GB</p>
+            </div>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="w-full bg-surface-highest h-2 rounded-full mt-4 overflow-hidden">
+            <div id="ramBar" class="bg-gradient-to-r from-red-600 to-rose-400 h-full w-0 transition-all duration-700 rounded-full"></div>
+          </div>
+        </div>
+
+        <!-- Card 2: Overall CPU Core Cluster -->
+        <div class="bg-surface-low border border-outline-variant/30 rounded-xl p-5 shadow-xl relative overflow-hidden transition-all hover:border-primary-container/40">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <span class="p-1.5 rounded bg-surface-highest text-tertiary">
+                <span class="material-symbols-outlined text-base leading-none">speed</span>
+              </span>
+              <span class="font-semibold text-sm text-on-surface">Processor Cluster</span>
+            </div>
+            <span class="font-mono text-xs px-2 py-0.5 rounded bg-tertiary/15 text-tertiary font-bold" id="coresCountBadge">-- Cores</span>
+          </div>
+
+          <div class="flex items-baseline justify-between mt-2">
+            <div>
+              <div class="flex items-baseline gap-1 font-mono">
+                <span class="text-4xl font-bold text-white tracking-tight" id="cpuOverallVal">--</span>
+                <span class="text-xl text-tertiary font-semibold">%</span>
+              </div>
+              <p class="font-mono text-xs text-secondary mt-1 truncate max-w-[200px]" id="cpuModelLabel">Detecting CPU...</p>
+            </div>
+            <div class="text-right font-mono text-xs">
+              <span class="text-secondary uppercase">Load Avg</span>
+              <p class="font-bold text-on-surface text-sm" id="loadAvgLabel">0.0, 0.0, 0.0</p>
+            </div>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="w-full bg-surface-highest h-2 rounded-full mt-4 overflow-hidden">
+            <div id="cpuOverallBar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full w-0 transition-all duration-700 rounded-full"></div>
+          </div>
+        </div>
+
+        <!-- Card 3: VPS Disk Storage -->
+        <div class="bg-surface-low border border-outline-variant/30 rounded-xl p-5 shadow-xl relative overflow-hidden transition-all hover:border-primary-container/40">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <span class="p-1.5 rounded bg-surface-highest text-amber-400">
+                <span class="material-symbols-outlined text-base leading-none">hard_drive</span>
+              </span>
+              <span class="font-semibold text-sm text-on-surface">Disk Storage (Root /)</span>
+            </div>
+            <span class="font-mono text-xs px-2 py-0.5 rounded bg-amber-400/15 text-amber-400 font-bold" id="diskMountBadge">/</span>
+          </div>
+
+          <div class="flex items-baseline justify-between mt-2">
+            <div>
+              <div class="flex items-baseline gap-1 font-mono">
+                <span class="text-4xl font-bold text-white tracking-tight" id="diskPercentVal">--</span>
+                <span class="text-xl text-amber-400 font-semibold">%</span>
+              </div>
+              <p class="font-mono text-xs text-secondary mt-1" id="diskDetail">Used: -- GB / Total: -- GB</p>
+            </div>
+            <div class="text-right font-mono text-xs">
+              <span class="text-secondary uppercase">Free Space</span>
+              <p class="font-bold text-amber-400 text-sm" id="diskFreeGB">-- GB</p>
+            </div>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="w-full bg-surface-highest h-2 rounded-full mt-4 overflow-hidden">
+            <div id="diskBar" class="bg-gradient-to-r from-amber-500 to-yellow-400 h-full w-0 transition-all duration-700 rounded-full"></div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Real-Time Per-Core CPU Usage Grid -->
+      <section class="bg-surface-low border border-outline-variant/30 rounded-xl p-6 shadow-xl relative overflow-hidden">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-outline-variant/20 gap-3">
+          <div>
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary text-xl">developer_board</span>
+              Individual CPU Cores (Real-Time % Usage)
+            </h3>
+            <p class="text-xs text-secondary font-mono mt-0.5">Live tick-delta calculation per logical execution thread</p>
+          </div>
+          <div class="flex items-center gap-3 font-mono text-xs">
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded bg-emerald-500 inline-block"></span> 0-40% Normal</span>
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded bg-amber-500 inline-block"></span> 40-75% Medium</span>
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded bg-red-600 inline-block"></span> &gt;75% High</span>
+          </div>
+        </div>
+
+        <!-- Cores Container Grid -->
+        <div id="coresGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 pt-5">
+          <div class="col-span-full py-8 text-center text-secondary font-mono text-xs">
+            <span class="material-symbols-outlined animate-spin text-2xl text-primary mb-2">sync</span>
+            <p>Sampling processor execution metrics...</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Real-Time Rolling History Graph (Canvas) -->
+      <section class="bg-surface-low border border-outline-variant/30 rounded-xl p-6 shadow-xl">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary text-xl">show_chart</span>
+              Live Telemetry Rolling Stream (Last 60s)
+            </h3>
+            <p class="text-xs text-secondary font-mono mt-0.5">CPU (Crimson) vs RAM (Emerald) % utilization over time</p>
+          </div>
+          <div class="flex items-center gap-4 font-mono text-xs">
+            <span class="flex items-center gap-1.5 text-primary"><span class="w-2.5 h-2.5 rounded bg-primary-container inline-block"></span> CPU Load</span>
+            <span class="flex items-center gap-1.5 text-tertiary"><span class="w-2.5 h-2.5 rounded bg-tertiary inline-block"></span> RAM Usage</span>
+          </div>
+        </div>
+        <div class="relative w-full h-48 bg-surface-lowest rounded-lg p-3 border border-outline-variant/20">
+          <canvas id="telemetryCanvas" class="w-full h-full"></canvas>
+        </div>
+      </section>
+
+      <!-- MariaDB Database & Kernel Diagnostics -->
+      <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- MariaDB Card -->
+        <div class="bg-surface-low border border-outline-variant/25 rounded-xl p-4 font-mono text-xs relative overflow-hidden">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-secondary uppercase">Database Subsystem</span>
+            <span class="px-2 py-0.5 rounded bg-tertiary/15 text-tertiary font-bold text-[10px]">ACTIVE</span>
+          </div>
+          <p class="text-sm font-bold text-white">MariaDB Server 10.x / 11.x</p>
+          <div class="mt-2 space-y-1 text-secondary">
+            <p>Port: <span class="text-primary font-bold">3306</span></p>
+            <p>Database: <span class="text-on-surface">eclipse_panel</span></p>
+            <p>User: <span class="text-on-surface">eclipse_user</span></p>
+          </div>
+        </div>
+
+        <div class="bg-surface-low border border-outline-variant/20 rounded-xl p-4 font-mono text-xs">
+          <span class="text-secondary uppercase">Operating System</span>
+          <p class="text-sm font-bold text-white mt-1" id="hostOs">Linux</p>
+          <span class="text-[11px] text-secondary/70 truncate block" id="hostRelease">--</span>
+          <p class="mt-2 text-secondary">Arch: <span class="text-tertiary font-bold" id="hostArch">x86_64</span></p>
+        </div>
+
+        <div class="bg-surface-low border border-outline-variant/20 rounded-xl p-4 font-mono text-xs">
+          <span class="text-secondary uppercase">System Uptime</span>
+          <p class="text-sm font-bold text-tertiary mt-1" id="hostUptime">--</p>
+          <p class="mt-2 text-secondary">Hostname: <span class="text-white" id="hostHostname">vps</span></p>
+          <span class="text-[11px] text-primary truncate block">Daemon live on Port 8090</span>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script>
+    const API_BASE = window.location.origin + '/api';
+    const WS_BASE = (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host + '/ws';
+    let token = localStorage.getItem('crimson_token') || '';
+    let ws = null;
+
+    const historyMax = 30;
+    const cpuHistory = [];
+    const ramHistory = [];
+
+    function getHeaders() {
+      const h = { 'Content-Type': 'application/json' };
+      if (token) h['Authorization'] = 'Bearer ' + token;
+      return h;
+    }
+
+    function requireAuth() {
+      if (!token) {
+        window.location.href = '/login.html';
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('crimson_token');
+      window.location.href = '/login.html';
+    }
+
+    function formatUptime(seconds) {
+      const d = Math.floor(seconds / (3600 * 24));
+      const h = Math.floor((seconds % (3600 * 24)) / 3600);
+      const m = Math.floor((seconds % 3600) / 60);
+      const s = Math.floor(seconds % 60);
+      if (d > 0) return `${d}d ${h}h ${m}m`;
+      if (h > 0) return `${h}h ${m}m ${s}s`;
+      return `${m}m ${s}s`;
+    }
+
+    function updateStatsUI(data) {
+      if (!data) return;
+      const { cpu, memory, disk, hostname, platform, release, arch, uptime, loadAvg } = data;
+
+      if (hostname) {
+        document.getElementById('hostBadge').innerText = hostname;
+        document.getElementById('hostHostname').innerText = hostname;
+      }
+      if (platform) document.getElementById('hostOs').innerText = platform.toUpperCase();
+      if (release) document.getElementById('hostRelease').innerText = release;
+      if (arch) document.getElementById('hostArch').innerText = arch;
+      if (uptime) document.getElementById('hostUptime').innerText = formatUptime(uptime);
+
+      if (memory) {
+        const pct = memory.usagePercent || 0;
+        document.getElementById('ramPercentVal').innerText = pct;
+        document.getElementById('ramBar').style.width = pct + '%';
+        document.getElementById('ramDetail').innerText = `Used: ${memory.usedGB} GB / Total: ${memory.totalGB} GB`;
+        document.getElementById('ramFreeGB').innerText = `${memory.freeGB} GB`;
+      }
+
+      if (cpu) {
+        const overall = cpu.overallPercent !== undefined ? cpu.overallPercent : 0;
+        document.getElementById('cpuOverallVal').innerText = overall;
+        document.getElementById('cpuOverallBar').style.width = overall + '%';
+        document.getElementById('coresCountBadge').innerText = `${cpu.cores} Cores`;
+        if (cpu.model) document.getElementById('cpuModelLabel').innerText = cpu.model;
+        if (loadAvg) document.getElementById('loadAvgLabel').innerText = loadAvg.map(l => l.toFixed(2)).join(', ');
+
+        if (cpu.coresList && Array.isArray(cpu.coresList)) {
+          renderCoresGrid(cpu.coresList);
+        }
+      }
+
+      if (disk) {
+        const pct = disk.usagePercent || 0;
+        document.getElementById('diskPercentVal').innerText = pct;
+        document.getElementById('diskBar').style.width = pct + '%';
+        document.getElementById('diskDetail').innerText = `Used: ${disk.usedGB} GB / Total: ${disk.totalGB} GB`;
+        document.getElementById('diskFreeGB').innerText = `${disk.freeGB} GB`;
+      }
+
+      const curCpu = cpu ? cpu.overallPercent : 0;
+      const curRam = memory ? memory.usagePercent : 0;
+      cpuHistory.push(curCpu);
+      ramHistory.push(curRam);
+      if (cpuHistory.length > historyMax) cpuHistory.shift();
+      if (ramHistory.length > historyMax) ramHistory.shift();
+      drawChart();
+    }
+
+    function renderCoresGrid(cores) {
+      const container = document.getElementById('coresGrid');
+      container.innerHTML = cores.map((c) => {
+        const pct = c.usagePercent;
+        let barColor = 'bg-emerald-500';
+        let textColor = 'text-tertiary';
+        if (pct >= 75) {
+          barColor = 'bg-red-600 shadow-[0_0_8px_#dc2626]';
+          textColor = 'text-primary';
+        } else if (pct >= 40) {
+          barColor = 'bg-amber-500';
+          textColor = 'text-amber-400';
+        }
+
+        return `
+          <div class="bg-surface-lowest p-3 rounded-lg border border-outline-variant/25 flex flex-col justify-between transition-all hover:border-primary-container/40">
+            <div class="flex items-center justify-between font-mono text-xs mb-1.5">
+              <span class="text-secondary font-semibold">Core #${c.coreIndex}</span>
+              <span class="${textColor} font-bold">${pct}%</span>
+            </div>
+            <div class="w-full bg-surface-highest h-2 rounded-full overflow-hidden">
+              <div class="${barColor} h-full transition-all duration-500 rounded-full" style="width: ${pct}%"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function drawChart() {
+      const canvas = document.getElementById('telemetryCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const w = canvas.clientWidth;
+      const h = canvas.clientHeight;
+      if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
+        canvas.width = w * dpr;
+        canvas.height = h * dpr;
+      }
+      ctx.resetTransform();
+      ctx.scale(dpr, dpr);
+      ctx.clearRect(0, 0, w, h);
+
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+      ctx.lineWidth = 1;
+      for (let y = 0; y <= h; y += h / 4) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+        ctx.stroke();
+      }
+
+      function drawLine(data, color, fillColor) {
+        if (data.length < 2) return;
+        const step = w / (historyMax - 1);
+        ctx.beginPath();
+        ctx.moveTo(0, h - (data[0] / 100) * h);
+        for (let i = 1; i < data.length; i++) {
+          ctx.lineTo(i * step, h - (data[i] / 100) * h);
+        }
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.lineTo((data.length - 1) * step, h);
+        ctx.lineTo(0, h);
+        ctx.closePath();
+        ctx.fillStyle = fillColor;
+        ctx.fill();
+      }
+
+      drawLine(ramHistory, '#4edea3', 'rgba(78, 222, 163, 0.08)');
+      drawLine(cpuHistory, '#ff5451', 'rgba(255, 84, 81, 0.12)');
+    }
+
+    async function fetchStatsRest() {
+      try {
+        const res = await fetch(API_BASE + '/admin/system', { headers: getHeaders() });
+        if (res.ok) {
+          const data = await res.json();
+          updateStatsUI(data.system);
+        } else if (res.status === 401 || res.status === 403) {
+          alert('Administrator access required.');
+          window.location.href = '/';
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function initWebSocket() {
+      ws = new WebSocket(WS_BASE);
+      ws.onopen = () => {
+        document.getElementById('wsStatus').innerHTML = '<span class="w-2 h-2 rounded-full bg-tertiary animate-pulse shadow-[0_0_8px_#4edea3]"></span><span>WS: Connected (Port 8090)</span>';
+        if (token) ws.send(JSON.stringify({ type: 'auth', token }));
+        ws.send(JSON.stringify({ type: 'subscribe', channel: 'system:stats' }));
+      };
+      ws.onmessage = (evt) => {
+        try {
+          const msg = JSON.parse(evt.data);
+          if (msg.type === 'system_stats' && msg.data) {
+            updateStatsUI(msg.data);
+          }
+        } catch (e) {}
+      };
+      ws.onclose = () => {
+        document.getElementById('wsStatus').innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-500"></span><span>WS: Reconnecting...</span>';
+        setTimeout(initWebSocket, 2500);
+      };
+    }
+
+    function refreshStats() {
+      const icon = document.getElementById('refreshIcon');
+      icon.classList.add('animate-spin');
+      fetchStatsRest().finally(() => setTimeout(() => icon.classList.remove('animate-spin'), 600));
+    }
+
+    requireAuth();
+    fetchStatsRest();
+    initWebSocket();
+  </script>
+
+  <!-- Profile & Account Settings Modal (Framer Motion / CSS Animated) -->
+  <div id="profileModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-[#1b1b1f] border border-[#5b403e]/40 rounded-2xl w-full max-w-md p-6 relative shadow-2xl">
+      <button onclick="closeProfileModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+        <span class="material-symbols-outlined text-xl">close</span>
+      </button>
+      <h3 class="text-lg font-bold text-white flex items-center gap-2 mb-1">
+        <span class="material-symbols-outlined text-red-400">manage_accounts</span>
+        Account & Profile Settings
+      </h3>
+      <p class="text-xs text-gray-400 mb-5 font-mono">Update your username, Gmail/email address, or master password.</p>
+
+      <!-- Profile Form -->
+      <form onsubmit="event.preventDefault(); saveProfileChanges();" class="space-y-3 pb-4 border-b border-[#292a2d]">
+        <div>
+          <label class="block text-xs font-semibold text-gray-300 uppercase font-mono mb-1">Username</label>
+          <input id="editUsername" type="text" required class="w-full bg-[#0d0e11] border border-[#343538] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-red-500 font-mono">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-300 uppercase font-mono mb-1">Gmail / Email Address</label>
+          <input id="editEmail" type="email" required class="w-full bg-[#0d0e11] border border-[#343538] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-red-500 font-mono">
+        </div>
+        <button type="submit" class="w-full py-2 rounded-lg bg-red-600 text-white font-semibold text-xs tracking-wider uppercase transition-all hover:bg-red-500 shadow-md">Save Profile Changes</button>
+      </form>
+
+      <!-- Password Change Form -->
+      <form onsubmit="event.preventDefault(); savePasswordChanges();" class="space-y-3 pt-4">
+        <h4 class="text-xs font-bold text-white uppercase tracking-wider font-mono">Change Master Password</h4>
+        <div>
+          <label class="block text-xs text-gray-400 font-mono mb-1">Current Password (optional for admin)</label>
+          <input id="editCurrentPass" type="password" placeholder="••••••••" class="w-full bg-[#0d0e11] border border-[#343538] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-red-500 font-mono">
+        </div>
+        <div>
+          <label class="block text-xs text-gray-400 font-mono mb-1">New Password</label>
+          <input id="editNewPass" type="password" required placeholder="••••••••" class="w-full bg-[#0d0e11] border border-[#343538] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-red-500 font-mono">
+        </div>
+        <button type="submit" class="w-full py-2 rounded-lg bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 text-white font-semibold text-xs tracking-wider uppercase transition-all">Update Password</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function openProfileModal() {
+      fetch(API_BASE + '/auth/me', { headers: getHeaders() })
+        .then(r => r.json())
+        .then(d => {
+          if (d.user) {
+            document.getElementById('editUsername').value = d.user.username;
+            document.getElementById('editEmail').value = d.user.email;
+            document.getElementById('profileModal').classList.remove('hidden');
+          }
+        })
+        .catch(e => {
+          document.getElementById('profileModal').classList.remove('hidden');
+        });
+    }
+
+    function closeProfileModal() {
+      document.getElementById('profileModal').classList.add('hidden');
+    }
+
+    async function saveProfileChanges() {
+      const username = document.getElementById('editUsername').value.trim();
+      const email = document.getElementById('editEmail').value.trim();
+      try {
+        const res = await fetch(API_BASE + '/auth/profile', {
+          method: 'PUT',
+          headers: getHeaders(),
+          body: JSON.stringify({ username, email })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        alert('Profile updated successfully!');
+        closeProfileModal();
+        location.reload();
+      } catch (err) { alert(err.message); }
+    }
+
+    async function savePasswordChanges() {
+      const currentPassword = document.getElementById('editCurrentPass').value;
+      const newPassword = document.getElementById('editNewPass').value;
+      try {
+        const res = await fetch(API_BASE + '/auth/password', {
+          method: 'PUT',
+          headers: getHeaders(),
+          body: JSON.stringify({ currentPassword, newPassword })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        alert('Password updated successfully!');
+        closeProfileModal();
+      } catch (err) { alert(err.message); }
+    }
+  </script>
+</body>
+</html>

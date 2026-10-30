@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=JetBrains+Mono:wght@100..900&display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"on-tertiary-container":"#00311f","on-secondary-container":"#b3b5be","on-error":"#690005","outline-variant":"#5b403e","secondary":"#c4c6d0","error-container":"#93000a","primary-fixed-dim":"#ffb3ad","on-surface":"#e3e2e6","surface-container-highest":"#343538","on-secondary-fixed":"#191c23","surface":"#121316","surface-container-high":"#292a2d","on-error-container":"#ffdad6","on-background":"#e3e2e6","surface-container-low":"#1b1b1f","on-primary":"#68000a","on-primary-fixed-variant":"#930013","inverse-primary":"#b91a24","primary":"#ffb3ad","primary-container":"#ff5451","tertiary":"#4edea3","inverse-surface":"#e3e2e6","error":"#ffb4ab","tertiary-fixed-dim":"#4edea3","surface-bright":"#38393c","secondary-fixed":"#e0e2ec","on-primary-container":"#5c0008","surface-variant":"#343538","on-primary-fixed":"#410004","surface-tint":"#ffb3ad","on-secondary-fixed-variant":"#44474f","inverse-on-surface":"#303034","on-tertiary-fixed-variant":"#005236","primary-fixed":"#ffdad7","surface-container":"#1f1f23","on-tertiary-fixed":"#002113","on-tertiary":"#003824","secondary-fixed-dim":"#c4c6d0","tertiary-fixed":"#6ffbbe","surface-container-lowest":"#0d0e11","on-surface-variant":"#e4beba","surface-dim":"#121316","background":"#121316","tertiary-container":"#00a572","on-secondary":"#2d3038","outline":"#ab8986","secondary-container":"#44474f"},borderRadius:{DEFAULT:"0.125rem",lg:"0.25rem",xl:"0.5rem",full:"0.75rem"},spacing:{"space-md":"1rem","space-lg":"1.5rem",gutter:"1rem",margin:"1rem","gutter-desktop":"1.5rem","space-xl":"2.5rem","space-sm":"0.5rem","margin-desktop":"2rem","space-xs":"0.25rem"},fontFamily:{"body-lg":["Geist"],"body-sm":["Geist"],"label-sm":["JetBrains Mono"],"headline-sm":["Geist"],"code-md":["JetBrains Mono"],"headline-lg":["Geist"],"label-md":["JetBrains Mono"],"code-lg":["JetBrains Mono"],"code-sm":["JetBrains Mono"],"headline-md":["Geist"],"headline-xl-mobile":["Geist"],"headline-xl":["Geist"],"body-md":["Geist"]},fontSize:{"body-lg":["16px",{lineHeight:"24px",fontWeight:"400"}],"body-sm":["12px",{lineHeight:"16px",fontWeight:"400"}],"label-sm":["10px",{lineHeight:"14px",fontWeight:"600"}],"headline-sm":["16px",{lineHeight:"24px",fontWeight:"600"}],"code-md":["12px",{lineHeight:"18px",fontWeight:"400"}],"headline-lg":["24px",{lineHeight:"32px",fontWeight:"600"}],"label-md":["12px",{lineHeight:"16px",fontWeight:"600"}],"code-lg":["14px",{lineHeight:"22px",fontWeight:"500"}],"code-sm":["11px",{lineHeight:"16px",fontWeight:"400"}],"headline-md":["20px",{lineHeight:"28px",fontWeight:"600"}],"headline-xl-mobile":["28px",{lineHeight:"36px",fontWeight:"700"}],"headline-xl":["36px",{lineHeight:"44px",fontWeight:"700"}],"body-md":["14px",{lineHeight:"20px",fontWeight:"400"}]}}}};</script></head><body class="bg-surface font-body-md text-on-surface antialiased min-h-screen"><aside class="fixed left-0 top-0 h-screen w-64 bg-surface-container-lowest/95 backdrop-blur-xl z-50 flex flex-col justify-between border-r border-outline-variant/30 shadow-[0_4px_30px_rgba(0,0,0,0.5)]"><div class="flex flex-col"><div class="h-16 px-space-md flex items-center justify-between border-b border-outline-variant/20"><div class="flex items-center gap-space-xs"><img alt="ECLIPSE PANEL Flame Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1VTSD-if4Nd_-jY1AC-IOS4OyM3Tg7UajMgvUzoM06psv3YvHJs0vDtrSEYXjbFKVZTfoXD8gBxe-GaxzrM38XicSgR1MQAFIAhUkaPBTKueT3F87kpA-V4e5j_H7at4aZvRS8v3mZskEKrei73BjjUl9TgL88n55aonVK0j_H8fmGO92shqz_QoDSo6P7g4dOgb6-W0Uync_8pFueYbIe8V0wjfPFs92GObVG1EZQ3"/><span class="font-headline-sm text-headline-sm font-bold tracking-wider text-on-surface uppercase">ECLIPSE PANEL</span></div><span class="font-label-sm text-label-sm px-1.5 py-0.5 rounded bg-primary-container/20 text-primary border border-primary-container/40 shadow-[0_0_8px_rgba(255,84,81,0.3)]">v2.4 LTS</span></div><div class="px-space-md pt-space-md pb-space-xs"><span class="font-label-sm text-label-sm uppercase tracking-widest text-on-secondary-container/70">Control Matrix</span></div><nav class="flex flex-col gap-1 px-space-xs" data-active-classes="bg-surface-container-high text-primary border-l-2 border-primary-container shadow-[inset_0_0_12px_rgba(255,84,81,0.1)]"><a class="group flex items-center gap-space-sm px-space-sm py-2 rounded text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-all font-body-md text-body-md" data-path="overview" href="#"><span class="material-symbols-outlined text-xl text-on-surface-variant group-hover:text-primary transition-colors">monitoring</span><span>Overview</span></a><a class="group flex items-center gap-space-sm px-space-sm py-2 rounded text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-all font-body-md text-body-md" data-path="applications" href="#"><span class="material-symbols-outlined text-xl text-on-surface-variant group-hover:text-primary transition-colors">rocket_launch</span><span>Applications</span></a><a class="group flex items-center gap-space-sm px-space-sm py-2 rounded text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-all font-body-md text-body-md" data-path="live-terminal" href="#"><span class="material-symbols-outlined text-xl text-on-surface-variant group-hover:text-primary transition-colors">terminal</span><span>Live Terminal</span></a><a class="group flex items-center gap-space-sm px-space-sm py-2 rounded text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-all font-body-md text-body-md" data-path="file-manager" href="#"><span class="material-symbols-outlined text-xl text-on-surface-variant group-hover:text-primary transition-colors">folder_open</span><span>File Manager / Editor</span></a><a aria-current="page" class="group flex items-center justify-between px-space-sm py-2 rounded transition-all font-body-md bg-surface-container-high text-primary border-l-2 border-primary-container shadow-[inset_0_0_12px_rgba(255,84,81,0.1)]" data-path="admin-center" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-xl text-on-surface-variant group-hover:text-primary transition-colors">shield</span><span>Admin Center</span></div><span class="font-label-sm text-label-sm px-1 py-0.2 bg-outline-variant/30 text-on-surface-variant rounded">ROLE</span></a></nav></div><div class="flex flex-col gap-space-xs p-space-xs border-t border-outline-variant/20 bg-surface-container-lowest/80"><div class="p-space-xs rounded bg-surface-container-low/60 border border-outline-variant/20 flex items-center justify-between"><div class="flex items-center gap-space-xs truncate"><span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-tertiary opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-tertiary shadow-[0_0_8px_#4edea3]"></span></span><span class="font-code-sm text-code-sm text-on-surface truncate">ubuntu-vps-fra1</span></div><span class="font-label-sm text-label-sm text-on-surface-variant font-mono">192.241.148.82</span></div><div class="p-space-xs rounded bg-surface-container-low/40 border border-outline-variant/20 flex items-center justify-between"><div class="flex items-center gap-space-xs truncate"><img alt="Profile" class="w-8 h-8 rounded-full object-cover ring-1 ring-outline-variant/40" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAA8IRmZrjztXrOA8Ct35jMWd1euNrahdA4MHvidTjQfankcSHIcIoUDVOtYWdhEOKLQ9H0Rjb9DDbLF6JjMbpHxstw_HbOaU3_B9t60FYeg2g_qvFh3gqD3qtn6rymxfS0dqA214CGRtPUio9b-DR4gZoppzvD3bpVhhu7wpEqzOALJAToIEUVm9z6Qwninm3ueCp2oodI0MZq6gpeKvgNIZH6g60V7zOm07EM0UM"/><div class="flex flex-col truncate"><span class="font-body-sm text-body-sm font-semibold text-on-surface truncate leading-tight">Alex Vance</span><span class="font-label-sm text-label-sm text-primary tracking-wider font-mono uppercase leading-tight">SUPERADMIN</span></div></div><button class="p-1 text-on-surface-variant hover:text-primary transition-colors rounded hover:bg-surface-container-high" title="Sign out" type="button"><span class="material-symbols-outlined text-lg leading-none">logout</span></button></div></div></aside><div class="pl-64"><header class="fixed top-0 left-64 right-0 h-16 bg-surface/85 backdrop-blur-xl border-b border-outline-variant/20 z-40 flex items-center justify-between px-gutter-desktop"><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-xs font-body-sm text-body-sm text-on-surface-variant"><span class="material-symbols-outlined text-base">dns</span><span class="hover:text-on-surface cursor-pointer transition-colors">Infrastructure</span><span class="text-outline-variant">/</span><span class="text-on-surface font-semibold">Console</span></div><div class="flex items-center gap-1.5 px-2 py-0.5 rounded bg-surface-container-low border border-outline-variant/25 font-label-sm text-label-sm text-tertiary"><span class="inline-block w-1.5 h-1.5 rounded-full bg-tertiary shadow-[0_0_6px_#4edea3]"></span><span>18ms</span></div></div><div class="flex items-center gap-space-md"><div class="relative flex items-center"><span class="material-symbols-outlined absolute left-2.5 text-base text-on-surface-variant pointer-events-none">search</span><input class="w-72 bg-surface-container-lowest border border-outline-variant/30 rounded pl-8 pr-3 py-1 font-code-sm text-code-sm text-on-surface placeholder:text-on-secondary-container/50 focus:outline-none focus:border-primary-container focus:shadow-[0_0_12px_rgba(255,84,81,0.25)] transition-all" placeholder="Search services, logs, ports (cmd+k)" type="text"/></div><div class="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded bg-surface-container-lowest border border-tertiary-container/30 font-code-sm text-code-sm text-tertiary"><span class="inline-block w-1.5 h-1.5 rounded-full bg-tertiary animate-pulse"></span><span>WS: Connected (ws://192.241.148.82:4000/ws)</span></div><div class="flex items-center gap-space-xs"><button class="relative p-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high rounded transition-colors" title="Notifications" type="button"><span class="material-symbols-outlined text-xl leading-none">notifications</span><span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-primary-container shadow-[0_0_6px_#ff5451]"></span></button><button class="flex items-center gap-1 px-3 py-1.5 rounded bg-primary-container text-on-primary-container font-headline-sm text-headline-sm font-semibold hover:bg-primary hover:text-on-primary shadow-[0_0_16px_rgba(255,84,81,0.4)] transition-all border border-white/10" type="button"><span class="material-symbols-outlined text-base">add</span><span>New App</span></button></div></div></header><main class="w-full pt-16 bg-surface px-gutter-desktop min-h-screen"><div class="flex flex-col w-full">
+<div class="flex flex-col gap-space-lg pb-space-xl">
+<div class="relative w-full rounded-xl bg-surface-container-low shadow-xl overflow-hidden p-space-md lg:p-space-lg">
+<div class="absolute -right-24 -top-24 w-96 h-96 bg-primary-container/10 rounded-full blur-3xl pointer-events-none"></div>
+<div class="absolute left-1/3 -bottom-32 w-80 h-80 bg-tertiary-container/10 rounded-full blur-3xl pointer-events-none"></div>
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md mb-space-md">
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs mb-1">
+<span class="font-label-sm text-label-sm uppercase tracking-widest text-primary font-mono">Kernel Core Matrix</span>
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container animate-pulse shadow-[0_0_8px_#ff5451]"></span>
+</div>
+<div class="flex items-baseline gap-space-md flex-wrap">
+<h2 class="font-headline-lg text-headline-lg font-bold text-on-surface tracking-tight">Host Diagnostics & Telemetry</h2>
+<span class="font-code-sm text-code-sm text-on-surface-variant font-mono">vps-crimson-core-01.internal</span>
+</div>
+</div>
+<div class="flex flex-wrap items-center gap-space-xs">
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-surface-container-highest font-label-sm text-label-sm text-tertiary shadow-sm">
+<span class="w-2 h-2 rounded-full bg-tertiary shadow-[0_0_6px_#4edea3]"></span>
+<span>SYSTEMD: ACTIVE</span>
+</div>
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-surface-container-highest font-label-sm text-label-sm text-tertiary shadow-sm">
+<span class="w-2 h-2 rounded-full bg-tertiary shadow-[0_0_6px_#4edea3]"></span>
+<span>DOCKER: ACTIVE</span>
+</div>
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-surface-container-highest font-label-sm text-label-sm text-tertiary shadow-sm">
+<span class="w-2 h-2 rounded-full bg-tertiary shadow-[0_0_6px_#4edea3]"></span>
+<span>NGINX PROXY</span>
+</div>
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-surface-container-highest font-label-sm text-label-sm text-tertiary shadow-sm">
+<span class="w-2 h-2 rounded-full bg-tertiary shadow-[0_0_6px_#4edea3]"></span>
+<span>UFW: 22, 80, 443, 4000</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-space-md">
+<div class="flex flex-col justify-between p-space-md rounded-xl bg-surface-container shadow-md relative overflow-hidden group">
+<div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary-container via-transparent to-transparent"></div>
+<div>
+<div class="flex items-center justify-between text-on-surface-variant mb-space-sm">
+<span class="font-label-sm text-label-sm tracking-wider uppercase font-mono">Platform Arch</span>
+<span class="material-symbols-outlined text-lg text-primary">terminal</span>
+</div>
+<div class="font-headline-sm text-headline-sm font-semibold text-on-surface">Ubuntu 24.04.1 LTS</div>
+<p class="font-code-sm text-code-sm text-on-surface-variant font-mono mt-0.5">Noble Numbat (x86_64)</p>
+</div>
+<div class="mt-space-md pt-space-xs bg-surface-container-low rounded-lg p-2 flex flex-col gap-1">
+<div class="flex justify-between items-center font-code-sm text-code-sm">
+<span class="text-on-secondary-container">Kernel</span>
+<span class="text-on-surface font-mono font-medium">6.8.0-49-generic</span>
+</div>
+<div class="flex justify-between items-center font-code-sm text-code-sm">
+<span class="text-on-secondary-container">Uptime</span>
+<span class="text-tertiary font-mono font-medium">48d 14h 22m</span>
+</div>
+</div>
+</div>
+<div class="flex flex-col justify-between p-space-md rounded-xl bg-surface-container shadow-md relative overflow-hidden group">
+<div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary-container via-transparent to-transparent"></div>
+<div>
+<div class="flex items-center justify-between text-on-surface-variant mb-space-sm">
+<span class="font-label-sm text-label-sm tracking-wider uppercase font-mono">Compute & Cores</span>
+<span class="material-symbols-outlined text-lg text-primary">memory</span>
+</div>
+<div class="font-headline-sm text-headline-sm font-semibold text-on-surface">AMD EPYC 7763</div>
+<p class="font-code-sm text-code-sm text-on-surface-variant font-mono mt-0.5">8 vCPUs Dedicated</p>
+</div>
+<div class="mt-space-md">
+<div class="flex justify-between items-center mb-1">
+<span class="font-code-sm text-code-sm text-on-secondary-container">Average Load</span>
+<span class="font-label-sm text-label-sm font-mono text-primary font-bold">34.2%</span>
+</div>
+<div class="w-full bg-surface-container-lowest h-2 rounded-full overflow-hidden">
+<div class="bg-primary-container h-full rounded-full transition-all duration-500 shadow-[0_0_10px_#ff5451]" style="width: 34.2%"></div>
+</div>
+<div class="flex justify-between items-center mt-2 font-code-sm text-code-sm text-on-secondary-container font-mono">
+<span>1m: 0.42</span>
+<span>5m: 0.38</span>
+<span>15m: 0.31</span>
+</div>
+</div>
+</div>
+<div class="flex flex-col justify-between p-space-md rounded-xl bg-surface-container shadow-md relative overflow-hidden group">
+<div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary-container via-transparent to-transparent"></div>
+<div>
+<div class="flex items-center justify-between text-on-surface-variant mb-space-sm">
+<span class="font-label-sm text-label-sm tracking-wider uppercase font-mono">Memory & NVMe</span>
+<span class="material-symbols-outlined text-lg text-primary">storage</span>
+</div>
+<div class="font-headline-sm text-headline-sm font-semibold text-on-surface">16.0 GB DDR4 ECC</div>
+<p class="font-code-sm text-code-sm text-on-surface-variant font-mono mt-0.5">5.8 GB Used / 10.2 GB Free</p>
+</div>
+<div class="mt-space-md flex flex-col gap-2">
+<div>
+<div class="flex justify-between items-center text-xs mb-1">
+<span class="font-code-sm text-code-sm text-on-secondary-container">NVMe Storage (320 GB)</span>
+<span class="font-label-sm text-label-sm font-mono text-tertiary">26.3% (84.2 GB)</span>
+</div>
+<div class="w-full bg-surface-container-lowest h-2 rounded-full overflow-hidden">
+<div class="bg-tertiary h-full rounded-full transition-all duration-500 shadow-[0_0_10px_#4edea3]" style="width: 26.3%"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="flex flex-col justify-between p-space-md rounded-xl bg-surface-container shadow-md relative overflow-hidden group">
+<div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary-container via-transparent to-transparent"></div>
+<div>
+<div class="flex items-center justify-between text-on-surface-variant mb-space-sm">
+<span class="font-label-sm text-label-sm tracking-wider uppercase font-mono">Routing & Bandwidth</span>
+<span class="material-symbols-outlined text-lg text-primary">router</span>
+</div>
+<div class="font-code-sm text-code-sm font-mono font-semibold text-on-surface">192.241.148.82</div>
+<p class="font-code-sm text-code-sm text-on-surface-variant font-mono truncate mt-0.5">2604:a880:400:90::8a</p>
+</div>
+<div class="mt-space-md pt-space-xs bg-surface-container-low rounded-lg p-2 grid grid-cols-2 gap-2">
+<div>
+<span class="font-label-sm text-label-sm text-on-secondary-container uppercase block font-mono">Total RX</span>
+<span class="font-headline-sm text-headline-sm font-bold text-tertiary font-mono">4.82 TB</span>
+</div>
+<div>
+<span class="font-label-sm text-label-sm text-on-secondary-container uppercase block font-mono">Total TX</span>
+<span class="font-headline-sm text-headline-sm font-bold text-primary-container font-mono">1.29 TB</span>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-space-md p-space-sm bg-surface-container-lowest rounded-lg flex items-center justify-between overflow-x-auto gap-space-md">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-base">shield_with_heart</span>
+<span class="font-code-sm text-code-sm text-on-surface font-mono">Automated Health Check: All 14 system units green.</span>
+</div>
+<div class="flex items-center gap-space-md shrink-0 font-code-sm text-code-sm text-on-secondary-container font-mono">
+<span>SysTemp: <strong class="text-on-surface">38.4°C</strong></span>
+<span>Entropy: <strong class="text-on-surface">256 bits</strong></span>
+<span>Swap: <strong class="text-on-surface">0.0 / 4.0 GB</strong></span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-space-lg items-start">
+<div class="xl:col-span-2 flex flex-col rounded-xl bg-surface-container-low shadow-xl p-space-md lg:p-space-lg">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm mb-space-md">
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs mb-1">
+<span class="font-label-sm text-label-sm uppercase tracking-widest text-primary font-mono">RBAC Matrix</span>
+</div>
+<h3 class="font-headline-lg text-headline-lg font-bold text-on-surface">Registered Operators & Access Control</h3>
+</div>
+<div class="flex items-center gap-space-xs">
+<div class="relative">
+<select class="bg-surface-container-highest text-on-surface font-label-md text-label-md rounded px-3 py-1.5 outline-none cursor-pointer focus:ring-1 focus:ring-primary-container" id="roleFilter" onchange="filterRole(this.value)">
+<option value="ALL">All Roles</option>
+<option value="SUPERADMIN">Superadmin</option>
+<option value="ADMIN">Admin</option>
+<option value="USER">User</option>
+</select>
+</div>
+<button class="flex items-center gap-1.5 px-3 py-1.5 rounded bg-primary-container text-on-primary-container font-headline-sm text-headline-sm font-semibold hover:bg-primary hover:text-on-primary shadow-md transition-all" onclick="openInviteModal()" type="button">
+<span class="material-symbols-outlined text-base">person_add</span>
+<span>Invite User</span>
+</button>
+</div>
+</div>
+<div class="w-full overflow-x-auto rounded-lg bg-surface-container-lowest">
+<table class="w-full text-left font-body-md text-body-md border-collapse">
+<thead>
+<tr class="bg-surface-container-high/60 font-label-sm text-label-sm uppercase tracking-wider text-on-secondary-container font-mono">
+<th class="p-space-sm">Operator</th>
+<th class="p-space-sm">Role</th>
+<th class="p-space-sm">Apps</th>
+<th class="p-space-sm">Activity</th>
+<th class="p-space-sm text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="font-body-sm text-body-sm" id="userTableBody">
+<tr class="hover:bg-surface-container-high/40 transition-colors" data-role="SUPERADMIN">
+<td class="p-space-sm">
+<div class="flex items-center gap-space-sm">
+<img class="w-9 h-9 rounded-full object-cover shadow-sm ring-1 ring-primary-container/40" data-alt="Cyberpunk high detail portrait of Alex Vance, tactical system architect with dark cybernetic interface headset in ruby ambiance" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBEmPFSGwDDyGIfsRAlocFctP2xRH3LjzPy9BElTbeQ-SVyGrbm19Uj3FY3h1lyL2ww-sbyjHTiR5bfiFDXxVRsq7-U9qMeOahyczk3FSLvQs1UBEe067z8KNA3o5SPUQwkXoUPLAk0PHUDqUYr-RKeefkRc2noQCnmYxLyCQTOozoGosjpREPnS10flRfqBfCjT4fYAfZd-ToWN_88Sg50Gayv65v2-DCpS_a32AI"/>
+<div class="flex flex-col min-w-0">
+<span class="font-headline-sm text-headline-sm font-semibold text-on-surface truncate flex items-center gap-1">
+                        Alex Vance
+                        <span class="font-label-sm text-label-sm text-primary font-mono">(You)</span>
+</span>
+<span class="font-code-sm text-code-sm text-on-secondary-container font-mono truncate">alex@ECLIPSE PANEL.internal</span>
+</div>
+</div>
+</td>
+<td class="p-space-sm">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded font-label-sm text-label-sm font-mono font-bold bg-primary-container/20 text-primary shadow-[0_0_8px_rgba(255,84,81,0.2)]">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+                    SUPERADMIN
+                  </span>
+</td>
+<td class="p-space-sm font-code-sm text-code-sm text-on-surface font-mono">4 apps</td>
+<td class="p-space-sm">
+<div class="flex flex-col">
+<span class="text-tertiary font-medium flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary animate-pulse"></span>
+                      Now
+                    </span>
+<span class="font-code-sm text-code-sm text-on-secondary-container font-mono">Init 48d ago</span>
+</div>
+</td>
+<td class="p-space-sm text-right">
+<div class="inline-flex items-center gap-1">
+<button class="p-1.5 text-on-surface-variant/40 rounded cursor-not-allowed" disabled="" title="Cannot alter self superadmin scope" type="button">
+<span class="material-symbols-outlined text-base">lock</span>
+</button>
+<button class="p-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high rounded transition-colors" title="View GPG / SSH Keys" type="button">
+<span class="material-symbols-outlined text-base">key</span>
+</button>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-high/40 transition-colors" data-role="ADMIN">
+<td class="p-space-sm">
+<div class="flex items-center gap-space-sm">
+<img class="w-9 h-9 rounded-full object-cover shadow-sm ring-1 ring-primary/30" data-alt="Portrait of Sarah Lin, DevOps Lead, smart glasses reflecting server console logs with soft crimson ambient fill light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBQpCCemp-yxXhfQ7JBHW2QgPJUWysEoQVVoj9dnNm3d55B22yaUsvxBcZQO-peFK5jgDYjlhZ4rJKJVwSswBCD6TsQHcCJWCWc6sRvwL0SVCzfyVqy6gKXDRmTBmfOrxZ_xDgN2XGVT01xxTWWfSTmOLvoS_kCvQH_Fs4HEcqAeuFiLqEyxx-w_EImykxvdidp45bC_dGinVqi3zFqTqeaePKubrSJGbwTseB8xXs"/>
+<div class="flex flex-col min-w-0">
+<span class="font-headline-sm text-headline-sm font-semibold text-on-surface truncate">Sarah Lin</span>
+<span class="font-code-sm text-code-sm text-on-secondary-container font-mono truncate">sarah.l@ECLIPSE PANEL.internal</span>
+</div>
+</div>
+</td>
+<td class="p-space-sm">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded font-label-sm text-label-sm font-mono font-bold bg-primary/20 text-primary-fixed-dim">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                    ADMIN
+                  </span>
+</td>
+<td class="p-space-sm font-code-sm text-code-sm text-on-surface font-mono">2 apps</td>
+<td class="p-space-sm">
+<div class="flex flex-col">
+<span class="text-on-surface">12m ago</span>
+<span class="font-code-sm text-code-sm text-on-secondary-container font-mono">Init 32d ago</span>
+</div>
+</td>
+<td class="p-space-sm text-right">
+<div class="inline-flex items-center gap-1">
+<button class="p-1.5 text-on-surface-variant hover:text-primary hover:bg-surface-container-high rounded transition-colors" onclick="toggleRole(this, 'USER')" title="Demote to User" type="button">
+<span class="material-symbols-outlined text-base">swap_horiz</span>
+</button>
+<button class="p-1.5 text-on-surface-variant hover:text-error hover:bg-error-container/20 rounded transition-colors" title="Revoke session tokens" type="button">
+<span class="material-symbols-outlined text-base">block</span>
+</button>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-high/40 transition-colors" data-role="USER">
+<td class="p-space-sm">
+<div class="flex items-center gap-space-sm">
+<img class="w-9 h-9 rounded-full object-cover shadow-sm ring-1 ring-outline/20" data-alt="Portrait of Marcus Miller, senior backend engineer, focused glance with obsidian technical workstation background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCpzls4q4q5RTbZgpetdKH57bS1zvHR7ve8D1tyYyariveK553vQ3DNw3ZOHLZ60Hhii9PTkyi5ILBga4ONdA7hSnltBab0vgPa_E4Ww6so8mm8h_2ftC06-MKgPnjWMdXMdLZh0gdMgO8ScTbBVpDJPKdfwT3pqzNa6M7wxiDwzA0EFdSCplCQvVkWp3qLetpRQm1Rgk-s19Wuo9La_S_fouRqiYnGKHPGnpzaeyU"/>
+<div class="flex flex-col min-w-0">
+<span class="font-headline-sm text-headline-sm font-semibold text-on-surface truncate">Marcus Miller</span>
+<span class="font-code-sm text-code-sm text-on-secondary-container font-mono truncate">m.miller@dev.io</span>
+</div>
+</div>
+</td>
+<td class="p-space-sm">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded font-label-sm text-label-sm font-mono font-medium bg-surface-container-high text-on-secondary-container">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                    USER
+                  </span>
+</td>
+<td class="p-space-sm font-code-sm text-code-sm text-on-surface font-mono">1 app</td>
+<td class="p-space-sm">
+<div class="flex flex-col">
+<span class="text-on-surface">2h ago</span>
+<span class="font-code-sm text-code-sm text-on-secondary-container font-mono">Init 14d ago</span>
+</div>
+</td>
+<td class="p-space-sm text-right">
+<div class="inline-flex items-center gap-1">
+<button class="p-1.5 text-on-surface-variant hover:text-tertiary hover:bg-surface-container-high rounded transition-colors" onclick="toggleRole(this, 'ADMIN')" title="Promote to Admin" type="button">
+<span class="material-symbols-outlined text-base">arrow_upward</span>
+</button>
+<button class="p-1.5 text-on-surface-variant hover:text-error hover:bg-error-container/20 rounded transition-colors" onclick="deleteUserRow(this)" title="Purge Operator" type="button">
+<span class="material-symbols-outlined text-base">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-high/40 transition-colors" data-role="USER">
+<td class="p-space-sm">
+<div class="flex items-center gap-space-sm">
+<div class="w-9 h-9 rounded-full bg-surface-container-high flex items-center justify-center font-label-md text-label-md font-bold text-primary ring-1 ring-outline/20">
+                      ER
+                    </div>
+<div class="flex flex-col min-w-0">
+<span class="font-headline-sm text-headline-sm font-semibold text-on-surface truncate">Elena Rostova</span>
+<span class="font-code-sm text-code-sm text-on-secondary-container font-mono truncate">elena@client.tech</span>
+</div>
+</div>
+</td>
+<td class="p-space-sm">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded font-label-sm text-label-sm font-mono font-medium bg-surface-container-high text-on-secondary-container">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                    USER
+                  </span>
+</td>
+<td class="p-space-sm font-code-sm text-code-sm text-on-surface font-mono">1 app</td>
+<td class="p-space-sm">
+<div class="flex flex-col">
+<span class="text-on-surface">1d ago</span>
+<span class="font-code-sm text-code-sm text-on-secondary-container font-mono">Init 3d ago</span>
+</div>
+</td>
+<td class="p-space-sm text-right">
+<div class="inline-flex items-center gap-1">
+<button class="p-1.5 text-on-surface-variant hover:text-tertiary hover:bg-surface-container-high rounded transition-colors" onclick="toggleRole(this, 'ADMIN')" title="Promote to Admin" type="button">
+<span class="material-symbols-outlined text-base">arrow_upward</span>
+</button>
+<button class="p-1.5 text-on-surface-variant hover:text-error hover:bg-error-container/20 rounded transition-colors" onclick="deleteUserRow(this)" title="Purge Operator" type="button">
+<span class="material-symbols-outlined text-base">delete</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="flex flex-col sm:flex-row items-center justify-between gap-space-sm mt-space-md pt-space-sm text-on-secondary-container font-code-sm text-code-sm">
+<span>Showing 4 of 4 registered keys</span>
+<div class="flex items-center gap-2">
+<span class="inline-block w-2 h-2 rounded-full bg-tertiary"></span>
+<span>LDAP / OAuth Sync: OK</span>
+</div>
+</div>
+</div>
+<div class="flex flex-col rounded-xl bg-surface-container-low shadow-xl p-space-md lg:p-space-lg">
+<div class="flex items-center justify-between mb-space-md">
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs mb-1">
+<span class="font-label-sm text-label-sm uppercase tracking-widest text-primary font-mono">Live Append</span>
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container animate-ping"></span>
+</div>
+<h3 class="font-headline-lg text-headline-lg font-bold text-on-surface">System Audit Log</h3>
+</div>
+<button class="p-1.5 text-on-surface-variant hover:text-on-surface rounded hover:bg-surface-container-high transition-colors" onclick="clearLogs()" title="Clear View" type="button">
+<span class="material-symbols-outlined text-lg">delete_sweep</span>
+</button>
+</div>
+<div class="h-44 w-full bg-surface-container-lowest rounded-lg p-space-sm mb-space-md flex flex-col justify-between relative overflow-hidden">
+<div class="flex items-center justify-between text-on-secondary-container font-code-sm text-code-sm">
+<span class="font-mono">Realtime Security Incidents</span>
+<span class="font-mono text-tertiary">0 Blocked</span>
+</div>
+<div class="w-full h-24 flex items-end">
+<svg class="w-full h-full overflow-visible" preserveaspectratio="none" viewbox="0 0 300 80">
+<defs>
+<lineargradient id="auditGrad" x1="0%" x2="0%" y1="0%" y2="100%">
+<stop offset="0%" stop-color="#ff5451" stop-opacity="0.35"></stop>
+<stop offset="100%" stop-color="#ff5451" stop-opacity="0.0"></stop>
+</lineargradient>
+</defs>
+<path d="M0,70 Q25,65 50,68 T100,55 T150,60 T200,40 T250,52 T300,30 L300,80 L0,80 Z" fill="url(#auditGrad)"></path>
+<path d="M0,70 Q25,65 50,68 T100,55 T150,60 T200,40 T250,52 T300,30" fill="none" stroke="#ff5451" stroke-width="2"></path>
+</svg>
+</div>
+<div class="flex justify-between font-label-sm text-label-sm text-on-secondary-container font-mono">
+<span>-60m</span>
+<span>-30m</span>
+<span>NOW</span>
+</div>
+</div>
+<div class="flex flex-col gap-2 overflow-y-auto max-h-[360px] pr-1" id="logStream">
+<div class="p-2.5 rounded bg-surface-container-lowest flex flex-col gap-1 transition-all hover:bg-surface-container-high/30">
+<div class="flex items-center justify-between font-label-sm text-label-sm">
+<span class="text-primary font-mono font-bold">SECURITY / FW_RULE</span>
+<span class="text-on-secondary-container font-mono">14:02:18 UTC</span>
+</div>
+<p class="font-code-sm text-code-sm text-on-surface">Firewall rule updated: Port 4000 WebSocket allowed</p>
+<div class="flex items-center gap-1 font-label-sm text-label-sm text-on-surface-variant font-mono">
+<span class="material-symbols-outlined text-xs">account_circle</span>
+<span>alex.vance (SUPERADMIN)</span>
+</div>
+</div>
+<div class="p-2.5 rounded bg-surface-container-lowest flex flex-col gap-1 transition-all hover:bg-surface-container-high/30">
+<div class="flex items-center justify-between font-label-sm text-label-sm">
+<span class="text-tertiary font-mono font-bold">PROCESS / SYSTEMD</span>
+<span class="text-on-secondary-container font-mono">13:48:02 UTC</span>
+</div>
+<p class="font-code-sm text-code-sm text-on-surface">User sarah.l restarted socket-gateway-service</p>
+<div class="flex items-center gap-1 font-label-sm text-label-sm text-on-surface-variant font-mono">
+<span class="material-symbols-outlined text-xs">account_circle</span>
+<span>sarah.l (ADMIN)</span>
+</div>
+</div>
+<div class="p-2.5 rounded bg-surface-container-lowest flex flex-col gap-1 transition-all hover:bg-surface-container-high/30">
+<div class="flex items-center justify-between font-label-sm text-label-sm">
+<span class="text-on-secondary-container font-mono font-bold">AUTH / SSH_SESSION</span>
+<span class="text-on-secondary-container font-mono">11:15:33 UTC</span>
+</div>
+<p class="font-code-sm text-code-sm text-on-surface">SSH public key accepted for user alex (ed25519-sha2)</p>
+<div class="flex items-center gap-1 font-label-sm text-label-sm text-on-surface-variant font-mono">
+<span class="material-symbols-outlined text-xs">fingerprint</span>
+<span>Origin: 104.28.192.12</span>
+</div>
+</div>
+<div class="p-2.5 rounded bg-surface-container-lowest flex flex-col gap-1 transition-all hover:bg-surface-container-high/30">
+<div class="flex items-center justify-between font-label-sm text-label-sm">
+<span class="text-primary-container font-mono font-bold">DOCKER / RESTART</span>
+<span class="text-on-secondary-container font-mono">08:04:19 UTC</span>
+</div>
+<p class="font-code-sm text-code-sm text-on-surface">Container redis-cache-worker healthcheck pass (PID 4091)</p>
+<div class="flex items-center gap-1 font-label-sm text-label-sm text-on-surface-variant font-mono">
+<span class="material-symbols-outlined text-xs">dns</span>
+<span>Daemon Auto-recovery</span>
+</div>
+</div>
+<div class="p-2.5 rounded bg-surface-container-lowest flex flex-col gap-1 transition-all hover:bg-surface-container-high/30">
+<div class="flex items-center justify-between font-label-sm text-label-sm">
+<span class="text-on-secondary-container font-mono font-bold">USER_MGMT / INVITE</span>
+<span class="text-on-secondary-container font-mono">3 days ago</span>
+</div>
+<p class="font-code-sm text-code-sm text-on-surface">Invited elena@client.tech as role USER</p>
+<div class="flex items-center gap-1 font-label-sm text-label-sm text-on-surface-variant font-mono">
+<span class="material-symbols-outlined text-xs">account_circle</span>
+<span>sarah.l (ADMIN)</span>
+</div>
+</div>
+</div>
+<button class="mt-space-md w-full py-2 px-3 rounded bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-md text-label-md flex items-center justify-center gap-2 transition-all" onclick="exportAuditLogs()" type="button">
+<span class="material-symbols-outlined text-base">download</span>
+<span>Export Full Audit Stream (.json)</span>
+</button>
+</div>
+</div>
+</div>
+<div class="hidden fixed inset-0 z-50 flex items-center justify-center bg-surface-container-lowest/80 backdrop-blur-md p-4" id="inviteModal">
+<div class="relative w-full max-w-md bg-surface-container-low rounded-xl shadow-2xl p-space-lg flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-xl">person_add</span>
+<h4 class="font-headline-sm text-headline-sm font-bold text-on-surface">Invite Operator</h4>
+</div>
+<button class="text-on-surface-variant hover:text-on-surface p-1" onclick="closeInviteModal()" type="button">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="flex flex-col gap-space-sm">
+<div>
+<label class="font-label-sm text-label-sm text-on-secondary-container uppercase font-mono block mb-1">Full Name</label>
+<input class="w-full bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded p-2 outline-none focus:ring-1 focus:ring-primary-container" id="invName" placeholder="e.g. David Zhao" type="text"/>
+</div>
+<div>
+<label class="font-label-sm text-label-sm text-on-secondary-container uppercase font-mono block mb-1">Work Email</label>
+<input class="w-full bg-surface-container-lowest text-on-surface font-code-sm text-code-sm font-mono rounded p-2 outline-none focus:ring-1 focus:ring-primary-container" id="invEmail" placeholder="d.zhao@domain.com" type="email"/>
+</div>
+<div>
+<label class="font-label-sm text-label-sm text-on-secondary-container uppercase font-mono block mb-1">Assigned Role</label>
+<select class="w-full bg-surface-container-lowest text-on-surface font-code-sm text-code-sm font-mono rounded p-2 outline-none focus:ring-1 focus:ring-primary-container" id="invRole">
+<option value="USER">USER (Scoped App Deployments)</option>
+<option value="ADMIN">ADMIN (Full Telemetry & Services)</option>
+</select>
+</div>
+</div>
+<div class="flex items-center justify-end gap-space-sm mt-2">
+<button class="px-3 py-1.5 rounded bg-surface-container-high text-on-surface font-headline-sm text-headline-sm hover:bg-surface-container-highest transition-colors" onclick="closeInviteModal()" type="button">
+          Cancel
+        </button>
+<button class="px-4 py-1.5 rounded bg-primary-container text-on-primary-container font-headline-sm text-headline-sm font-semibold hover:bg-primary hover:text-on-primary shadow-md transition-all" onclick="submitInvite()" type="button">
+          Generate & Dispatch
+        </button>
+</div>
+</div>
+</div>
+<script>
+    function filterRole(role) {
+      const rows = document.querySelectorAll('#userTableBody tr');
+      rows.forEach(row => {
+        if (role === 'ALL' || row.getAttribute('data-role') === role) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    }
+
+    function toggleRole(btn, newRole) {
+      const row = btn.closest('tr');
+      const badge = row.querySelector('td:nth-child(2) span');
+      if (newRole === 'ADMIN') {
+        row.setAttribute('data-role', 'ADMIN');
+        badge.className = 'inline-flex items-center gap-1 px-2 py-0.5 rounded font-label-sm text-label-sm font-mono font-bold bg-primary/20 text-primary-fixed-dim';
+        badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>ADMIN';
+        btn.setAttribute('onclick', "toggleRole(this, 'USER')");
+        btn.setAttribute('title', 'Demote to User');
+        btn.querySelector('.material-symbols-outlined').textContent = 'swap_horiz';
+      } else {
+        row.setAttribute('data-role', 'USER');
+        badge.className = 'inline-flex items-center gap-1 px-2 py-0.5 rounded font-label-sm text-label-sm font-mono font-medium bg-surface-container-high text-on-secondary-container';
+        badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>USER';
+        btn.setAttribute('onclick', "toggleRole(this, 'ADMIN')");
+        btn.setAttribute('title', 'Promote to Admin');
+        btn.querySelector('.material-symbols-outlined').textContent = 'arrow_upward';
+      }
+    }
+
+    function deleteUserRow(btn) {
+      if (confirm('Permanently purge this operator access credentials?')) {
+        const row = btn.closest('tr');
+        row.remove();
+      }
+    }
+
+    function openInviteModal() {
+      document.getElementById('inviteModal').classList.remove('hidden');
+    }
+
+    function closeInviteModal() {
+      document.getElementById('inviteModal').classList.add('hidden');
+    }
+
+    function submitInvite() {
+      const name = document.getElementById('invName').value.trim();
+      const email = document.getElementById('invEmail').value.trim();
+      const role = document.getElementById('invRole').value;
+      if (!name || !email) {
+        alert('Please fill out all fields.');
+        return;
+      }
+      
+      const tbody = document.getElementById('userTableBody');
+      const tr = document.createElement('tr');
+      tr.setAttribute('data-role', role);
+      tr.className = 'hover:bg-surface-container-high/40 transition-colors';
+      tr.innerHTML = `
+        <td class="p-space-sm">
+          <div class="flex items-center gap-space-sm">
+            <div class="w-9 h-9 rounded-full bg-primary-container/20 flex items-center justify-center font-label-md text-label-md font-bold text-primary ring-1 ring-primary-container/40">
+              ${name.slice(0,2).toUpperCase()}
+            </div>
+            <div class="flex flex-col min-w-0">
+              <span class="font-headline-sm text-headline-sm font-semibold text-on-surface truncate">${name}</span>
+              <span class="font-code-sm text-code-sm text-on-secondary-container font-mono truncate">${email}</span>
+            </div>
+          </div>
+        </td>
+        <td class="p-space-sm">
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded font-label-sm text-label-sm font-mono font-bold ${role === 'ADMIN' ? 'bg-primary/20 text-primary-fixed-dim' : 'bg-surface-container-high text-on-secondary-container'}">
+            <span class="w-1.5 h-1.5 rounded-full ${role === 'ADMIN' ? 'bg-primary' : 'bg-secondary'}"></span>
+            ${role}
+          </span>
+        </td>
+        <td class="p-space-sm font-code-sm text-code-sm text-on-surface font-mono">0 apps</td>
+        <td class="p-space-sm">
+          <div class="flex flex-col">
+            <span class="text-on-surface-variant font-mono">Pending Invite</span>
+            <span class="font-code-sm text-code-sm text-on-secondary-container font-mono">Just now</span>
+          </div>
+        </td>
+        <td class="p-space-sm text-right">
+          <div class="inline-flex items-center gap-1">
+            <button type="button" onclick="deleteUserRow(this)" title="Cancel invite" class="p-1.5 text-on-surface-variant hover:text-error hover:bg-error-container/20 rounded transition-colors">
+              <span class="material-symbols-outlined text-base">delete</span>
+            </button>
+          </div>
+        </td>
+      `;
+      tbody.appendChild(tr);
+      closeInviteModal();
+      document.getElementById('invName').value = '';
+      document.getElementById('invEmail').value = '';
+    }
+
+    function clearLogs() {
+      const stream = document.getElementById('logStream');
+      stream.innerHTML = '<div class="p-3 text-center font-code-sm text-code-sm text-on-secondary-container font-mono">Log buffer purged. Monitoring realtime pipe...</div>';
+    }
+
+    function exportAuditLogs() {
+      const logs = [
+        { time: "14:02:18 UTC", event: "Firewall rule updated: Port 4000 WebSocket allowed", actor: "alex.vance", role: "SUPERADMIN" },
+        { time: "13:48:02 UTC", event: "User sarah.l restarted socket-gateway-service", actor: "sarah.l", role: "ADMIN" },
+        { time: "11:15:33 UTC", event: "SSH public key accepted for user alex", ip: "104.28.192.12" }
+      ];
+      const blob = new Blob([JSON.stringify(logs, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "ECLIPSE PANEL-audit-" + Date.now() + ".json";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</div></main></div>
+
+<!-- Framer Motion CDN & Real-Time Client Core -->
+<script src="https://cdn.jsdelivr.net/npm/framer-motion@11.11.11/dist/framer-motion.js"></script>
+<script>
+  const API_BASE = window.location.origin + '/api';
+  const WS_BASE = (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host + '/ws';
+  let token = localStorage.getItem('eclipse_token') || '';
+
+  function getHeaders() {
+    const h = { 'Content-Type': 'application/json' };
+    if (token) h['Authorization'] = 'Bearer ' + token;
+    return h;
+  }
+
+  function logout() {
+    localStorage.removeItem('eclipse_token');
+    window.location.href = '/login.html';
+  }
+
+  function requireAuth() {
+    if (!token && !window.location.pathname.endsWith('login.html')) {
+      window.location.href = '/login.html';
+    }
+  }
+
+  // Update navigation hrefs across pages
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('a[data-path="overview"]').forEach(el => el.href = '/');
+    document.querySelectorAll('a[data-path="applications"]').forEach(el => el.href = '/app.html');
+    document.querySelectorAll('a[data-path="live-terminal"]').forEach(el => el.href = '/app.html');
+    document.querySelectorAll('a[data-path="file-manager"]').forEach(el => el.href = '/app.html');
+    document.querySelectorAll('a[data-path="admin-center"]').forEach(el => el.href = '/admin.html');
+    document.querySelectorAll('a[data-path="vps-stats"]').forEach(el => el.href = '/admin-stats.html');
+    document.querySelectorAll('button[title="Sign out"]').forEach(el => el.onclick = logout);
+
+    // Add Telemetry link to nav if missing
+    const nav = document.querySelector('nav');
+    if (nav && !nav.querySelector('a[href="/admin-stats.html"]')) {
+      const statsLink = document.createElement('a');
+      statsLink.href = '/admin-stats.html';
+      statsLink.className = 'group flex items-center justify-between px-space-sm py-2 rounded text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-all font-body-md text-body-md';
+      statsLink.innerHTML = '<div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-xl text-on-surface-variant group-hover:text-primary transition-colors">speed</span><span>VPS Telemetry</span></div><span class="font-label-sm text-label-sm px-1 py-0.2 bg-tertiary/20 text-tertiary rounded font-mono">LIVE</span>';
+      nav.appendChild(statsLink);
+    }
+  });
+</script>
+
+<script>
+  requireAuth();
+
+  async function loadAdminData() {
+    try {
+      const userRes = await fetch(API_BASE + '/admin/users', { headers: getHeaders() });
+      if (!userRes.ok) {
+        alert('Access denied: Administrator privileges required.');
+        window.location.href = '/';
+        return;
+      }
+      const sysRes = await fetch(API_BASE + '/admin/system', { headers: getHeaders() });
+      if (sysRes.ok) {
+        const sysData = await sysRes.json();
+        console.log('Host Diagnostics:', sysData);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', loadAdminData);
+</script>
+
+  <!-- Profile & Account Settings Modal (Framer Motion / CSS Animated) -->
+  <div id="profileModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-[#1b1b1f] border border-[#5b403e]/40 rounded-2xl w-full max-w-md p-6 relative shadow-2xl">
+      <button onclick="closeProfileModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+        <span class="material-symbols-outlined text-xl">close</span>
+      </button>
+      <h3 class="text-lg font-bold text-white flex items-center gap-2 mb-1">
+        <span class="material-symbols-outlined text-red-400">manage_accounts</span>
+        Account & Profile Settings
+      </h3>
+      <p class="text-xs text-gray-400 mb-5 font-mono">Update your username, Gmail/email address, or master password.</p>
+
+      <!-- Profile Form -->
+      <form onsubmit="event.preventDefault(); saveProfileChanges();" class="space-y-3 pb-4 border-b border-[#292a2d]">
+        <div>
+          <label class="block text-xs font-semibold text-gray-300 uppercase font-mono mb-1">Username</label>
+          <input id="editUsername" type="text" required class="w-full bg-[#0d0e11] border border-[#343538] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-red-500 font-mono">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-300 uppercase font-mono mb-1">Gmail / Email Address</label>
+          <input id="editEmail" type="email" required class="w-full bg-[#0d0e11] border border-[#343538] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-red-500 font-mono">
+        </div>
+        <button type="submit" class="w-full py-2 rounded-lg bg-red-600 text-white font-semibold text-xs tracking-wider uppercase transition-all hover:bg-red-500 shadow-md">Save Profile Changes</button>
+      </form>
+
+      <!-- Password Change Form -->
+      <form onsubmit="event.preventDefault(); savePasswordChanges();" class="space-y-3 pt-4">
+        <h4 class="text-xs font-bold text-white uppercase tracking-wider font-mono">Change Master Password</h4>
+        <div>
+          <label class="block text-xs text-gray-400 font-mono mb-1">Current Password (optional for admin)</label>
+          <input id="editCurrentPass" type="password" placeholder="••••••••" class="w-full bg-[#0d0e11] border border-[#343538] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-red-500 font-mono">
+        </div>
+        <div>
+          <label class="block text-xs text-gray-400 font-mono mb-1">New Password</label>
+          <input id="editNewPass" type="password" required placeholder="••••••••" class="w-full bg-[#0d0e11] border border-[#343538] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-red-500 font-mono">
+        </div>
+        <button type="submit" class="w-full py-2 rounded-lg bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 text-white font-semibold text-xs tracking-wider uppercase transition-all">Update Password</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function openProfileModal() {
+      fetch(API_BASE + '/auth/me', { headers: getHeaders() })
+        .then(r => r.json())
+        .then(d => {
+          if (d.user) {
+            document.getElementById('editUsername').value = d.user.username;
+            document.getElementById('editEmail').value = d.user.email;
+            document.getElementById('profileModal').classList.remove('hidden');
+          }
+        })
+        .catch(e => {
+          document.getElementById('profileModal').classList.remove('hidden');
+        });
+    }
+
+    function closeProfileModal() {
+      document.getElementById('profileModal').classList.add('hidden');
+    }
+
+    async function saveProfileChanges() {
+      const username = document.getElementById('editUsername').value.trim();
+      const email = document.getElementById('editEmail').value.trim();
+      try {
+        const res = await fetch(API_BASE + '/auth/profile', {
+          method: 'PUT',
+          headers: getHeaders(),
+          body: JSON.stringify({ username, email })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        alert('Profile updated successfully!');
+        closeProfileModal();
+        location.reload();
+      } catch (err) { alert(err.message); }
+    }
+
+    async function savePasswordChanges() {
+      const currentPassword = document.getElementById('editCurrentPass').value;
+      const newPassword = document.getElementById('editNewPass').value;
+      try {
+        const res = await fetch(API_BASE + '/auth/password', {
+          method: 'PUT',
+          headers: getHeaders(),
+          body: JSON.stringify({ currentPassword, newPassword })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        alert('Password updated successfully!');
+        closeProfileModal();
+      } catch (err) { alert(err.message); }
+    }
+  </script>
+</body></html>

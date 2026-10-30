@@ -1,0 +1,10 @@
+node_modules/
+storage/apps/
+storage/data/*.db
+storage/data/*.db-wal
+storage/data/*.db-shm
+.env
+stitch_extracted/
+*.log
+.DS_Store
+Thumbs.db

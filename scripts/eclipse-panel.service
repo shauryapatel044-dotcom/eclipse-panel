@@ -1,0 +1,17 @@
+[Unit]
+Description=Eclipse Panel - Python & Node.js Hosting Daemon
+After=network.target mariadb.service
+Wants=mariadb.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/eclipse-panel
+ExecStart=/usr/bin/node src/index.js
+Restart=always
+RestartSec=3
+Environment=NODE_ENV=production
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
