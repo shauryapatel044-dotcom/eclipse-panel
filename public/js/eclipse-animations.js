@@ -289,6 +289,27 @@
     renderWave();
   }
 
+  // 7. BACKGROUND VIDEO AUTOPLAY HELPER
+  function initBackgroundVideo() {
+    const video = document.querySelector('.video-bg-media');
+    if (!video) return;
+
+    video.muted = true;
+    const playPromise = video.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(() => {
+        // Autoplay policy prevented playback, attempt again on user interaction
+        const retry = () => {
+          video.play().catch(() => {});
+          document.removeEventListener('click', retry);
+          document.removeEventListener('keydown', retry);
+        };
+        document.addEventListener('click', retry, { once: true });
+        document.addEventListener('keydown', retry, { once: true });
+      });
+    }
+  }
+
   // Expose to window
   window.EclipseAnimations = {
     animateCounter,
@@ -296,11 +317,13 @@
     initMagneticButtons,
     initCyberCanvas,
     showToast,
-    initOscilloscope
+    initOscilloscope,
+    initBackgroundVideo
   };
 
   // Auto-init on DOMContentLoaded
   document.addEventListener('DOMContentLoaded', () => {
+    initBackgroundVideo();
     initCyberCanvas();
     init3DTilt();
     initMagneticButtons();
