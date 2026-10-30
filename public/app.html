@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Eclipse Panel - Application Console & Terminal</title>
+  <title>Eclipse Panel - Server Console & Terminal</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,71 +11,63 @@
   <link rel="stylesheet" href="/css/eclipse.css"/>
 
   <style>
-    .terminal-container {
-      background: #07080B;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 12px;
-      font-family: var(--font-mono);
-      font-size: 12px;
-      padding: 16px;
-      min-height: 420px;
-      max-height: 540px;
-      overflow-y: auto;
-      color: #E2E8F0;
-      line-height: 1.6;
-      box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.6);
-    }
-    .terminal-line {
-      white-space: pre-wrap;
-      word-break: break-all;
-    }
-    .terminal-line.stderr {
-      color: #F87171;
-    }
-    .terminal-line.system {
-      color: #10B981;
-    }
     .tab-nav {
       display: flex;
-      gap: 4px;
+      gap: 6px;
       border-bottom: 1px solid var(--border-subtle);
-      padding-bottom: 8px;
+      padding-bottom: 12px;
       margin-bottom: 20px;
     }
     .tab-nav-btn {
-      padding: 8px 16px;
+      padding: 9px 18px;
       border-radius: 8px;
       background: transparent;
       border: 1px solid transparent;
-      color: var(--text-muted);
+      color: var(--text-secondary);
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       display: flex;
       align-items: center;
       gap: 8px;
-      transition: all 0.2s;
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .tab-nav-btn:hover {
+      background: rgba(255, 255, 255, 0.04);
+      color: #FFF;
     }
     .tab-nav-btn.active {
       background: var(--bg-card);
       border-color: var(--border-crimson);
       color: #FFFFFF;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 4px 15px rgba(239, 68, 68, 0.15);
     }
-    .file-tree-item {
-      padding: 8px 12px;
-      border-radius: 6px;
-      font-family: var(--font-mono);
-      font-size: 12px;
-      cursor: pointer;
-      display: flex;
+    .spec-chip {
+      display: inline-flex;
       align-items: center;
-      gap: 8px;
-      color: var(--text-secondary);
-      transition: all 0.15s;
+      gap: 6px;
+      background: var(--bg-card-subtle);
+      border: 1px solid var(--border-subtle);
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: #E2E8F0;
     }
-    .file-tree-item:hover, .file-tree-item.active {
-      background: var(--bg-card-hover);
+    .quick-cmd-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .quick-cmd-btn:hover {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: var(--primary);
       color: #FFF;
     }
   </style>
@@ -106,7 +98,7 @@
           </a>
           <a href="/app.html" class="nav-link active">
             <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
-            <span>Applications</span>
+            <span>Servers / Console</span>
           </a>
           <a href="/admin-stats.html" class="nav-link">
             <svg viewBox="0 0 24 24"><path d="M12 2C6.49 2 2 6.49 2 12s4.49 10 10 10 10-4.49 10-10S17.51 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3-8c0 1.66-1.34 3-3 3s-3-1.34-3-3 1.34-3 3-3 3 1.34 3 3z"/></svg>
@@ -130,7 +122,7 @@
           <span style="color: var(--primary); font-weight: 700;">:8090</span>
         </div>
 
-        <div class="user-profile-bar" onclick="openProfileModal()" title="Click to edit profile, Gmail, or password">
+        <div class="user-profile-bar" onclick="openProfileModal()" title="Click to edit profile or change password">
           <div class="user-avatar-sm" id="sidebar-user-avatar">A</div>
           <div class="user-info-text">
             <span class="user-name-label" id="sidebar-user-name">admin</span>
@@ -149,9 +141,9 @@
       <header class="top-header">
         <div class="header-left">
           <div class="breadcrumbs">
-            <span>Applications</span>
+            <span>Servers</span>
             <span>/</span>
-            <span class="current" id="header-app-name">Select Application</span>
+            <span class="current" id="header-app-name">Select Server Instance</span>
           </div>
           <div class="badge-ws-status">
             <span class="status-dot-green"></span>
@@ -161,50 +153,73 @@
 
         <div class="header-right">
           <div style="display: flex; align-items: center; gap: 8px;">
-            <select id="app-selector" class="form-control" style="width: 200px; padding: 6px 12px; cursor: pointer;" onchange="switchApp(this.value)">
-              <option value="">Choose Application...</option>
+            <select id="app-selector" class="form-control" style="width: 220px; padding: 7px 12px; cursor: pointer;" onchange="switchApp(this.value)">
+              <option value="">Loading servers...</option>
             </select>
           </div>
-          <button class="btn-primary" onclick="openCreateAppModal()">
+          <button class="btn-primary framer-spring" onclick="openCreateAppModal()">
             <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-            <span>New App</span>
+            <span>Create Server</span>
           </button>
         </div>
       </header>
 
       <!-- Page Body -->
-      <div class="page-container">
-        <!-- APP HERO & SUPERVISOR CONTROLS -->
-        <section class="content-section" style="padding: 20px;">
+      <div class="page-container motion-enter">
+        <!-- SERVER HERO & HARDWARE SPECS BAR -->
+        <section class="content-section" style="padding: 24px;">
           <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
             <div>
-              <div style="display: flex; align-items: center; gap: 12px;">
-                <h1 style="font-size: 20px; font-weight: 800; color: #FFF;" id="hero-app-name">No Application Selected</h1>
+              <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                <h1 style="font-size: 22px; font-weight: 800; color: #FFF; letter-spacing: -0.01em;" id="hero-app-name">Select a Server</h1>
                 <span class="status-pill stopped" id="hero-status-pill">STOPPED</span>
                 <span class="metric-pill crimson" id="hero-runtime-pill">Node.js</span>
               </div>
-              <div style="display: flex; align-items: center; gap: 16px; margin-top: 8px; font-family: var(--font-mono); font-size: 12px; color: var(--text-muted);">
-                <span>Port: <a id="hero-port-link" href="#" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 700;">:----</a></span>
-                <span>PID: <span id="hero-pid" style="color: #FFF;">--</span></span>
-                <span>Restarts: <span id="hero-restarts" style="color: #FFF;">0</span></span>
+
+              <!-- Live Specs Matrix -->
+              <div style="display: flex; align-items: center; gap: 10px; margin-top: 12px; flex-wrap: wrap;">
+                <div class="spec-chip">
+                  <span style="color: var(--primary);">🌐 Port:</span>
+                  <a id="hero-port-link" href="#" target="_blank" style="color: #FFF; text-decoration: none; font-weight: 700;">:----</a>
+                </div>
+                <div class="spec-chip">
+                  <span style="color: var(--emerald);">🧠 RAM Limit:</span>
+                  <span id="hero-ram-spec" style="font-weight: 700; color: #FFF;">1024 MB</span>
+                </div>
+                <div class="spec-chip">
+                  <span style="color: var(--amber);">⚡ CPU Limit:</span>
+                  <span id="hero-cpu-spec" style="font-weight: 700; color: #FFF;">100% (1 Core)</span>
+                </div>
+                <div class="spec-chip">
+                  <span style="color: var(--text-muted);">PID:</span>
+                  <span id="hero-pid" style="color: #FFF; font-weight: 600;">--</span>
+                </div>
+                <div class="spec-chip">
+                  <span style="color: var(--text-muted);">Restarts:</span>
+                  <span id="hero-restarts" style="color: #FFF; font-weight: 600;">0</span>
+                </div>
               </div>
             </div>
 
-            <!-- Lifecycle Buttons -->
-            <div style="display: flex; gap: 10px;">
-              <button class="btn-primary" id="btn-start" onclick="execAction('start')">
+            <!-- Lifecycle Actions -->
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button class="btn-primary framer-spring" id="btn-start" onclick="execAction('start')">
                 <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                 <span>Start</span>
               </button>
-              <button class="btn-secondary" id="btn-stop" onclick="execAction('stop')">
+              <button class="btn-secondary framer-spring" id="btn-stop" onclick="execAction('stop')">
                 <svg viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
                 <span>Stop</span>
               </button>
-              <button class="btn-secondary" id="btn-restart" onclick="execAction('restart')">
+              <button class="btn-secondary framer-spring" id="btn-restart" onclick="execAction('restart')">
                 <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
                 <span>Restart</span>
               </button>
-              <button class="btn-secondary" style="color: var(--primary);" onclick="deleteCurrentApp()">
+              <button class="btn-secondary framer-spring" onclick="openSpecsModal()" title="Modify CPU, RAM, Port, and runtime specs">
+                <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+                <span>Edit Specs</span>
+              </button>
+              <button class="btn-secondary framer-spring" style="color: var(--primary);" onclick="deleteCurrentApp()">
                 <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
                 <span>Delete</span>
               </button>
@@ -212,106 +227,231 @@
           </div>
         </section>
 
-        <!-- APP WORKSPACE TABS -->
+        <!-- WORKSPACE TABS -->
         <section class="content-section">
           <div class="tab-nav">
             <button class="tab-nav-btn active" id="tab-btn-console" onclick="switchConsoleTab('console')">
               <svg style="width: 16px; height: 16px; fill: currentColor;" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-9 14H5v-2h6v2zm-2.83-5.17L4.34 9l1.41-1.41 3.54 3.54-3.54 3.54-1.41-1.41 2.83-2.84z"/></svg>
-              <span>Live Console & Logs</span>
+              <span>Interactive Console</span>
             </button>
             <button class="tab-nav-btn" id="tab-btn-files" onclick="switchConsoleTab('files')">
               <svg style="width: 16px; height: 16px; fill: currentColor;" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
-              <span>File Manager / Editor</span>
+              <span>Workspace Files</span>
             </button>
             <button class="tab-nav-btn" id="tab-btn-config" onclick="switchConsoleTab('config')">
-              <svg style="width: 16px; height: 16px; fill: currentColor;" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
-              <span>Environment & Settings</span>
+              <svg style="width: 16px; height: 16px; fill: currentColor;" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+              <span>Environment (.env)</span>
             </button>
           </div>
 
-          <!-- TAB 1: LIVE CONSOLE -->
+          <!-- TAB 1: PROFESSIONAL INTERACTIVE CONSOLE -->
           <div id="pane-console">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-              <div style="font-family: var(--font-mono); font-size: 12px; color: var(--text-muted);">
-                Streaming stdout/stderr directly from supervisor process
+            <div class="console-wrapper">
+              <!-- Console Top Bar -->
+              <div class="console-header-bar">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div class="console-dots">
+                    <span class="console-dot red"></span>
+                    <span class="console-dot yellow"></span>
+                    <span class="console-dot green"></span>
+                  </div>
+                  <span style="color: #94A3B8; font-weight: 600;" id="console-title-app">terminal: stdio</span>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <label style="display: flex; align-items: center; gap: 5px; color: var(--text-muted); cursor: pointer;">
+                    <input type="checkbox" id="chk-autoscroll" checked> Auto-Scroll
+                  </label>
+                  <button class="quick-cmd-btn" onclick="clearConsole()">Clear</button>
+                  <button class="quick-cmd-btn" onclick="copyLogs()">Copy Logs</button>
+                </div>
               </div>
-              <button class="btn-secondary" style="padding: 4px 10px; font-size: 11px;" onclick="clearConsole()">Clear Output</button>
-            </div>
-            <div class="terminal-container" id="terminal-output">
-              <div class="terminal-line system">[Eclipse Supervisor] Ready to capture daemon process execution stream...</div>
+
+              <!-- Quick Command Bar -->
+              <div style="display: flex; align-items: center; gap: 6px; padding: 6px 14px; background: #080A0E; border-bottom: 1px solid rgba(255,255,255,0.05); overflow-x: auto;">
+                <span style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);">Quick actions:</span>
+                <button class="quick-cmd-btn" onclick="runQuickCmd('npm install')">npm install</button>
+                <button class="quick-cmd-btn" onclick="runQuickCmd('pip install -r requirements.txt')">pip install</button>
+                <button class="quick-cmd-btn" onclick="runQuickCmd('node -v')">node -v</button>
+                <button class="quick-cmd-btn" onclick="runQuickCmd('python --version')">python -V</button>
+                <button class="quick-cmd-btn" onclick="runQuickCmd('git status')">git status</button>
+              </div>
+
+              <!-- Live Terminal Body -->
+              <div class="console-body" id="terminal-output">
+                <div class="terminal-line system">[Eclipse Daemon Supervisor] Connected to real-time process execution pipeline.</div>
+              </div>
+
+              <!-- Command Prompt Input Bar -->
+              <form class="console-command-bar" onsubmit="event.preventDefault(); submitConsoleCommand();">
+                <span class="console-prompt-prefix">&gt;</span>
+                <input type="text" id="console-cmd-input" class="console-input" placeholder="Type a terminal command or stdin input and press Enter (e.g. npm test, ls, git log)..." autocomplete="off">
+                <button type="submit" class="btn-primary" style="padding: 5px 12px; font-size: 11px;">Execute</button>
+              </form>
             </div>
           </div>
 
           <!-- TAB 2: FILE MANAGER -->
           <div id="pane-files" style="display: none;">
-            <div style="display: grid; grid-template-columns: 240px 1fr; gap: 16px;">
-              <div style="background: var(--bg-sidebar); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 12px; max-height: 480px; overflow-y: auto;">
-                <div style="font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 10px;">Workspace Files</div>
+            <div style="display: grid; grid-template-columns: 260px 1fr; gap: 18px;">
+              <div style="background: var(--bg-sidebar); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 14px; max-height: 520px; overflow-y: auto;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                  <span style="font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Workspace Explorer</span>
+                  <button class="quick-cmd-btn" onclick="loadFiles(currentAppId)">↻ Refresh</button>
+                </div>
                 <div id="file-tree-list">
                   <div style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);">Loading files...</div>
                 </div>
               </div>
+
               <div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                  <span id="active-filename" style="font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: #FFF;">No file open</span>
-                  <button class="btn-primary" style="padding: 4px 12px; font-size: 12px;" onclick="saveActiveFile()">Save File</button>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                  <span id="active-filename" style="font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: #FFF;">Select a file to edit</span>
+                  <button class="btn-primary framer-spring" style="padding: 6px 16px; font-size: 12px;" onclick="saveActiveFile()">Save Changes</button>
                 </div>
-                <textarea id="file-editor" class="form-control" style="height: 440px; font-family: var(--font-mono); font-size: 12px; line-height: 1.5; resize: vertical;" placeholder="// Open a file from the workspace tree to view and edit..."></textarea>
+                <textarea id="file-editor" class="form-control" style="height: 470px; font-family: var(--font-mono); font-size: 12px; line-height: 1.6; resize: vertical;" placeholder="// Select a file from the explorer on the left..."></textarea>
               </div>
             </div>
           </div>
 
-          <!-- TAB 3: CONFIGURATION -->
+          <!-- TAB 3: ENVIRONMENT VARIABLES -->
           <div id="pane-config" style="display: none;">
-            <form onsubmit="event.preventDefault(); saveAppConfig();" style="max-width: 600px;">
-              <div class="form-group">
-                <label class="form-label" for="cfg-port">Port Assignment</label>
-                <input type="number" id="cfg-port" class="form-control" required>
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="cfg-entry">Entry Point File</label>
-                <input type="text" id="cfg-entry" class="form-control" required placeholder="index.js or app.py">
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="cfg-env">Environment Variables (.env format)</label>
-                <textarea id="cfg-env" class="form-control" style="height: 160px; font-family: var(--font-mono); font-size: 12px;" placeholder="PORT=3000&#10;NODE_ENV=production&#10;DATABASE_URL=..."></textarea>
-              </div>
-              <button type="submit" class="btn-primary" id="btn-save-cfg">Save App Configuration</button>
-            </form>
+            <div style="max-width: 640px;">
+              <h3 style="font-size: 15px; font-weight: 700; color: #FFF; margin-bottom: 6px;">Environment Variables</h3>
+              <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">These key-value pairs are automatically injected into the process environment upon boot.</p>
+              
+              <form onsubmit="event.preventDefault(); saveEnvConfig();">
+                <div class="form-group">
+                  <label class="form-label" for="cfg-env">Environment Configuration (JSON Object)</label>
+                  <textarea id="cfg-env" class="form-control" style="height: 220px; font-family: var(--font-mono); font-size: 12px; line-height: 1.5;" placeholder='{\n  "PORT": 3000,\n  "NODE_ENV": "production",\n  "SECRET_KEY": "..."\n}'></textarea>
+                </div>
+                <button type="submit" class="btn-primary framer-spring" id="btn-save-env">Save Environment Settings</button>
+              </form>
+            </div>
           </div>
         </section>
       </div>
     </main>
   </div>
 
-  <!-- MODAL: DEPLOY APP -->
+  <!-- MODAL: EDIT SERVER SPECS (RAM, CPU, PORT, ENTRY, TYPE) -->
+  <div class="modal-overlay" id="modal-specs">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">
+          <svg style="width: 22px; height: 22px; fill: var(--primary);" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+          <span>Modify Server Specifications</span>
+        </h3>
+        <button class="modal-close-btn" onclick="closeSpecsModal()">
+          <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </div>
+
+      <form onsubmit="event.preventDefault(); submitSpecsUpdate();">
+        <div class="form-group">
+          <label class="form-label" for="spec-name">Server Name</label>
+          <input type="text" id="spec-name" class="form-control" required>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <div class="form-group">
+            <label class="form-label" for="spec-ram">RAM Allocation (MB)</label>
+            <select id="spec-ram" class="form-control" style="cursor: pointer;">
+              <option value="512">512 MB (Standard)</option>
+              <option value="1024">1,024 MB (1 GB Recommended)</option>
+              <option value="2048">2,048 MB (2 GB)</option>
+              <option value="4096">4,096 MB (4 GB High-Compute)</option>
+              <option value="8192">8,192 MB (8 GB Dedicated)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="spec-cpu">CPU Allocation Limit (%)</label>
+            <select id="spec-cpu" class="form-control" style="cursor: pointer;">
+              <option value="50">50% (0.5 Logical Core)</option>
+              <option value="100">100% (1 Logical Core)</option>
+              <option value="200">200% (2 Logical Cores)</option>
+              <option value="400">400% (4 Logical Cores)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <div class="form-group">
+            <label class="form-label" for="spec-port">Dedicated Port</label>
+            <input type="number" id="spec-port" class="form-control" required placeholder="3000">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="spec-entry">Entrypoint Script</label>
+            <input type="text" id="spec-entry" class="form-control" required placeholder="index.js or app.py">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="spec-autorestart">Supervisor Watchdog</label>
+          <select id="spec-autorestart" class="form-control" style="cursor: pointer;">
+            <option value="1">Enabled (Auto-Restart on Crash)</option>
+            <option value="0">Disabled (Manual Recovery Only)</option>
+          </select>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeSpecsModal()">Cancel</button>
+          <button type="submit" class="btn-primary framer-spring" id="btn-save-specs">Save Specifications</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: CREATE SERVER -->
   <div class="modal-overlay" id="modal-create-app">
     <div class="modal-card">
       <div class="modal-header">
-        <h3 class="modal-title"><span>Deploy Application</span></h3>
+        <h3 class="modal-title"><span>Create New Server</span></h3>
         <button class="modal-close-btn" onclick="closeCreateAppModal()"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
       </div>
       <form onsubmit="event.preventDefault(); submitCreateApp();">
         <div class="form-group">
-          <label class="form-label">Application Name</label>
-          <input type="text" id="new-app-name" class="form-control" required placeholder="my-service">
+          <label class="form-label">Server / Application Name</label>
+          <input type="text" id="new-app-name" class="form-control" required placeholder="node-api-server">
         </div>
+
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div class="form-group">
             <label class="form-label">Runtime Engine</label>
             <select id="new-app-type" class="form-control">
-              <option value="nodejs">Node.js</option>
-              <option value="python">Python 3</option>
+              <option value="nodejs">Node.js 22 (ESM/CJS)</option>
+              <option value="python">Python 3.12 (venv)</option>
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label">Port</label>
+            <label class="form-label">Assigned Port</label>
             <input type="number" id="new-app-port" class="form-control" required value="3001">
           </div>
         </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label class="form-label">RAM Limit</label>
+            <select id="new-app-ram" class="form-control">
+              <option value="1024">1,024 MB (Standard)</option>
+              <option value="2048">2,048 MB (Medium)</option>
+              <option value="4096">4,096 MB (High)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">CPU Limit</label>
+            <select id="new-app-cpu" class="form-control">
+              <option value="100">100% (1 Core)</option>
+              <option value="200">200% (2 Cores)</option>
+            </select>
+          </div>
+        </div>
+
         <div class="modal-footer">
           <button type="button" class="btn-secondary" onclick="closeCreateAppModal()">Cancel</button>
-          <button type="submit" class="btn-primary">Create App</button>
+          <button type="submit" class="btn-primary framer-spring">Deploy Server</button>
         </div>
       </form>
     </div>
@@ -334,12 +474,12 @@
           <input type="email" id="self-email" class="form-control" required>
         </div>
         <div class="form-group">
-          <label class="form-label">New Password</label>
+          <label class="form-label">New Password (leave blank to keep current)</label>
           <input type="password" id="self-pass" class="form-control" placeholder="••••••••••••">
         </div>
         <div class="modal-footer">
           <button type="button" class="btn-secondary" onclick="closeProfileModal()">Cancel</button>
-          <button type="submit" class="btn-primary">Save Profile</button>
+          <button type="submit" class="btn-primary framer-spring">Save Changes</button>
         </div>
       </form>
     </div>
@@ -350,6 +490,7 @@
     let token = localStorage.getItem('eclipse_token') || '';
     let currentUser = null;
     let currentAppId = null;
+    let currentAppObj = null;
     let activeWs = null;
     let activeFile = null;
 
@@ -381,6 +522,18 @@
     }
     function closeProfileModal() { document.getElementById('modal-profile').classList.remove('open'); }
 
+    function openSpecsModal() {
+      if (!currentAppObj) return;
+      document.getElementById('spec-name').value = currentAppObj.name || '';
+      document.getElementById('spec-port').value = currentAppObj.port || '';
+      document.getElementById('spec-entry').value = currentAppObj.entrypoint || 'index.js';
+      document.getElementById('spec-ram').value = currentAppObj.memory_limit || '1024';
+      document.getElementById('spec-cpu').value = currentAppObj.cpu_limit || '100';
+      document.getElementById('spec-autorestart').value = currentAppObj.auto_restart ? '1' : '0';
+      document.getElementById('modal-specs').classList.add('open');
+    }
+    function closeSpecsModal() { document.getElementById('modal-specs').classList.remove('open'); }
+
     function switchConsoleTab(tab) {
       document.getElementById('pane-console').style.display = tab === 'console' ? 'block' : 'none';
       document.getElementById('pane-files').style.display = tab === 'files' ? 'block' : 'none';
@@ -397,10 +550,12 @@
       try {
         const res = await fetch(API_BASE + '/apps', { headers: getHeaders() });
         if (!res.ok) return;
-        const apps = await res.json();
+        const data = await res.json();
+        const apps = data.apps || data || [];
+
         const selector = document.getElementById('app-selector');
-        selector.innerHTML = '<option value="">Choose Application...</option>' + 
-          apps.map(a => `<option value="${a.id}">${a.name} (:${a.port})</option>`).join('');
+        selector.innerHTML = '<option value="">Choose Server Instance...</option>' + 
+          apps.map(a => `<option value="${a.id}">${escapeHtml(a.name)} (:${a.port})</option>`).join('');
 
         const urlParams = new URLSearchParams(window.location.search);
         const queryId = urlParams.get('id');
@@ -423,7 +578,9 @@
       try {
         const res = await fetch(`${API_BASE}/apps/${appId}`, { headers: getHeaders() });
         if (!res.ok) return;
-        const app = await res.json();
+        const d = await res.json();
+        const app = d.app || d;
+        currentAppObj = app;
         renderAppDetails(app);
         connectAppWS(appId);
         loadRecentLogs(appId);
@@ -433,18 +590,25 @@
     function renderAppDetails(app) {
       document.getElementById('header-app-name').innerText = app.name;
       document.getElementById('hero-app-name').innerText = app.name;
+      document.getElementById('console-title-app').innerText = `${app.name} (${app.type})`;
+      
+      const isRunning = app.status === 'running';
       document.getElementById('hero-status-pill').innerText = (app.status || 'STOPPED').toUpperCase();
-      document.getElementById('hero-status-pill').className = 'status-pill ' + (app.status === 'running' ? 'running' : 'stopped');
+      document.getElementById('hero-status-pill').className = 'status-pill ' + (isRunning ? 'running' : 'stopped');
       document.getElementById('app-status-badge').innerText = (app.status || 'STOPPED').toUpperCase();
       document.getElementById('hero-runtime-pill').innerText = app.type === 'python' ? 'Python 3' : 'Node.js';
-      document.getElementById('hero-port-link').innerText = ':' + app.port;
-      document.getElementById('hero-port-link').href = `http://${window.location.hostname}:${app.port}`;
-      document.getElementById('hero-pid').innerText = app.pid || '--';
+      
+      document.getElementById('hero-port-link').innerText = ':' + (app.port || 'Auto');
+      document.getElementById('hero-port-link').href = app.port ? `http://${window.location.hostname}:${app.port}` : '#';
+      document.getElementById('hero-pid').innerText = (app.metrics && app.metrics.pid) || '--';
       document.getElementById('hero-restarts').innerText = app.restart_count || 0;
 
-      document.getElementById('cfg-port').value = app.port;
-      document.getElementById('cfg-entry').value = app.entry_point || 'index.js';
-      document.getElementById('cfg-env').value = app.env ? JSON.stringify(app.env, null, 2) : '';
+      // Specs display
+      document.getElementById('hero-ram-spec').innerText = (app.memory_limit || 1024) + ' MB';
+      document.getElementById('hero-cpu-spec').innerText = (app.cpu_limit || 100) + '%';
+
+      // Config tab values
+      document.getElementById('cfg-env').value = app.env_vars ? JSON.stringify(app.env_vars, null, 2) : '{}';
     }
 
     async function execAction(action) {
@@ -461,11 +625,73 @@
     }
 
     async function deleteCurrentApp() {
-      if (!currentAppId || !confirm('Permanently delete this application?')) return;
+      if (!currentAppId || !confirm('Permanently delete this server? All files and configurations will be removed.')) return;
       try {
         await fetch(`${API_BASE}/apps/${currentAppId}`, { method: 'DELETE', headers: getHeaders() });
         window.location.href = '/';
       } catch (e) { alert(e.message); }
+    }
+
+    // Submit Specs Changes
+    async function submitSpecsUpdate() {
+      if (!currentAppId) return;
+      const name = document.getElementById('spec-name').value.trim();
+      const port = parseInt(document.getElementById('spec-port').value, 10);
+      const entrypoint = document.getElementById('spec-entry').value.trim();
+      const memory_limit = parseInt(document.getElementById('spec-ram').value, 10);
+      const cpu_limit = parseInt(document.getElementById('spec-cpu').value, 10);
+      const auto_restart = parseInt(document.getElementById('spec-autorestart').value, 10);
+
+      const btn = document.getElementById('btn-save-specs');
+      btn.disabled = true;
+      btn.innerText = 'Applying Specs...';
+
+      try {
+        const res = await fetch(`${API_BASE}/apps/${currentAppId}`, {
+          method: 'PUT',
+          headers: getHeaders(),
+          body: JSON.stringify({ name, port, entrypoint, memory_limit, cpu_limit, auto_restart })
+        });
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.error || 'Failed to update specs');
+
+        closeSpecsModal();
+        alert('Server specifications successfully updated!');
+        switchApp(currentAppId);
+      } catch (err) {
+        alert(err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Save Specifications';
+      }
+    }
+
+    // Interactive Console Command Runner
+    async function submitConsoleCommand() {
+      if (!currentAppId) return;
+      const input = document.getElementById('console-cmd-input');
+      const cmd = input.value.trim();
+      if (!cmd) return;
+
+      appendLog('system', `> ${cmd}`);
+      input.value = '';
+
+      try {
+        const res = await fetch(`${API_BASE}/apps/${currentAppId}/command`, {
+          method: 'POST',
+          headers: getHeaders(),
+          body: JSON.stringify({ command: cmd })
+        });
+        const d = await res.json();
+        if (!res.ok) appendLog('stderr', `[Error] ${d.error || 'Execution failed'}`);
+      } catch (e) {
+        appendLog('stderr', `[Network Error] ${e.message}`);
+      }
+    }
+
+    function runQuickCmd(cmd) {
+      document.getElementById('console-cmd-input').value = cmd;
+      submitConsoleCommand();
     }
 
     function connectAppWS(appId) {
@@ -505,11 +731,19 @@
       div.className = 'terminal-line ' + (stream || '');
       div.innerText = msg;
       term.appendChild(div);
-      term.scrollTop = term.scrollHeight;
+
+      if (document.getElementById('chk-autoscroll').checked) {
+        term.scrollTop = term.scrollHeight;
+      }
     }
 
     function clearConsole() {
       document.getElementById('terminal-output').innerHTML = '';
+    }
+
+    function copyLogs() {
+      const text = document.getElementById('terminal-output').innerText;
+      navigator.clipboard.writeText(text).then(() => alert('Console log stream copied to clipboard!'));
     }
 
     async function loadFiles(appId) {
@@ -542,7 +776,7 @@
     }
 
     async function saveActiveFile() {
-      if (!currentAppId || !activeFile) return alert('No file selected');
+      if (!currentAppId || !activeFile) return alert('Select a file to save');
       const content = document.getElementById('file-editor').value;
       try {
         const res = await fetch(`${API_BASE}/files/write`, {
@@ -554,16 +788,14 @@
       } catch (e) { alert(e.message); }
     }
 
-    async function saveAppConfig() {
+    async function saveEnvConfig() {
       if (!currentAppId) return;
-      const port = parseInt(document.getElementById('cfg-port').value, 10);
-      const entry = document.getElementById('cfg-entry').value.trim();
+      const raw = document.getElementById('cfg-env').value.trim();
       let envObj = {};
       try {
-        const raw = document.getElementById('cfg-env').value.trim();
         if (raw) envObj = JSON.parse(raw);
       } catch (e) {
-        alert('Environment variables must be valid JSON object (or empty)');
+        alert('Environment variables must be a valid JSON object');
         return;
       }
 
@@ -571,12 +803,9 @@
         const res = await fetch(`${API_BASE}/apps/${currentAppId}`, {
           method: 'PUT',
           headers: getHeaders(),
-          body: JSON.stringify({ port, entry_point: entry, env: envObj })
+          body: JSON.stringify({ env_vars: envObj })
         });
-        if (res.ok) {
-          alert('Configuration updated!');
-          switchApp(currentAppId);
-        }
+        if (res.ok) alert('Environment configuration saved!');
       } catch (e) { alert(e.message); }
     }
 
@@ -584,14 +813,17 @@
       const name = document.getElementById('new-app-name').value.trim();
       const type = document.getElementById('new-app-type').value;
       const port = parseInt(document.getElementById('new-app-port').value, 10);
+      const memory_limit = parseInt(document.getElementById('new-app-ram').value, 10);
+      const cpu_limit = parseInt(document.getElementById('new-app-cpu').value, 10);
+
       try {
         const res = await fetch(API_BASE + '/apps', {
           method: 'POST',
           headers: getHeaders(),
-          body: JSON.stringify({ name, type, port })
+          body: JSON.stringify({ name, type, port, memory_limit, cpu_limit })
         });
         const d = await res.json();
-        if (!res.ok) throw new Error(d.error || 'Failed');
+        if (!res.ok) throw new Error(d.error || 'Failed to create server');
         closeCreateAppModal();
         loadAllApps();
       } catch (e) { alert(e.message); }

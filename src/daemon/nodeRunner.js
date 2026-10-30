@@ -63,9 +63,15 @@ export class NodeRunner {
       APP_NAME: app.name,
     };
 
-    logStreamer.append(app.id, 'system', `[Daemon] Launching Node.js process: node ${entrypoint} (Port: ${app.port || 'Auto'})`);
+    const nodeArgs = [];
+    if (app.memory_limit && parseInt(app.memory_limit, 10) > 0) {
+      nodeArgs.push(`--max-old-space-size=${parseInt(app.memory_limit, 10)}`);
+    }
+    nodeArgs.push(entrypoint);
 
-    const child = spawn(config.nodeBin, [entrypoint], {
+    logStreamer.append(app.id, 'system', `[Daemon] Launching Node.js process: node ${nodeArgs.join(' ')} (Port: ${app.port || 'Auto'})`);
+
+    const child = spawn(config.nodeBin, nodeArgs, {
       cwd: appDir,
       env,
       stdio: ['pipe', 'pipe', 'pipe'],

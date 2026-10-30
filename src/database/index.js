@@ -50,6 +50,10 @@ export function initDatabase() {
     );
   `);
 
+  // Migrate columns if needed
+  try { db.exec(`ALTER TABLE apps ADD COLUMN memory_limit INTEGER DEFAULT 1024;`); } catch (e) {}
+  try { db.exec(`ALTER TABLE apps ADD COLUMN cpu_limit INTEGER DEFAULT 100;`); } catch (e) {}
+
   // Seed default admin account if not existing (admin / admin)
   try {
     const checkAdmin = db.prepare('SELECT id FROM users WHERE username = ?');

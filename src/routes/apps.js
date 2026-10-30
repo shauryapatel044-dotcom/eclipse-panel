@@ -12,8 +12,9 @@ router.get('/:id', AppController.getAppById);
 router.put('/:id', AppController.updateApp);
 router.delete('/:id', AppController.deleteApp);
 
-// Action endpoints: start, stop, restart, install
+// Action endpoints: start, stop, restart, install, command
 router.post('/:id/action/:action', AppController.performAction);
+router.post('/:id/command', AppController.sendCommand);
 router.get('/:id/logs', AppController.getLogs);
 router.get('/:id/stats', AppController.getStats);
 

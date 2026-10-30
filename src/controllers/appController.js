@@ -94,7 +94,7 @@ export class AppController {
 
   static async createApp(req, res) {
     try {
-      const { name, type, entrypoint, port, env_vars, auto_restart } = req.body;
+      const { name, type, entrypoint, port, env_vars, auto_restart, memory_limit, cpu_limit } = req.body;
 
       if (!name || !type) {
         return res.status(400).json({ error: 'App name and type (nodejs | python) are required' });
@@ -110,13 +110,15 @@ export class AppController {
       const envJson = typeof env_vars === 'object' ? JSON.stringify(env_vars) : (env_vars || '{}');
       const autoRestartVal = auto_restart === false || auto_restart === 0 ? 0 : 1;
       const appPort = port ? parseInt(port, 10) : null;
+      const memLimit = memory_limit ? parseInt(memory_limit, 10) : 1024;
+      const cpLimit = cpu_limit ? parseInt(cpu_limit, 10) : 100;
 
       // Insert into database
       const insertStmt = db.prepare(`
-        INSERT INTO apps (id, name, type, user_id, entrypoint, port, env_vars, auto_restart, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'stopped')
+        INSERT INTO apps (id, name, type, user_id, entrypoint, port, env_vars, auto_restart, memory_limit, cpu_limit, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'stopped')
       `);
-      insertStmt.run(appId, name.trim(), normalizedType, req.user.id, defaultEntry, appPort, envJson, autoRestartVal);
+      insertStmt.run(appId, name.trim(), normalizedType, req.user.id, defaultEntry, appPort, envJson, autoRestartVal, memLimit, cpLimit);
 
       // Create app directory and starter template
       const appDir = supervisor.getAppDir(appId);
@@ -203,7 +205,7 @@ if __name__ == '__main__':
   static async updateApp(req, res) {
     try {
       const { id } = req.params;
-      const { name, entrypoint, port, env_vars, auto_restart } = req.body;
+      const { name, entrypoint, port, env_vars, auto_restart, memory_limit, cpu_limit, type } = req.body;
 
       const stmt = db.prepare('SELECT * FROM apps WHERE id = ?');
       const app = stmt.get(id);
@@ -214,19 +216,43 @@ if __name__ == '__main__':
       }
 
       const newName = name !== undefined ? name.trim() : app.name;
+      const newType = type !== undefined ? type.trim().toLowerCase() : app.type;
       const newEntrypoint = entrypoint !== undefined ? entrypoint.trim() : app.entrypoint;
       const newPort = port !== undefined ? (port ? parseInt(port, 10) : null) : app.port;
       const newAutoRestart = auto_restart !== undefined ? (auto_restart ? 1 : 0) : app.auto_restart;
+      const newMem = memory_limit !== undefined ? (memory_limit ? parseInt(memory_limit, 10) : 1024) : (app.memory_limit || 1024);
+      const newCpu = cpu_limit !== undefined ? (cpu_limit ? parseInt(cpu_limit, 10) : 100) : (app.cpu_limit || 100);
       const newEnv = env_vars !== undefined ? (typeof env_vars === 'object' ? JSON.stringify(env_vars) : env_vars) : app.env_vars;
 
       const updateStmt = db.prepare(`
         UPDATE apps
-        SET name = ?, entrypoint = ?, port = ?, env_vars = ?, auto_restart = ?, updated_at = CURRENT_TIMESTAMP
+        SET name = ?, type = ?, entrypoint = ?, port = ?, env_vars = ?, auto_restart = ?, memory_limit = ?, cpu_limit = ?, updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
       `);
-      updateStmt.run(newName, newEntrypoint, newPort, newEnv, newAutoRestart, id);
+      updateStmt.run(newName, newType, newEntrypoint, newPort, newEnv, newAutoRestart, newMem, newCpu, id);
 
-      return res.json({ message: 'App configuration updated successfully' });
+      logStreamer.append(id, 'system', `[Config Updated] Specs updated: Port=${newPort}, RAM=${newMem}MB, CPU=${newCpu}%, Entry=${newEntrypoint}`);
+
+      return res.json({ message: 'Server specs and configuration updated successfully' });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
+  static async sendCommand(req, res) {
+    try {
+      const { id } = req.params;
+      const { command } = req.body;
+      const stmt = db.prepare('SELECT * FROM apps WHERE id = ?');
+      const app = stmt.get(id);
+      if (!app) return res.status(404).json({ error: 'Server not found' });
+
+      if (req.user.role !== 'admin' && app.user_id !== req.user.id) {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
+
+      const result = await supervisor.sendCommand(id, command);
+      return res.json(result);
     } catch (err) {
       return res.status(500).json({ error: err.message });
     }

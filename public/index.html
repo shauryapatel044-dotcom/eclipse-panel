@@ -253,8 +253,9 @@
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>Application</th>
+                  <th>Application / Server</th>
                   <th>Runtime</th>
+                  <th>Specs (RAM / CPU)</th>
                   <th>Status</th>
                   <th>Port</th>
                   <th>Restarts</th>
@@ -316,6 +317,27 @@
           </div>
         </div>
 
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label class="form-label" for="app-ram">RAM Allocation</label>
+            <select id="app-ram" class="form-control" style="cursor: pointer;">
+              <option value="512">512 MB</option>
+              <option value="1024" selected>1,024 MB (1 GB)</option>
+              <option value="2048">2,048 MB (2 GB)</option>
+              <option value="4096">4,096 MB (4 GB)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="app-cpu">CPU Limit (%)</label>
+            <select id="app-cpu" class="form-control" style="cursor: pointer;">
+              <option value="50">50% (0.5 Core)</option>
+              <option value="100" selected>100% (1 Core)</option>
+              <option value="200">200% (2 Cores)</option>
+            </select>
+          </div>
+        </div>
+
         <div class="form-group">
           <label class="form-label" for="app-entry">Entrypoint Script</label>
           <input type="text" id="app-entry" class="form-control" placeholder="index.js or app.py" required value="index.js">
@@ -324,6 +346,63 @@
         <div class="modal-footer">
           <button type="button" class="btn-secondary" onclick="closeCreateAppModal()">Cancel</button>
           <button type="submit" class="btn-primary" id="btn-create-submit">Create & Deploy</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: EDIT SERVER SPECS -->
+  <div class="modal-overlay" id="modal-specs">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">
+          <svg style="width: 22px; height: 22px; fill: var(--primary);" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+          <span>Modify Server Specifications</span>
+        </h3>
+        <button class="modal-close-btn" onclick="closeSpecsModal()"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
+      </div>
+
+      <form onsubmit="event.preventDefault(); submitSpecsUpdate();">
+        <input type="hidden" id="spec-app-id">
+        <div class="form-group">
+          <label class="form-label" for="spec-name">Server Name</label>
+          <input type="text" id="spec-name" class="form-control" required>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label class="form-label" for="spec-ram">RAM Allocation</label>
+            <select id="spec-ram" class="form-control">
+              <option value="512">512 MB</option>
+              <option value="1024">1,024 MB (1 GB)</option>
+              <option value="2048">2,048 MB (2 GB)</option>
+              <option value="4096">4,096 MB (4 GB)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="spec-cpu">CPU Limit (%)</label>
+            <select id="spec-cpu" class="form-control">
+              <option value="50">50% (0.5 Core)</option>
+              <option value="100">100% (1 Core)</option>
+              <option value="200">200% (2 Cores)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label class="form-label" for="spec-port">Port</label>
+            <input type="number" id="spec-port" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="spec-entry">Entrypoint</label>
+            <input type="text" id="spec-entry" class="form-control" required>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeSpecsModal()">Cancel</button>
+          <button type="submit" class="btn-primary framer-spring" id="btn-save-specs">Save Specs</button>
         </div>
       </form>
     </div>
@@ -503,19 +582,65 @@
       }
     }
 
+    function openSpecsModal(app) {
+      document.getElementById('spec-app-id').value = app.id;
+      document.getElementById('spec-name').value = app.name;
+      document.getElementById('spec-ram').value = app.memory_limit || '1024';
+      document.getElementById('spec-cpu').value = app.cpu_limit || '100';
+      document.getElementById('spec-port').value = app.port || '3000';
+      document.getElementById('spec-entry').value = app.entrypoint || 'index.js';
+      document.getElementById('modal-specs').classList.add('open');
+    }
+
+    function closeSpecsModal() {
+      document.getElementById('modal-specs').classList.remove('open');
+    }
+
+    async function submitSpecsUpdate() {
+      const id = document.getElementById('spec-app-id').value;
+      const name = document.getElementById('spec-name').value.trim();
+      const memory_limit = parseInt(document.getElementById('spec-ram').value, 10);
+      const cpu_limit = parseInt(document.getElementById('spec-cpu').value, 10);
+      const port = parseInt(document.getElementById('spec-port').value, 10);
+      const entrypoint = document.getElementById('spec-entry').value.trim();
+      const btn = document.getElementById('btn-save-specs');
+
+      btn.disabled = true;
+      btn.innerText = 'Saving...';
+
+      try {
+        const res = await fetch(`${API_BASE}/apps/${id}`, {
+          method: 'PUT',
+          headers: getHeaders(),
+          body: JSON.stringify({ name, memory_limit, cpu_limit, port, entrypoint })
+        });
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.error || 'Failed to update specs');
+
+        closeSpecsModal();
+        alert('Server specifications updated successfully!');
+        fetchApps();
+      } catch (err) {
+        alert(err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Save Specs';
+      }
+    }
+
     function renderAppsTable(apps) {
       const tbody = document.getElementById('apps-tbody');
       if (!apps || apps.length === 0) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="6">
+            <td colspan="7">
               <div class="empty-state-box">
                 <div class="empty-state-icon">
                   <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
                 </div>
                 <p style="font-size: 14px; font-weight: 600; color: #FFF; margin-bottom: 6px;">No Applications Deployed</p>
                 <p style="font-size: 12px; margin-bottom: 16px;">Deploy your first Node.js or Python application to get started.</p>
-                <button class="btn-primary" onclick="openCreateAppModal()">Deploy Application</button>
+                <button class="btn-primary framer-spring" onclick="openCreateAppModal()">Deploy Application</button>
               </div>
             </td>
           </tr>
@@ -528,15 +653,22 @@
         const isCrashed = app.status === 'crashed';
         const pillClass = isRunning ? 'running' : (isCrashed ? 'crashed' : 'stopped');
         const runtimeIcon = app.type === 'python' ? '🐍 Python' : '🟢 Node.js';
+        const ramStr = (app.memory_limit || 1024) + 'MB';
+        const cpuStr = (app.cpu_limit || 100) + '%';
 
         return `
           <tr>
             <td>
               <div style="font-weight: 700; color: #FFF;">${escapeHtml(app.name)}</div>
-              <div style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);">${escapeHtml(app.entry_point || 'index.js')}</div>
+              <div style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);">${escapeHtml(app.entrypoint || 'index.js')}</div>
             </td>
             <td>
               <span style="font-family: var(--font-mono); font-size: 12px;">${runtimeIcon}</span>
+            </td>
+            <td>
+              <div style="font-family: var(--font-mono); font-size: 11px;">
+                <span style="color: var(--emerald);">${ramStr}</span> · <span style="color: var(--amber);">${cpuStr}</span>
+              </div>
             </td>
             <td>
               <span class="status-pill ${pillClass}">
@@ -545,20 +677,21 @@
               </span>
             </td>
             <td>
-              <a href="http://${window.location.hostname}:${app.port}" target="_blank" style="color: var(--primary); font-family: var(--font-mono); text-decoration: none; font-weight: 600;">:${app.port} ↗</a>
+              <a href="http://${window.location.hostname}:${app.port}" target="_blank" style="color: var(--primary); font-family: var(--font-mono); text-decoration: none; font-weight: 600;">:${app.port || 'Auto'}</a>
             </td>
             <td style="font-family: var(--font-mono); font-size: 12px;">
               ${app.restart_count || 0}
             </td>
             <td>
               <div style="display: flex; gap: 6px;">
+                <button class="btn-secondary framer-spring" style="padding: 4px 8px; font-size: 11px;" onclick='openSpecsModal(${JSON.stringify(app)})'>Edit Specs</button>
                 ${isRunning 
-                  ? `<button class="btn-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="triggerAppAction('${app.id}', 'stop')">Stop</button>`
-                  : `<button class="btn-primary" style="padding: 4px 8px; font-size: 11px;" onclick="triggerAppAction('${app.id}', 'start')">Start</button>`
+                  ? `<button class="btn-secondary framer-spring" style="padding: 4px 8px; font-size: 11px;" onclick="triggerAppAction('${app.id}', 'stop')">Stop</button>`
+                  : `<button class="btn-primary framer-spring" style="padding: 4px 8px; font-size: 11px;" onclick="triggerAppAction('${app.id}', 'start')">Start</button>`
                 }
-                <button class="btn-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="triggerAppAction('${app.id}', 'restart')">Restart</button>
-                <a href="/app.html?id=${app.id}" class="btn-secondary" style="padding: 4px 8px; font-size: 11px; text-decoration: none;">Console</a>
-                <button class="btn-secondary" style="padding: 4px 8px; font-size: 11px; color: var(--primary);" onclick="deleteApp('${app.id}')">Delete</button>
+                <button class="btn-secondary framer-spring" style="padding: 4px 8px; font-size: 11px;" onclick="triggerAppAction('${app.id}', 'restart')">Restart</button>
+                <a href="/app.html?id=${app.id}" class="btn-secondary framer-spring" style="padding: 4px 8px; font-size: 11px; text-decoration: none;">Console</a>
+                <button class="btn-secondary framer-spring" style="padding: 4px 8px; font-size: 11px; color: var(--primary);" onclick="deleteApp('${app.id}')">Delete</button>
               </div>
             </td>
           </tr>
@@ -566,52 +699,23 @@
       }).join('');
     }
 
-    async function triggerAppAction(appId, action) {
-      try {
-        const res = await fetch(`${API_BASE}/apps/${appId}/action/${action}`, {
-          method: 'POST',
-          headers: getHeaders()
-        });
-        const d = await res.json();
-        if (!res.ok) alert(d.error || 'Action failed');
-        fetchApps();
-      } catch (err) {
-        alert(err.message);
-      }
-    }
-
-    async function deleteApp(appId) {
-      if (!confirm('Are you sure you want to permanently delete this application?')) return;
-      try {
-        const res = await fetch(`${API_BASE}/apps/${appId}`, {
-          method: 'DELETE',
-          headers: getHeaders()
-        });
-        if (!res.ok) {
-          const d = await res.json();
-          alert(d.error || 'Delete failed');
-        }
-        fetchApps();
-      } catch (err) {
-        alert(err.message);
-      }
-    }
-
     async function submitCreateApp() {
       const name = document.getElementById('app-name').value.trim();
       const type = document.getElementById('app-type').value;
       const port = parseInt(document.getElementById('app-port').value, 10);
       const entry = document.getElementById('app-entry').value.trim();
+      const memory_limit = parseInt(document.getElementById('app-ram').value, 10);
+      const cpu_limit = parseInt(document.getElementById('app-cpu').value, 10);
       const btn = document.getElementById('btn-create-submit');
 
       btn.disabled = true;
-      btn.innerText = 'Creating...';
+      btn.innerText = 'Deploying...';
 
       try {
         const res = await fetch(API_BASE + '/apps', {
           method: 'POST',
           headers: getHeaders(),
-          body: JSON.stringify({ name, type, port, entry_point: entry })
+          body: JSON.stringify({ name, type, port, entrypoint: entry, memory_limit, cpu_limit })
         });
         const d = await res.json();
         if (!res.ok) throw new Error(d.error || 'Failed to create application');

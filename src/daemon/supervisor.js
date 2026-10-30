@@ -170,6 +170,48 @@ class Supervisor {
     }
   }
 
+  async sendCommand(appId, commandStr) {
+    const trimmed = (commandStr || '').trim();
+    if (!trimmed) return { success: false, message: 'Empty command' };
+
+    logStreamer.append(appId, 'system', `> ${trimmed}`);
+
+    const record = this.managedProcesses.get(appId);
+    if (record && record.child && record.child.stdin && record.child.stdin.writable) {
+      try {
+        record.child.stdin.write(trimmed + '\n');
+        return { success: true, message: 'Command sent to process stdin' };
+      } catch (e) {
+        logStreamer.append(appId, 'stderr', `Failed to write to stdin: ${e.message}`);
+      }
+    }
+
+    // Execute command in app environment/workspace
+    const appDir = this.getAppDir(appId);
+    const { spawn } = await import('child_process');
+    const isWin = process.platform === 'win32';
+
+    return new Promise((resolve) => {
+      const proc = spawn(isWin ? 'cmd.exe' : '/bin/sh', [isWin ? '/c' : '-c', trimmed], {
+        cwd: appDir,
+        env: { ...process.env },
+      });
+
+      proc.stdout.on('data', (d) => logStreamer.append(appId, 'stdout', d.toString()));
+      proc.stderr.on('data', (d) => logStreamer.append(appId, 'stderr', d.toString()));
+
+      proc.on('close', (code) => {
+        logStreamer.append(appId, 'system', `[Execution Finished] Exit code: ${code}`);
+        resolve({ success: true, code });
+      });
+
+      proc.on('error', (err) => {
+        logStreamer.append(appId, 'stderr', `Command execution error: ${err.message}`);
+        resolve({ success: false, error: err.message });
+      });
+    });
+  }
+
   isRunning(appId) {
     const record = this.managedProcesses.get(appId);
     return !!(record && record.child && !record.child.killed);
