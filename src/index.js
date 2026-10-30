@@ -14,6 +14,7 @@ import authRoutes from './routes/auth.js';
 import appRoutes from './routes/apps.js';
 import adminRoutes from './routes/admin.js';
 import fileRoutes from './routes/files.js';
+import nodeRoutes from './routes/nodes.js';
 
 const app = express();
 
@@ -52,6 +53,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/apps', appRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/files', fileRoutes);
+app.use('/api/nodes', nodeRoutes);
 
 // Convenient Page Route Mappings
 app.get('/login', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'login.html')));

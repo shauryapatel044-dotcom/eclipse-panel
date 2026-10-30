@@ -4,12 +4,15 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Eclipse Panel - Admin Matrix & Server Governance</title>
-  <link rel="icon" type="image/jpeg" href="/assets/logo.jpg"/>
+  <link rel="icon" type="image/png" href="./assets/logo.png"/>
+  <link rel="alternate icon" type="image/jpeg" href="./assets/logo.jpg"/>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/eclipse.css"/>
   <link rel="stylesheet" href="/css/eclipse.css"/>
+  <script src="./js/eclipse-animations.js"></script>
   <script src="/js/eclipse-animations.js"></script>
 
   <style>
@@ -83,7 +86,7 @@
       <div>
         <div class="sidebar-brand">
           <a href="/" class="brand-link">
-            <img src="/assets/logo.jpg" alt="Eclipse Panel Logo" class="brand-logo-img" />
+            <img src="./assets/logo.png" onerror="this.src='./assets/logo.jpg'" alt="Eclipse Panel Logo" class="brand-logo-img" />
             <div>
               <span class="brand-text">ECLIPSE PANEL</span>
             </div>
@@ -96,10 +99,6 @@
           <a href="/" class="nav-link">
             <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
             <span>Overview</span>
-          </a>
-          <a href="/app.html" class="nav-link">
-            <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
-            <span>Servers</span>
           </a>
           <a href="/admin-stats.html" class="nav-link">
             <svg viewBox="0 0 24 24"><path d="M12 2C6.49 2 2 6.49 2 12s4.49 10 10 10 10-4.49 10-10S17.51 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3-8c0 1.66-1.34 3-3 3s-3-1.34-3-3 1.34-3 3-3 3 1.34 3 3z"/></svg>
@@ -230,6 +229,18 @@
               <svg style="width: 16px; height: 16px; fill: currentColor;" viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 3s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
               <span>Operator Accounts</span>
             </button>
+            <button class="admin-tab-btn" id="tab-btn-nodes" onclick="switchAdminTab('nodes')">
+              <svg style="width: 16px; height: 16px; fill: currentColor;" viewBox="0 0 24 24"><path d="M4 1h16a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zm0 8h16a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1zm0 8h16a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1zM6 4h2v1H6V4zm0 8h2v1H6v-1zm0 8h2v1H6v-1z"/></svg>
+              <span>Multi-Node Cluster</span>
+            </button>
+            <button class="admin-tab-btn" id="tab-btn-security" onclick="switchAdminTab('security')">
+              <svg style="width: 16px; height: 16px; fill: currentColor;" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+              <span>Security & SSL</span>
+            </button>
+            <button class="admin-tab-btn" id="tab-btn-alerts" onclick="switchAdminTab('alerts')">
+              <svg style="width: 16px; height: 16px; fill: currentColor;" viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/></svg>
+              <span>Incident Webhooks</span>
+            </button>
           </div>
 
           <!-- PANE 1: ALL SERVERS MANAGEMENT -->
@@ -302,6 +313,148 @@
                   </tr>
                 </tbody>
               </table>
+            </div>
+          </div>
+
+          <!-- PANE 3: MULTI-NODE CLUSTER -->
+          <div id="pane-admin-nodes" style="display: none;">
+            <div class="section-header">
+              <div class="section-title-wrap">
+                <h2>
+                  <svg style="width: 20px; height: 20px; fill: var(--primary);" viewBox="0 0 24 24"><path d="M4 1h16a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zm0 8h16a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1zm0 8h16a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1zM6 4h2v1H6V4zm0 8h2v1H6v-1zm0 8h2v1H6v-1z"/></svg>
+                  <span>Multi-Node Cluster Matrix</span>
+                </h2>
+                <p>Manage daemon host clusters. <strong>LocalNode</strong> is connected and managing processes by default.</p>
+              </div>
+              <button class="btn-primary framer-spring" onclick="openCreateNodeModal()">+ Connect Remote Node</button>
+            </div>
+
+            <div class="data-table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Node Name</th>
+                    <th>Node Type</th>
+                    <th>Host IP : Daemon Port</th>
+                    <th>Status</th>
+                    <th>Latency / Ping</th>
+                    <th>Active Apps</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="nodes-tbody">
+                  <tr>
+                    <td colspan="7" style="text-align: center; padding: 28px; color: var(--text-muted); font-family: var(--font-mono);">
+                      Loading cluster nodes...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- PANE 4: SECURITY & SSL -->
+          <div id="pane-admin-security" style="display: none;">
+            <div class="section-header">
+              <div class="section-title-wrap">
+                <h2>
+                  <svg style="width: 20px; height: 20px; fill: var(--primary);" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+                  <span>Security & Let's Encrypt SSL Certbot</span>
+                </h2>
+                <p>Automated brute-force shielding (5 failed attempts = 15m ban) and 1-Click Let's Encrypt SSL automation.</p>
+              </div>
+            </div>
+
+            <!-- SSL Manager Card -->
+            <div class="feature-card" style="margin-bottom: 24px;">
+              <div class="feature-card-header">
+                <div class="feature-card-title">
+                  <span style="font-size: 18px;">🔒</span> 1-Click Let's Encrypt SSL Automation
+                </div>
+                <span class="feature-badge badge-online" id="ssl-status-badge">Checking...</span>
+              </div>
+              <p style="font-size: 13px; color: var(--text-secondary);">
+                Issue automated Let's Encrypt SSL certificates for your panel domain using automated Certbot integration.
+              </p>
+              <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                <input type="text" id="ssl-domain-input" class="form-control" style="max-width: 300px;" placeholder="panel.yourdomain.com">
+                <input type="email" id="ssl-email-input" class="form-control" style="max-width: 260px;" placeholder="admin@yourdomain.com">
+                <button class="btn-primary framer-spring" onclick="triggerIssueSSL()" id="btn-issue-ssl">Issue & Enable SSL</button>
+              </div>
+            </div>
+
+            <!-- Audit Logs Matrix -->
+            <div class="section-header" style="margin-top: 20px;">
+              <div class="section-title-wrap">
+                <h3 style="font-size: 15px; font-weight: 700; color: #FFF;">Live Security Audit Trail</h3>
+                <p>Immutable log of logins, server deployments, spec adjustments, and daemon events.</p>
+              </div>
+              <button class="btn-secondary" onclick="loadAuditLogs()">↻ Refresh Trail</button>
+            </div>
+
+            <div class="data-table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Timestamp</th>
+                    <th>Operator</th>
+                    <th>Action</th>
+                    <th>IP Address</th>
+                    <th>Details</th>
+                  </tr>
+                </thead>
+                <tbody id="audit-tbody">
+                  <tr>
+                    <td colspan="5" style="text-align: center; padding: 28px; color: var(--text-muted); font-family: var(--font-mono);">
+                      Loading security logs...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- PANE 5: INCIDENT ALERTS -->
+          <div id="pane-admin-alerts" style="display: none;">
+            <div class="section-header">
+              <div class="section-title-wrap">
+                <h2>
+                  <svg style="width: 20px; height: 20px; fill: var(--primary);" viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/></svg>
+                  <span>Incident Webhook Alerts</span>
+                </h2>
+                <p>Receive real-time push alerts to your Discord channels or Telegram bot whenever a server crashes or high CPU is detected.</p>
+              </div>
+            </div>
+
+            <div style="max-width: 680px; display: flex; flex-direction: column; gap: 18px;">
+              <div class="feature-card">
+                <div class="feature-card-title">
+                  <span style="color: #5865F2;">🎮</span> Discord Webhook Alerting
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label">Discord Channel Webhook URL</label>
+                  <input type="text" id="alert-discord-webhook" class="form-control" placeholder="https://discord.com/api/webhooks/...">
+                </div>
+              </div>
+
+              <div class="feature-card">
+                <div class="feature-card-title">
+                  <span style="color: #229ED9;">✈️</span> Telegram Bot Alerting
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Telegram Bot Token</label>
+                  <input type="text" id="alert-telegram-token" class="form-control" placeholder="123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label">Telegram Chat ID</label>
+                  <input type="text" id="alert-telegram-chat" class="form-control" placeholder="-100123456789">
+                </div>
+              </div>
+
+              <div style="display: flex; gap: 12px;">
+                <button class="btn-primary framer-spring" onclick="saveAlertSettings()">Save Alert Configuration</button>
+                <button class="btn-secondary framer-spring" onclick="testAlertNotification()">Send Test Incident Alert</button>
+              </div>
             </div>
           </div>
         </section>
@@ -578,6 +731,40 @@
     </div>
   </div>
 
+  <!-- MODAL: CONNECT REMOTE NODE -->
+  <div class="modal-overlay" id="modal-create-node">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title"><span>Connect Remote Daemon Node</span></h3>
+        <button class="modal-close-btn" onclick="closeCreateNodeModal()">&times;</button>
+      </div>
+      <form onsubmit="event.preventDefault(); submitCreateNode();">
+        <div class="form-group">
+          <label class="form-label" for="new-node-name">Node Identifier Name</label>
+          <input type="text" id="new-node-name" class="form-control" required placeholder="e.g. EU-Frankfurt-Node-01">
+        </div>
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label class="form-label" for="new-node-host">Host IP / FQDN</label>
+            <input type="text" id="new-node-host" class="form-control" required placeholder="192.168.1.100 or node.domain.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="new-node-port">Daemon Port</label>
+            <input type="number" id="new-node-port" class="form-control" required value="8090">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="new-node-token">Cluster Secret Auth Token</label>
+          <input type="password" id="new-node-token" class="form-control" placeholder="••••••••••••••••">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeCreateNodeModal()">Cancel</button>
+          <button type="submit" class="btn-primary framer-spring">Register & Ping Node</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script>
     const API_BASE = window.location.origin + '/api';
     let token = localStorage.getItem('eclipse_token') || '';
@@ -610,11 +797,238 @@
     }
 
     function switchAdminTab(tab) {
-      document.getElementById('pane-admin-servers').style.display = tab === 'servers' ? 'block' : 'none';
-      document.getElementById('pane-admin-users').style.display = tab === 'users' ? 'block' : 'none';
+      const tabs = ['servers', 'users', 'nodes', 'security', 'alerts'];
+      tabs.forEach(t => {
+        const pane = document.getElementById('pane-admin-' + t);
+        const btn = document.getElementById('tab-btn-' + t);
+        if (pane) pane.style.display = (tab === t ? 'block' : 'none');
+        if (btn) btn.className = 'admin-tab-btn' + (tab === t ? ' active' : '');
+      });
 
-      document.getElementById('tab-btn-servers').className = 'admin-tab-btn' + (tab === 'servers' ? ' active' : '');
-      document.getElementById('tab-btn-users').className = 'admin-tab-btn' + (tab === 'users' ? ' active' : '');
+      if (tab === 'nodes') loadNodes();
+      if (tab === 'security') { loadAuditLogs(); loadSSLStatus(); }
+      if (tab === 'alerts') loadAlertSettings();
+    }
+
+    function openCreateNodeModal() { document.getElementById('modal-create-node').classList.add('open'); }
+    function closeCreateNodeModal() { document.getElementById('modal-create-node').classList.remove('open'); }
+
+    async function loadNodes() {
+      try {
+        const res = await fetch(API_BASE + '/nodes', { headers: getHeaders() });
+        if (!res.ok) return;
+        const nodes = await res.json();
+        const tbody = document.getElementById('nodes-tbody');
+        if (!nodes || nodes.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 24px; color: var(--text-muted);">No nodes found.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = nodes.map(n => {
+          const isOnline = n.status === 'online';
+          const isLocal = n.is_local === 1 || n.id === 'node_local';
+          return `
+            <tr>
+              <td>
+                <div style="font-weight: 700; color: #FFF; display: flex; align-items: center; gap: 8px;">
+                  <span>${escapeHtml(n.name)}</span>
+                  ${isLocal ? '<span class="feature-badge badge-violet">DEFAULT</span>' : ''}
+                </div>
+                <div style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);">${n.id}</div>
+              </td>
+              <td>
+                <span style="font-family: var(--font-mono); font-size: 11px; color: ${isLocal ? 'var(--neon-violet)' : '#94A3B8'};">
+                  ${isLocal ? '🖥️ Local Host Daemon' : '🌐 Remote VPS Agent'}
+                </span>
+              </td>
+              <td>
+                <span class="whole-ip-badge" onclick="copyAddressToClipboard('${n.host_ip}:${n.port}')">
+                  ${n.host_ip}:${n.port} <svg class="copy-icon" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                </span>
+              </td>
+              <td>
+                <span class="feature-badge ${isOnline ? 'badge-online' : 'badge-amber'}">
+                  <span style="width: 6px; height: 6px; border-radius: 50%; background: currentColor; display: inline-block; margin-right: 4px;"></span>
+                  ${n.status ? n.status.toUpperCase() : 'ONLINE'}
+                </span>
+              </td>
+              <td style="font-family: var(--font-mono); font-size: 12px; color: #86EFAC;">
+                ${n.latency_ms !== null && n.latency_ms !== undefined ? n.latency_ms + ' ms' : '< 1 ms (direct)'}
+              </td>
+              <td style="font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: #FFF;">
+                ${n.active_apps || 0}
+              </td>
+              <td>
+                <div style="display: flex; gap: 6px;">
+                  <button class="btn-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="pingNode('${n.id}')">Ping</button>
+                  ${!isLocal ? `<button class="btn-secondary" style="padding: 4px 8px; font-size: 11px; color: var(--primary);" onclick="deleteNode('${n.id}')">Disconnect</button>` : ''}
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      } catch (err) {
+        console.error('Failed to load nodes:', err);
+      }
+    }
+
+    async function pingNode(id) {
+      try {
+        notify('Testing cluster node latency...', 'info');
+        const res = await fetch(`${API_BASE}/nodes/${id}/ping`, { method: 'POST', headers: getHeaders() });
+        const d = await res.json();
+        if (res.ok) {
+          notify(`Node Latency: ${d.latency_ms} ms (Status: ${d.status})`, 'success');
+          loadNodes();
+        } else {
+          notify(d.error || 'Ping test failed', 'error');
+        }
+      } catch (err) {
+        notify(err.message, 'error');
+      }
+    }
+
+    async function submitCreateNode() {
+      const name = document.getElementById('new-node-name').value.trim();
+      const host_ip = document.getElementById('new-node-host').value.trim();
+      const port = parseInt(document.getElementById('new-node-port').value, 10) || 8090;
+      const secret_token = document.getElementById('new-node-token').value.trim();
+
+      try {
+        const res = await fetch(API_BASE + '/nodes', {
+          method: 'POST',
+          headers: getHeaders(),
+          body: JSON.stringify({ name, host_ip, port, secret_token })
+        });
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.error || 'Failed to connect node');
+        closeCreateNodeModal();
+        notify('Remote cluster node connected successfully!', 'success');
+        loadNodes();
+      } catch (err) {
+        notify(err.message, 'error');
+      }
+    }
+
+    async function deleteNode(id) {
+      if (!confirm('Are you sure you want to disconnect this node?')) return;
+      try {
+        const res = await fetch(`${API_BASE}/nodes/${id}`, { method: 'DELETE', headers: getHeaders() });
+        if (res.ok) {
+          notify('Node disconnected', 'success');
+          loadNodes();
+        }
+      } catch (err) {
+        notify(err.message, 'error');
+      }
+    }
+
+    async function loadAuditLogs() {
+      try {
+        const res = await fetch(API_BASE + '/admin/audit-logs', { headers: getHeaders() });
+        if (!res.ok) return;
+        const logs = await res.json();
+        const tbody = document.getElementById('audit-tbody');
+        if (!logs || logs.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 24px; color: var(--text-muted);">No security events recorded.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = logs.map(l => `
+          <tr>
+            <td style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);">${new Date(l.created_at).toLocaleString()}</td>
+            <td style="font-weight: 700; color: #FFF;">${escapeHtml(l.username || 'System')}</td>
+            <td><span class="feature-badge badge-violet">${escapeHtml(l.action)}</span></td>
+            <td style="font-family: var(--font-mono); font-size: 11px; color: #86EFAC;">${escapeHtml(l.ip_address || '127.0.0.1')}</td>
+            <td style="font-family: var(--font-mono); font-size: 11px; color: var(--text-secondary);">${escapeHtml(l.details || '')}</td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        console.error('Failed to load audit logs:', err);
+      }
+    }
+
+    async function loadSSLStatus() {
+      try {
+        const res = await fetch(API_BASE + '/admin/ssl/status', { headers: getHeaders() });
+        if (!res.ok) return;
+        const data = await res.json();
+        const badge = document.getElementById('ssl-status-badge');
+        if (data.active) {
+          badge.className = 'feature-badge badge-online';
+          badge.innerText = 'HTTPS SSL ACTIVE';
+        } else {
+          badge.className = 'feature-badge badge-amber';
+          badge.innerText = 'HTTP / SELF-SIGNED (No Public Cert)';
+        }
+      } catch (err) {}
+    }
+
+    async function triggerIssueSSL() {
+      const domain = document.getElementById('ssl-domain-input').value.trim();
+      const email = document.getElementById('ssl-email-input').value.trim();
+      if (!domain) return notify('Please enter a panel domain for SSL issuance', 'error');
+
+      const btn = document.getElementById('btn-issue-ssl');
+      btn.disabled = true;
+      btn.innerText = 'Running Certbot Automation...';
+
+      try {
+        const res = await fetch(API_BASE + '/admin/ssl/issue', {
+          method: 'POST',
+          headers: getHeaders(),
+          body: JSON.stringify({ domain, email })
+        });
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.error || 'SSL issuance failed');
+        notify('SSL Certificate issued & deployed successfully!', 'success');
+        loadSSLStatus();
+      } catch (err) {
+        notify(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Issue & Enable SSL';
+      }
+    }
+
+    async function loadAlertSettings() {
+      try {
+        const res = await fetch(API_BASE + '/admin/alerts', { headers: getHeaders() });
+        if (!res.ok) return;
+        const d = await res.json();
+        if (d.discord_webhook) document.getElementById('alert-discord-webhook').value = d.discord_webhook;
+        if (d.telegram_bot_token) document.getElementById('alert-telegram-token').value = d.telegram_bot_token;
+        if (d.telegram_chat_id) document.getElementById('alert-telegram-chat').value = d.telegram_chat_id;
+      } catch (err) {}
+    }
+
+    async function saveAlertSettings() {
+      const discord_webhook = document.getElementById('alert-discord-webhook').value.trim();
+      const telegram_bot_token = document.getElementById('alert-telegram-token').value.trim();
+      const telegram_chat_id = document.getElementById('alert-telegram-chat').value.trim();
+
+      try {
+        const res = await fetch(API_BASE + '/admin/alerts', {
+          method: 'PUT',
+          headers: getHeaders(),
+          body: JSON.stringify({ discord_webhook, telegram_bot_token, telegram_chat_id })
+        });
+        if (res.ok) {
+          notify('Incident alert webhooks saved successfully!', 'success');
+        }
+      } catch (err) {
+        notify(err.message, 'error');
+      }
+    }
+
+    async function testAlertNotification() {
+      try {
+        notify('Triggering test incident alert...', 'info');
+        const res = await fetch(API_BASE + '/admin/alerts/test', { method: 'POST', headers: getHeaders() });
+        const d = await res.json();
+        if (res.ok) notify('Test alert dispatched to configured webhooks!', 'success');
+        else notify(d.error || 'Failed to dispatch test alert', 'error');
+      } catch (err) {
+        notify(err.message, 'error');
+      }
     }
 
     function openCreateUserModal() { document.getElementById('modal-create-user').classList.add('open'); }

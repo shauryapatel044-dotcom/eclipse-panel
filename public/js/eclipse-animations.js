@@ -43,11 +43,14 @@
     requestAnimationFrame(update);
   }
 
-  // 2. 3D TILT EFFECT FOR CARDS
-  function init3DTilt(selector = '.metric-card, .content-section, .console-wrapper') {
+  // 2. 3D TILT EFFECT FOR CARDS (Excluded on console/servers to keep terminal rock-solid)
+  function init3DTilt(selector = '.metric-card:not(.no-tilt)') {
     const cards = document.querySelectorAll(selector);
 
     cards.forEach(card => {
+      // Never apply tilt to console wrapper or inside servers/app cockpit
+      if (card.closest('.console-wrapper') || card.classList.contains('console-wrapper')) return;
+
       // Add perspective parent
       card.style.transformStyle = 'preserve-3d';
       card.style.transition = 'transform 0.15s ease-out, box-shadow 0.25s ease';
@@ -59,11 +62,11 @@
         const centerX = rect.width / 2;
         const centerY = rect.height / 2;
 
-        const rotateX = ((y - centerY) / centerY) * -7; // Max 7 deg
-        const rotateY = ((x - centerX) / centerX) * 7;
+        const rotateX = ((y - centerY) / centerY) * -6;
+        const rotateY = ((x - centerX) / centerX) * 6;
 
-        card.style.transform = `perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) translateY(-4px)`;
-        card.style.boxShadow = `0 18px 45px rgba(0, 0, 0, 0.7), 0 0 35px rgba(239, 68, 68, 0.22)`;
+        card.style.transform = `perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) translateY(-3px)`;
+        card.style.boxShadow = `0 16px 40px rgba(0, 0, 0, 0.7), 0 0 30px rgba(168, 85, 247, 0.2)`;
       });
 
       card.addEventListener('mouseleave', () => {

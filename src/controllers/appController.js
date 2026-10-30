@@ -93,6 +93,10 @@ export class AppController {
   }
 
   static async createApp(req, res) {
+    // Role check: Only administrators can create new servers
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Permission denied: Only administrators can create or deploy new servers.' });
+    }
     try {
       const { 
         name, 
@@ -270,6 +274,19 @@ if __name__ == '__main__':
 
       if (req.user.role !== 'admin' && app.user_id !== req.user.id) {
         return res.status(403).json({ error: 'Forbidden' });
+      }
+
+      // Role check: Regular users cannot modify hardware specs (RAM, CPU, Disk, Port, IP)
+      if (req.user.role !== 'admin') {
+        if (
+          (memory_limit !== undefined && parseInt(memory_limit, 10) !== app.memory_limit) ||
+          (cpu_limit !== undefined && parseInt(cpu_limit, 10) !== app.cpu_limit) ||
+          (disk_limit !== undefined && parseInt(disk_limit, 10) !== app.disk_limit) ||
+          (port !== undefined && parseInt(port, 10) !== app.port) ||
+          (primary_ip !== undefined && primary_ip.trim() !== app.primary_ip)
+        ) {
+          return res.status(403).json({ error: 'Permission denied: Hardware specifications can only be modified by an Administrator.' });
+        }
       }
 
       const newName = name !== undefined ? name.trim() : app.name;
