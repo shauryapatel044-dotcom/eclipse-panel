@@ -1,221 +1,272 @@
 <!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Eclipse Panel - Operator Sign In</title>
+  <!-- Material Symbols & Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 
-<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_blank" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=JetBrains+Mono:wght@100..900&display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"on-tertiary-container":"#00311f","on-secondary-container":"#b3b5be","on-error":"#690005","outline-variant":"#5b403e","secondary":"#c4c6d0","error-container":"#93000a","primary-fixed-dim":"#ffb3ad","on-surface":"#e3e2e6","surface-container-highest":"#343538","on-secondary-fixed":"#191c23","surface":"#121316","surface-container-high":"#292a2d","on-error-container":"#ffdad6","on-background":"#e3e2e6","surface-container-low":"#1b1b1f","on-primary":"#68000a","on-primary-fixed-variant":"#930013","inverse-primary":"#b91a24","primary":"#ffb3ad","primary-container":"#ff5451","tertiary":"#4edea3","inverse-surface":"#e3e2e6","error":"#ffb4ab","tertiary-fixed-dim":"#4edea3","surface-bright":"#38393c","secondary-fixed":"#e0e2ec","on-primary-container":"#5c0008","surface-variant":"#343538","on-primary-fixed":"#410004","surface-tint":"#ffb3ad","on-secondary-fixed-variant":"#44474f","inverse-on-surface":"#303034","on-tertiary-fixed-variant":"#005236","primary-fixed":"#ffdad7","surface-container":"#1f1f23","on-tertiary-fixed":"#002113","on-tertiary":"#003824","secondary-fixed-dim":"#c4c6d0","tertiary-fixed":"#6ffbbe","surface-container-lowest":"#0d0e11","on-surface-variant":"#e4beba","surface-dim":"#121316","background":"#121316","tertiary-container":"#00a572","on-secondary":"#2d3038","outline":"#ab8986","secondary-container":"#44474f"},borderRadius:{DEFAULT:"0.125rem",lg:"0.25rem",xl:"0.5rem",full:"0.75rem"},spacing:{"space-md":"1rem","space-lg":"1.5rem",gutter:"1rem",margin:"1rem","gutter-desktop":"1.5rem","space-xl":"2.5rem","space-sm":"0.5rem","margin-desktop":"2rem","space-xs":"0.25rem"},fontFamily:{"body-lg":["Geist"],"body-sm":["Geist"],"label-sm":["JetBrains Mono"],"headline-sm":["Geist"],"code-md":["JetBrains Mono"],"headline-lg":["Geist"],"label-md":["JetBrains Mono"],"code-lg":["JetBrains Mono"],"code-sm":["JetBrains Mono"],"headline-md":["Geist"],"headline-xl-mobile":["Geist"],"headline-xl":["Geist"],"body-md":["Geist"]},fontSize:{"body-lg":["16px",{lineHeight:"24px",fontWeight:"400"}],"body-sm":["12px",{lineHeight:"16px",fontWeight:"400"}],"label-sm":["10px",{lineHeight:"14px",fontWeight:"600"}],"headline-sm":["16px",{lineHeight:"24px",fontWeight:"600"}],"code-md":["12px",{lineHeight:"18px",fontWeight:"400"}],"headline-lg":["24px",{lineHeight:"32px",fontWeight:"600"}],"label-md":["12px",{lineHeight:"16px",fontWeight:"600"}],"code-lg":["14px",{lineHeight:"22px",fontWeight:"500"}],"code-sm":["11px",{lineHeight:"16px",fontWeight:"400"}],"headline-md":["20px",{lineHeight:"28px",fontWeight:"600"}],"headline-xl-mobile":["28px",{lineHeight:"36px",fontWeight:"700"}],"headline-xl":["36px",{lineHeight:"44px",fontWeight:"700"}],"body-md":["14px",{lineHeight:"20px",fontWeight:"400"}]}}}};</script></head><body class="bg-surface font-body-md text-on-surface antialiased min-h-screen flex items-center justify-center p-gutter"><main class="w-full max-w-lg bg-surface"><div class="flex flex-col w-full items-center justify-center relative">
-<div class="absolute -top-32 left-1/2 -translate-x-1/2 w-96 h-96 bg-primary-container/20 rounded-full blur-3xl pointer-events-none -z-10"></div>
-<div class="absolute -bottom-24 left-1/3 w-80 h-80 bg-primary/10 rounded-full blur-3xl pointer-events-none -z-10"></div>
-<div class="w-full bg-surface-container-lowest/80 backdrop-blur-xl rounded-xl shadow-2xl overflow-hidden p-space-lg flex flex-col gap-space-md">
-<div class="flex flex-col items-center text-center gap-space-xs">
-<div class="relative flex items-center justify-center p-space-xs rounded-xl bg-surface-container-high/60 shadow-md shadow-primary/10">
-<img alt="ECLIPSE PANEL Flame Logo" class="w-14 h-14 object-contain drop-shadow-[0_0_12px_rgba(255,84,81,0.6)]" src="https://lh3.googleusercontent.com/aida/AEtjO1VTSD-if4Nd_-jY1AC-IOS4OyM3Tg7UajMgvUzoM06psv3YvHJs0vDtrSEYXjbFKVZTfoXD8gBxe-GaxzrM38XicSgR1MQAFIAhUkaPBTKueT3F87kpA-V4e5j_H7at4aZvRS8v3mZskEKrei73BjjUl9TgL88n55aonVK0j_H8fmGO92shqz_QoDSo6P7g4dOgb6-W0Uync_8pFueYbIe8V0wjfPFs92GObVG1EZQ3"/>
-</div>
-<div class="flex items-center gap-space-xs mt-space-xs">
-<h1 class="font-headline-lg text-headline-lg tracking-wider text-on-surface uppercase">ECLIPSE PANEL</h1>
-<span class="bg-primary-container/20 text-primary font-label-sm text-label-sm px-1.5 py-0.5 rounded-sm uppercase tracking-widest">v2.4</span>
-</div>
-<p class="font-body-sm text-body-sm text-secondary">High-Performance Node.js & Python VPS Runtime Manager</p>
-</div>
-<div class="grid grid-cols-2 p-1 bg-surface-container-high rounded-lg gap-1">
-<button class="py-2 px-space-md rounded-md font-headline-sm text-headline-sm transition-all text-on-surface bg-surface-container-lowest shadow-sm flex items-center justify-center gap-1.5 cursor-pointer" id="tab-login" onclick="switchAuthTab('login')">
-<span class="material-symbols-outlined text-sm text-primary">login</span>
-        Sign In
-      </button>
-<button class="py-2 px-space-md rounded-md font-headline-sm text-headline-sm transition-all text-secondary hover:text-on-surface flex items-center justify-center gap-1.5 cursor-pointer" id="tab-register" onclick="switchAuthTab('register')">
-<span class="material-symbols-outlined text-sm">person_add</span>
-        Register Operator
-      </button>
-</div>
-<div class="bg-surface-container-low p-space-sm rounded-lg flex items-center gap-space-sm shadow-sm transition-all" id="superadmin-badge">
-<div class="flex items-center justify-center w-7 h-7 rounded-sm bg-primary/20 text-primary shrink-0">
-<span class="material-symbols-outlined text-sm">shield</span>
-</div>
-<p class="font-code-sm text-code-sm text-on-surface-variant flex-1 leading-snug">
-        First registered operator automatically ascends to <span class="text-primary font-semibold">SuperAdmin</span> role.
-      </p>
-</div>
-<form class="flex flex-col gap-space-sm" id="auth-form" onsubmit="event.preventDefault(); handleAuthSubmit();">
-<div class="flex flex-col gap-1">
-<label class="font-label-md text-label-md text-secondary uppercase tracking-wider flex items-center gap-1" for="operator-id">
-<span class="material-symbols-outlined text-xs">terminal</span>
-          Operator Identity
-        </label>
-<div class="relative flex items-center">
-<span class="material-symbols-outlined absolute left-3 text-secondary text-base pointer-events-none">alternate_email</span>
-<input class="w-full bg-surface-container-low text-on-surface font-code-md text-code-md pl-10 pr-4 py-2.5 rounded-lg focus:outline-none focus:bg-surface-container placeholder:text-secondary-container" id="operator-id" placeholder="admin@ECLIPSE PANEL.internal" required="" type="text"/>
-</div>
-</div>
-<div class="flex flex-col gap-1">
-<div class="flex justify-between items-center">
-<label class="font-label-md text-label-md text-secondary uppercase tracking-wider flex items-center gap-1" for="password">
-<span class="material-symbols-outlined text-xs">key</span>
-            Master Key
+  <!-- Tailwind Configuration MUST be loaded BEFORE cdn.tailwindcss.com -->
+  <script>
+    window.tailwind = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface": "#0A0B0E",
+            "surface-container-lowest": "#0D0E11",
+            "surface-container-low": "#12141A",
+            "surface-container": "#181B22",
+            "surface-container-high": "#222631",
+            "surface-container-highest": "#2D3240",
+            "on-surface": "#E3E2E6",
+            "on-surface-variant": "#E4BEBA",
+            "outline-variant": "#3D2528",
+            "secondary": "#94A3B8",
+            "primary": "#F87171",
+            "primary-container": "#DC2626",
+            "tertiary": "#10B981",
+          },
+          fontFamily: {
+            "body": ["Geist", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "sans-serif"],
+            "mono": ["JetBrains Mono", "monospace"]
+          }
+        }
+      }
+    };
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Comprehensive CSS Fallback & Styling -->
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: #0A0B0E !important;
+      color: #E3E2E6 !important;
+      font-family: 'Geist', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .crimson-glow {
+      box-shadow: 0 0 35px rgba(220, 38, 38, 0.25);
+    }
+    .crimson-glow:hover {
+      box-shadow: 0 0 45px rgba(220, 38, 38, 0.4);
+    }
+    .material-symbols-outlined {
+      font-family: 'Material Symbols Outlined', sans-serif;
+      font-weight: normal;
+      font-style: normal;
+      display: inline-block;
+      line-height: 1;
+      text-transform: none;
+      letter-spacing: normal;
+      word-wrap: normal;
+      white-space: nowrap;
+      direction: ltr;
+    }
+  </style>
+</head>
+<body class="bg-[#0A0B0E] text-[#E3E2E6] font-body antialiased min-h-screen flex items-center justify-center p-4">
+
+  <!-- Ambient Glow Orbs -->
+  <div class="fixed inset-0 overflow-hidden pointer-events-none -z-10">
+    <div class="absolute -top-32 left-1/2 -translate-x-1/2 w-96 h-96 bg-red-600/15 rounded-full blur-3xl"></div>
+    <div class="absolute -bottom-24 left-1/3 w-80 h-80 bg-red-950/20 rounded-full blur-3xl"></div>
+  </div>
+
+  <main class="w-full max-w-md">
+    <div class="w-full bg-[#12141A]/95 border border-[#2D1519] backdrop-blur-xl rounded-2xl shadow-2xl p-6 sm:p-8 flex flex-col gap-5 crimson-glow">
+
+      <!-- Header & Logo -->
+      <div class="flex flex-col items-center text-center gap-2">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-red-600 to-red-950 flex items-center justify-center shadow-lg shadow-red-900/40 border border-red-500/30">
+          <svg class="w-8 h-8 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.7)]" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+          </svg>
+        </div>
+        <div class="flex items-center gap-2 mt-1">
+          <h1 class="text-2xl font-bold tracking-wider text-white uppercase font-body">ECLIPSE PANEL</h1>
+          <span class="bg-red-950 border border-red-800 text-red-400 font-mono text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider">v1.0</span>
+        </div>
+        <p class="text-xs text-gray-400">High-Performance Node.js & Python VPS Runtime Manager</p>
+      </div>
+
+      <!-- Tab Switcher (Sign In / Register) -->
+      <div class="grid grid-cols-2 p-1 bg-[#0D0E11] rounded-xl border border-zinc-800 gap-1 font-mono text-xs">
+        <button class="py-2.5 px-3 rounded-lg font-semibold transition-all text-white bg-[#1E222D] shadow-sm flex items-center justify-center gap-2 cursor-pointer" id="tab-login" onclick="switchAuthTab('login')">
+          <i class="fa-solid fa-right-to-bracket text-red-400"></i>
+          <span>Sign In</span>
+        </button>
+        <button class="py-2.5 px-3 rounded-lg font-semibold transition-all text-gray-400 hover:text-white flex items-center justify-center gap-2 cursor-pointer" id="tab-register" onclick="switchAuthTab('register')">
+          <i class="fa-solid fa-user-plus text-xs"></i>
+          <span>Register</span>
+        </button>
+      </div>
+
+      <!-- SuperAdmin Notice Badge -->
+      <div class="bg-[#181B22] border border-red-900/30 p-3 rounded-xl flex items-center gap-3" id="superadmin-badge">
+        <div class="flex items-center justify-center w-7 h-7 rounded-lg bg-red-600/20 text-red-400 shrink-0">
+          <i class="fa-solid fa-shield-halved text-xs"></i>
+        </div>
+        <p class="font-mono text-[11px] text-gray-300 leading-snug">
+          First operator to register automatically ascends to <span class="text-red-400 font-bold">SuperAdmin</span> role.
+        </p>
+      </div>
+
+      <!-- Form -->
+      <form class="flex flex-col gap-4" id="auth-form" onsubmit="event.preventDefault(); handleAuthSubmit();">
+        <div class="flex flex-col gap-1.5">
+          <label class="font-mono text-xs text-gray-400 uppercase tracking-wider flex items-center gap-1.5" for="operator-id">
+            <i class="fa-solid fa-terminal text-[10px] text-red-400"></i>
+            <span>Operator Identity</span>
           </label>
-<a class="font-code-sm text-code-sm text-primary hover:text-primary-fixed transition-colors" href="#" id="forgot-key">Forgot key?</a>
-</div>
-<div class="relative flex items-center">
-<span class="material-symbols-outlined absolute left-3 text-secondary text-base pointer-events-none">lock</span>
-<input class="w-full bg-surface-container-low text-on-surface font-code-md text-code-md pl-10 pr-10 py-2.5 rounded-lg focus:outline-none focus:bg-surface-container placeholder:text-secondary-container" id="password" placeholder="••••••••••••••••" required="" type="password"/>
-<button class="absolute right-3 text-secondary hover:text-on-surface flex items-center justify-center p-0.5 cursor-pointer" onclick="togglePassVisibility('password', this)" type="button">
-<span class="material-symbols-outlined text-sm">visibility</span>
-</button>
-</div>
-</div>
-<div class="hidden flex-col gap-space-sm" id="register-fields">
-<div class="flex flex-col gap-1">
-<label class="font-label-md text-label-md text-secondary uppercase tracking-wider flex items-center gap-1" for="confirm-password">
-<span class="material-symbols-outlined text-xs">verified_user</span>
-            Confirm Master Key
-          </label>
-<div class="relative flex items-center">
-<span class="material-symbols-outlined absolute left-3 text-secondary text-base pointer-events-none">lock_reset</span>
-<input class="w-full bg-surface-container-low text-on-surface font-code-md text-code-md pl-10 pr-10 py-2.5 rounded-lg focus:outline-none focus:bg-surface-container placeholder:text-secondary-container" id="confirm-password" placeholder="••••••••••••••••" type="password"/>
-<button class="absolute right-3 text-secondary hover:text-on-surface flex items-center justify-center p-0.5 cursor-pointer" onclick="togglePassVisibility('confirm-password', this)" type="button">
-<span class="material-symbols-outlined text-sm">visibility</span>
-</button>
-</div>
-</div>
-<div class="flex flex-col gap-1">
-<label class="font-label-md text-label-md text-secondary uppercase tracking-wider flex items-center gap-1" for="cluster-token">
-<span class="material-symbols-outlined text-xs">vpn_key</span>
-            Master VPS Passcode
-          </label>
-<div class="relative flex items-center">
-<span class="material-symbols-outlined absolute left-3 text-secondary text-base pointer-events-none">encrypted</span>
-<input class="w-full bg-surface-container-low text-on-surface font-code-md text-code-md pl-10 pr-4 py-2.5 rounded-lg focus:outline-none focus:bg-surface-container placeholder:text-secondary-container" id="cluster-token" placeholder="OPTIONAL CLUSTER SEED" type="password"/>
-</div>
-</div>
-</div>
-<div class="flex items-center justify-between pt-1">
-<label class="flex items-center gap-2 cursor-pointer select-none">
-<input checked="" class="w-4 h-4 rounded bg-surface-container-low accent-primary-container cursor-pointer" id="remember-terminal" type="checkbox"/>
-<span class="font-body-sm text-body-sm text-secondary">Remember terminal session (30d)</span>
-</label>
-</div>
-<button class="mt-space-xs w-full py-3 px-space-md rounded-lg bg-primary-container text-on-primary-container font-headline-sm text-headline-sm flex items-center justify-center gap-2 shadow-lg shadow-primary-container/30 hover:shadow-primary-container/50 hover:bg-primary transition-all active:scale-[0.99] cursor-pointer" id="submit-cta" type="submit">
-<span id="btn-text">Authenticate & Access Console</span>
-<span class="material-symbols-outlined text-base">arrow_forward</span>
-</button>
-</form>
-<div class="flex flex-col gap-2 pt-space-xs">
-<div class="bg-surface-container-low p-space-xs px-space-sm rounded-md flex items-center justify-between font-code-sm text-code-sm text-secondary">
-<div class="flex items-center gap-1.5 truncate">
-<span class="material-symbols-outlined text-xs text-tertiary">storage</span>
-<span class="truncate">JWT auth storage • API: <code class="text-on-surface font-code-sm">YOUR_VPS_IP:4000/api</code></span>
-</div>
-<span class="material-symbols-outlined text-xs text-primary shrink-0">lan</span>
-</div>
-<div class="flex items-center justify-between font-code-sm text-code-sm text-secondary px-1">
-<div class="flex items-center gap-2">
-<span class="relative flex h-2 w-2">
-<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-tertiary opacity-75"></span>
-<span class="relative inline-flex rounded-full h-2 w-2 bg-tertiary"></span>
-</span>
-<span>Linux VPS Node v2.4</span>
-</div>
-<div class="flex items-center gap-3">
-<span class="text-on-surface-variant">WebSocket Ready</span>
-<span class="text-tertiary font-semibold">14ms</span>
-</div>
-</div>
-</div>
-</div>
-<script>
+          <div class="relative flex items-center">
+            <i class="fa-solid fa-at absolute left-3.5 text-gray-500 text-xs"></i>
+            <input class="w-full bg-[#0D0E11] text-white font-mono text-sm pl-10 pr-4 py-2.5 rounded-xl border border-zinc-800 focus:outline-none focus:border-red-500 placeholder:text-zinc-600 transition-colors" id="operator-id" placeholder="admin" required="" type="text" value="admin"/>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <div class="flex justify-between items-center">
+            <label class="font-mono text-xs text-gray-400 uppercase tracking-wider flex items-center gap-1.5" for="password">
+              <i class="fa-solid fa-key text-[10px] text-red-400"></i>
+              <span>Master Key / Password</span>
+            </label>
+          </div>
+          <div class="relative flex items-center">
+            <i class="fa-solid fa-lock absolute left-3.5 text-gray-500 text-xs"></i>
+            <input class="w-full bg-[#0D0E11] text-white font-mono text-sm pl-10 pr-10 py-2.5 rounded-xl border border-zinc-800 focus:outline-none focus:border-red-500 placeholder:text-zinc-600 transition-colors" id="password" placeholder="admin" required="" type="password" value="admin"/>
+            <button class="absolute right-3.5 text-gray-500 hover:text-white transition-colors" onclick="togglePassVisibility('password', this)" type="button">
+              <i class="fa-solid fa-eye text-xs"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Register Extra Fields (Confirm Password & Email) -->
+        <div class="hidden flex-col gap-4" id="register-fields">
+          <div class="flex flex-col gap-1.5">
+            <label class="font-mono text-xs text-gray-400 uppercase tracking-wider flex items-center gap-1.5" for="confirm-password">
+              <i class="fa-solid fa-check-double text-[10px] text-red-400"></i>
+              <span>Confirm Password</span>
+            </label>
+            <div class="relative flex items-center">
+              <i class="fa-solid fa-lock absolute left-3.5 text-gray-500 text-xs"></i>
+              <input class="w-full bg-[#0D0E11] text-white font-mono text-sm pl-10 pr-10 py-2.5 rounded-xl border border-zinc-800 focus:outline-none focus:border-red-500 placeholder:text-zinc-600 transition-colors" id="confirm-password" placeholder="Confirm your password" type="password"/>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button class="w-full mt-2 py-3 px-4 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-lg shadow-red-900/40 transition-all active:scale-[0.98] cursor-pointer" id="submit-cta" type="submit">
+          <span id="btn-text">Authenticate & Access Console</span>
+          <i class="fa-solid fa-arrow-right text-xs"></i>
+        </button>
+      </form>
+
+      <!-- Bottom Info -->
+      <div class="flex flex-col gap-2 pt-2 border-t border-zinc-800/80 font-mono text-xs text-gray-500">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>Daemon Online (Port 8090)</span>
+          </div>
+          <span class="text-gray-400">MariaDB :3306</span>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    const API_BASE = window.location.origin + '/api';
+
     function switchAuthTab(mode) {
       const tabLogin = document.getElementById('tab-login');
       const tabRegister = document.getElementById('tab-register');
       const registerFields = document.getElementById('register-fields');
       const btnText = document.getElementById('btn-text');
-      const forgotKey = document.getElementById('forgot-key');
       const confirmInput = document.getElementById('confirm-password');
 
       if (mode === 'register') {
-        tabRegister.className = "py-2 px-space-md rounded-md font-headline-sm text-headline-sm transition-all text-on-surface bg-surface-container-lowest shadow-sm flex items-center justify-center gap-1.5 cursor-pointer";
-        tabLogin.className = "py-2 px-space-md rounded-md font-headline-sm text-headline-sm transition-all text-secondary hover:text-on-surface flex items-center justify-center gap-1.5 cursor-pointer";
+        tabRegister.className = "py-2.5 px-3 rounded-lg font-semibold transition-all text-white bg-[#1E222D] shadow-sm flex items-center justify-center gap-2 cursor-pointer";
+        tabLogin.className = "py-2.5 px-3 rounded-lg font-semibold transition-all text-gray-400 hover:text-white flex items-center justify-center gap-2 cursor-pointer";
         registerFields.classList.remove('hidden');
         registerFields.classList.add('flex');
         btnText.innerText = "Register & Launch Console";
-        forgotKey.classList.add('invisible');
         confirmInput.setAttribute('required', 'true');
+        document.getElementById('operator-id').value = '';
+        document.getElementById('password').value = '';
       } else {
-        tabLogin.className = "py-2 px-space-md rounded-md font-headline-sm text-headline-sm transition-all text-on-surface bg-surface-container-lowest shadow-sm flex items-center justify-center gap-1.5 cursor-pointer";
-        tabRegister.className = "py-2 px-space-md rounded-md font-headline-sm text-headline-sm transition-all text-secondary hover:text-on-surface flex items-center justify-center gap-1.5 cursor-pointer";
+        tabLogin.className = "py-2.5 px-3 rounded-lg font-semibold transition-all text-white bg-[#1E222D] shadow-sm flex items-center justify-center gap-2 cursor-pointer";
+        tabRegister.className = "py-2.5 px-3 rounded-lg font-semibold transition-all text-gray-400 hover:text-white flex items-center justify-center gap-2 cursor-pointer";
         registerFields.classList.add('hidden');
         registerFields.classList.remove('flex');
         btnText.innerText = "Authenticate & Access Console";
-        forgotKey.classList.remove('invisible');
         confirmInput.removeAttribute('required');
       }
     }
 
     function togglePassVisibility(inputId, triggerBtn) {
       const field = document.getElementById(inputId);
-      const icon = triggerBtn.querySelector('.material-symbols-outlined');
+      const icon = triggerBtn.querySelector('i');
       if (field.type === 'password') {
         field.type = 'text';
-        icon.innerText = 'visibility_off';
+        icon.className = 'fa-solid fa-eye-slash text-xs';
       } else {
         field.type = 'password';
-        icon.innerText = 'visibility';
+        icon.className = 'fa-solid fa-eye text-xs';
       }
     }
 
-    
-  async function handleAuthSubmit() {
-    const isRegister = !document.getElementById('register-fields').classList.contains('hidden');
-    const operatorId = document.getElementById('operator-id').value.trim();
-    const password = document.getElementById('password').value;
-    const confirmPassword = document.getElementById('confirm-password')?.value;
+    async function handleAuthSubmit() {
+      const isRegister = !document.getElementById('register-fields').classList.contains('hidden');
+      const operatorId = document.getElementById('operator-id').value.trim();
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirm-password')?.value;
 
-    if (isRegister && password !== confirmPassword) {
-      alert('Master keys do not match.');
-      return;
-    }
-
-    const btn = document.getElementById('submit-cta');
-    const origHtml = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-base">sync</span> <span>Connecting to Port 8090...</span>';
-
-    try {
-      const endpoint = isRegister ? '/api/auth/register' : '/api/auth/login';
-      const payload = isRegister 
-        ? { username: operatorId.split('@')[0], email: operatorId.includes('@') ? operatorId : operatorId + '@panel.local', password }
-        : { login: operatorId, password };
-
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Authentication rejected');
-
-      localStorage.setItem('eclipse_token', data.token);
-      localStorage.setItem('crimson_user', JSON.stringify(data.user));
-
-      btn.innerHTML = '<span class="material-symbols-outlined text-base text-tertiary">check_circle</span> <span>Authorized!</span>';
-      setTimeout(() => { window.location.href = '/'; }, 500);
-    } catch (err) {
-      alert(err.message);
-      btn.innerHTML = origHtml;
-      btn.disabled = false;
-    }
-  }
-  function __mock_disabled() {
+      if (isRegister && password !== confirmPassword) {
+        alert('Passwords do not match.');
+        return;
+      }
 
       const btn = document.getElementById('submit-cta');
       const origHtml = btn.innerHTML;
       btn.disabled = true;
-      btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-base">sync</span> <span>Connecting Terminal...</span>';
-      
-      setTimeout(() => {
-        btn.innerHTML = '<span class="material-symbols-outlined text-base">check_circle</span> <span>Session Authorized</span>';
-        setTimeout(() => {
-          btn.innerHTML = origHtml;
-          btn.disabled = false;
-        }, 1200);
-      }, 900);
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-sm"></i> <span>Authenticating...</span>';
+
+      try {
+        const endpoint = isRegister ? '/api/auth/register' : '/api/auth/login';
+        const payload = isRegister 
+          ? { username: operatorId.split('@')[0], email: operatorId.includes('@') ? operatorId : operatorId + '@eclipsepanel.local', password }
+          : { login: operatorId, password };
+
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Authentication rejected');
+
+        localStorage.setItem('eclipse_token', data.token);
+        localStorage.setItem('eclipse_user', JSON.stringify(data.user));
+
+        btn.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-400"></i> <span>Authorized!</span>';
+        setTimeout(() => { window.location.href = '/'; }, 500);
+      } catch (err) {
+        alert(err.message);
+        btn.innerHTML = origHtml;
+        btn.disabled = false;
+      }
     }
   </script>
-</div></main></body></html>
+</body>
+</html>
