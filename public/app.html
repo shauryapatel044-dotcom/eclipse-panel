@@ -7,8 +7,9 @@
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/eclipse.css"/>
+  <script src="/js/eclipse-animations.js"></script>
 
   <style>
     .tab-nav {
@@ -505,6 +506,14 @@
       return h;
     }
 
+    function notify(msg, type = 'info') {
+      if (window.EclipseAnimations && window.EclipseAnimations.showToast) {
+        window.EclipseAnimations.showToast(msg, type);
+      } else {
+        alert(msg);
+      }
+    }
+
     function logout() {
       localStorage.removeItem('eclipse_token');
       localStorage.removeItem('eclipse_user');
@@ -619,17 +628,18 @@
           headers: getHeaders()
         });
         const d = await res.json();
-        if (!res.ok) alert(d.error || 'Action failed');
+        if (!res.ok) notify(d.error || 'Action failed', 'error');
         switchApp(currentAppId);
-      } catch (e) { alert(e.message); }
+      } catch (e) { notify(e.message, 'error'); }
     }
 
     async function deleteCurrentApp() {
       if (!currentAppId || !confirm('Permanently delete this server? All files and configurations will be removed.')) return;
       try {
         await fetch(`${API_BASE}/apps/${currentAppId}`, { method: 'DELETE', headers: getHeaders() });
-        window.location.href = '/';
-      } catch (e) { alert(e.message); }
+        notify('Server deleted.', 'success');
+        setTimeout(() => { window.location.href = '/'; }, 300);
+      } catch (e) { notify(e.message, 'error'); }
     }
 
     // Submit Specs Changes
@@ -656,10 +666,10 @@
         if (!res.ok) throw new Error(d.error || 'Failed to update specs');
 
         closeSpecsModal();
-        alert('Server specifications successfully updated!');
+        notify('Server specifications successfully updated!', 'success');
         switchApp(currentAppId);
       } catch (err) {
-        alert(err.message);
+        notify(err.message, 'error');
       } finally {
         btn.disabled = false;
         btn.innerText = 'Save Specifications';
@@ -743,7 +753,7 @@
 
     function copyLogs() {
       const text = document.getElementById('terminal-output').innerText;
-      navigator.clipboard.writeText(text).then(() => alert('Console log stream copied to clipboard!'));
+      navigator.clipboard.writeText(text).then(() => notify('Console log stream copied to clipboard!', 'success'));
     }
 
     async function loadFiles(appId) {
@@ -776,7 +786,7 @@
     }
 
     async function saveActiveFile() {
-      if (!currentAppId || !activeFile) return alert('Select a file to save');
+      if (!currentAppId || !activeFile) return notify('Select a file to save', 'error');
       const content = document.getElementById('file-editor').value;
       try {
         const res = await fetch(`${API_BASE}/files/write`, {
@@ -784,8 +794,8 @@
           headers: getHeaders(),
           body: JSON.stringify({ appId: currentAppId, path: activeFile, content })
         });
-        if (res.ok) alert('File saved successfully!');
-      } catch (e) { alert(e.message); }
+        if (res.ok) notify('File saved successfully!', 'success');
+      } catch (e) { notify(e.message, 'error'); }
     }
 
     async function saveEnvConfig() {
@@ -795,7 +805,7 @@
       try {
         if (raw) envObj = JSON.parse(raw);
       } catch (e) {
-        alert('Environment variables must be a valid JSON object');
+        notify('Environment variables must be a valid JSON object', 'error');
         return;
       }
 
@@ -805,8 +815,8 @@
           headers: getHeaders(),
           body: JSON.stringify({ env_vars: envObj })
         });
-        if (res.ok) alert('Environment configuration saved!');
-      } catch (e) { alert(e.message); }
+        if (res.ok) notify('Environment configuration saved!', 'success');
+      } catch (e) { notify(e.message, 'error'); }
     }
 
     async function submitCreateApp() {
@@ -825,8 +835,9 @@
         const d = await res.json();
         if (!res.ok) throw new Error(d.error || 'Failed to create server');
         closeCreateAppModal();
+        notify('Server created successfully!', 'success');
         loadAllApps();
-      } catch (e) { alert(e.message); }
+      } catch (e) { notify(e.message, 'error'); }
     }
 
     async function submitProfile() {
@@ -845,9 +856,9 @@
           localStorage.setItem('eclipse_user', JSON.stringify(d.user));
           renderSelf();
         }
-        alert('Profile saved!');
+        notify('Profile saved!', 'success');
         closeProfileModal();
-      } catch (e) { alert(e.message); }
+      } catch (e) { notify(e.message, 'error'); }
     }
 
     function renderSelf() {

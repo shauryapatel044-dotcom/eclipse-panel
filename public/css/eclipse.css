@@ -33,10 +33,25 @@
 
 html, body {
   background-color: var(--bg-base);
+  background-image: 
+    radial-gradient(rgba(239, 68, 68, 0.09) 1px, transparent 1px),
+    radial-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 32px 32px;
+  background-position: 0 0, 16px 16px;
   color: var(--text-main);
   font-family: var(--font-sans);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  position: relative;
+}
+
+.bold-gradient-title {
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #FFFFFF 30%, #EF4444 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 /* Scrollbars */
@@ -467,20 +482,36 @@ svg {
 }
 
 .metric-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: 16px;
-  padding: 20px;
+  background: linear-gradient(180deg, #13151E 0%, #0C0E14 100%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 18px;
+  padding: 22px;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
-  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.metric-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, rgba(239, 68, 68, 0.7) 50%, transparent 100%);
+  opacity: 0.6;
+  transition: opacity 0.3s;
+}
+
+.metric-card:hover::after {
+  opacity: 1;
 }
 
 .metric-card:hover {
-  transform: translateY(-2px);
-  border-color: var(--border-crimson);
-  box-shadow: 0 12px 35px rgba(239, 68, 68, 0.15);
+  transform: translateY(-4px) scale(1.008);
+  border-color: rgba(239, 68, 68, 0.55);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.7), 0 0 30px rgba(239, 68, 68, 0.28);
 }
 
 .metric-card-glow {

@@ -7,8 +7,9 @@
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/eclipse.css"/>
+  <script src="/js/eclipse-animations.js"></script>
 
   <style>
     .pulse-glow {
@@ -153,6 +154,11 @@
 
             <div class="progress-track">
               <div class="progress-fill crimson" id="cpu-progress-bar" style="width: 0%;"></div>
+            </div>
+
+            <!-- Real-time Sine Oscilloscope -->
+            <div style="margin: 8px 0 4px; overflow: hidden; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.2); background: rgba(0, 0, 0, 0.35);">
+              <canvas id="cpu-oscilloscope" style="width: 100%; height: 28px; display: block;"></canvas>
             </div>
 
             <div class="metric-footer-row">
@@ -490,6 +496,8 @@
       document.getElementById('modal-profile').classList.remove('open');
     }
 
+    let latestCpuPercent = 0;
+
     // Update UI with real host metrics
     function updateMetricsUI(data) {
       if (!data) return;
@@ -499,10 +507,17 @@
         const model = data.cpu.model || 'Host Processor';
         const cores = data.cpu.cores || 1;
         const percent = data.cpu.overallPercent !== undefined ? data.cpu.overallPercent : 0;
+        latestCpuPercent = percent;
 
         document.getElementById('cpu-model-name').innerText = model;
         document.getElementById('cpu-core-badge').innerText = cores + 'x Cores';
-        document.getElementById('cpu-percent').innerText = percent;
+        
+        if (window.EclipseAnimations && window.EclipseAnimations.animateCounter) {
+          window.EclipseAnimations.animateCounter(document.getElementById('cpu-percent'), percent, 600, 0);
+        } else {
+          document.getElementById('cpu-percent').innerText = percent;
+        }
+
         document.getElementById('cpu-progress-bar').style.width = Math.min(100, Math.max(0, percent)) + '%';
       }
 
@@ -513,13 +528,19 @@
 
       // 2. Memory / RAM
       if (data.memory) {
-        const usedGB = data.memory.usedGB || (data.memory.usedMB ? (data.memory.usedMB / 1024).toFixed(2) : '0.0');
-        const totalGB = data.memory.totalGB || (data.memory.totalMB ? (data.memory.totalMB / 1024).toFixed(2) : '0.0');
+        const usedGB = parseFloat(data.memory.usedGB || (data.memory.usedMB ? (data.memory.usedMB / 1024).toFixed(2) : '0.0'));
+        const totalGB = parseFloat(data.memory.totalGB || (data.memory.totalMB ? (data.memory.totalMB / 1024).toFixed(2) : '0.0'));
         const freeGB = data.memory.freeGB || (data.memory.freeMB ? (data.memory.freeMB / 1024).toFixed(2) : '0.0');
         const percent = data.memory.usagePercent !== undefined ? data.memory.usagePercent : 0;
 
-        document.getElementById('ram-used-gb').innerText = usedGB;
-        document.getElementById('ram-total-gb').innerText = totalGB;
+        if (window.EclipseAnimations && window.EclipseAnimations.animateCounter) {
+          window.EclipseAnimations.animateCounter(document.getElementById('ram-used-gb'), usedGB, 600, 2);
+          window.EclipseAnimations.animateCounter(document.getElementById('ram-total-gb'), totalGB, 600, 2);
+        } else {
+          document.getElementById('ram-used-gb').innerText = usedGB.toFixed(2);
+          document.getElementById('ram-total-gb').innerText = totalGB.toFixed(2);
+        }
+
         document.getElementById('ram-usage-pill').innerText = percent + '% Utilized';
         document.getElementById('ram-free-text').innerText = freeGB + ' GB Available';
         document.getElementById('ram-progress-bar').style.width = Math.min(100, Math.max(0, percent)) + '%';
@@ -531,13 +552,19 @@
 
       // 3. Storage / Disk
       if (data.disk) {
-        const usedGB = data.disk.usedGB || '0.0';
-        const totalGB = data.disk.totalGB || '0.0';
+        const usedGB = parseFloat(data.disk.usedGB || '0.0');
+        const totalGB = parseFloat(data.disk.totalGB || '0.0');
         const freeGB = data.disk.freeGB || '0.0';
         const percent = data.disk.usagePercent !== undefined ? data.disk.usagePercent : 0;
 
-        document.getElementById('disk-used-gb').innerText = usedGB;
-        document.getElementById('disk-total-gb').innerText = totalGB;
+        if (window.EclipseAnimations && window.EclipseAnimations.animateCounter) {
+          window.EclipseAnimations.animateCounter(document.getElementById('disk-used-gb'), usedGB, 600, 1);
+          window.EclipseAnimations.animateCounter(document.getElementById('disk-total-gb'), totalGB, 600, 1);
+        } else {
+          document.getElementById('disk-used-gb').innerText = usedGB.toFixed(1);
+          document.getElementById('disk-total-gb').innerText = totalGB.toFixed(1);
+        }
+
         document.getElementById('disk-usage-pill').innerText = percent + '% Used';
         document.getElementById('disk-free-text').innerText = freeGB + ' GB Free Space';
         document.getElementById('disk-progress-bar').style.width = Math.min(100, Math.max(0, percent)) + '%';
@@ -618,10 +645,18 @@
         if (!res.ok) throw new Error(d.error || 'Failed to update specs');
 
         closeSpecsModal();
-        alert('Server specifications updated successfully!');
+        if (window.EclipseAnimations && window.EclipseAnimations.showToast) {
+          window.EclipseAnimations.showToast('Server specifications updated successfully!', 'success');
+        } else {
+          alert('Server specifications updated successfully!');
+        }
         fetchApps();
       } catch (err) {
-        alert(err.message);
+        if (window.EclipseAnimations && window.EclipseAnimations.showToast) {
+          window.EclipseAnimations.showToast(err.message, 'error');
+        } else {
+          alert(err.message);
+        }
       } finally {
         btn.disabled = false;
         btn.innerText = 'Save Specs';
@@ -754,10 +789,18 @@
           localStorage.setItem('eclipse_user', JSON.stringify(d.user));
           renderUserData();
         }
-        alert('Profile updated successfully!');
+        if (window.EclipseAnimations && window.EclipseAnimations.showToast) {
+          window.EclipseAnimations.showToast('Profile updated successfully!', 'success');
+        } else {
+          alert('Profile updated successfully!');
+        }
         closeProfileModal();
       } catch (err) {
-        alert(err.message);
+        if (window.EclipseAnimations && window.EclipseAnimations.showToast) {
+          window.EclipseAnimations.showToast(err.message, 'error');
+        } else {
+          alert(err.message);
+        }
       } finally {
         btn.disabled = false;
         btn.innerText = 'Save Changes';
@@ -817,6 +860,10 @@
       fetchLiveMetrics();
       fetchApps();
       connectWS();
+
+      if (window.EclipseAnimations && window.EclipseAnimations.initOscilloscope) {
+        window.EclipseAnimations.initOscilloscope('cpu-oscilloscope', () => latestCpuPercent);
+      }
 
       // Polling fallback every 3s
       setInterval(fetchLiveMetrics, 3000);

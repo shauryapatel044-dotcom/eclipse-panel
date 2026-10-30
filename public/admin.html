@@ -7,8 +7,9 @@
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/eclipse.css"/>
+  <script src="/js/eclipse-animations.js"></script>
 
   <style>
     .role-badge {
@@ -559,6 +560,14 @@
       return h;
     }
 
+    function notify(msg, type = 'info') {
+      if (window.EclipseAnimations && window.EclipseAnimations.showToast) {
+        window.EclipseAnimations.showToast(msg, type);
+      } else {
+        alert(msg);
+      }
+    }
+
     function logout() {
       localStorage.removeItem('eclipse_token');
       localStorage.removeItem('eclipse_user');
@@ -742,10 +751,10 @@
         if (!res.ok) throw new Error(d.error || 'Failed to update specs');
 
         closeSpecsModal();
-        alert('Server specifications successfully updated!');
+        notify('Server specifications successfully updated!', 'success');
         loadAdminData();
       } catch (e) {
-        alert(e.message);
+        notify(e.message, 'error');
       } finally {
         btn.disabled = false;
         btn.innerText = 'Apply Specifications';
@@ -759,9 +768,10 @@
           headers: getHeaders()
         });
         const d = await res.json();
-        if (!res.ok) alert(d.error || 'Action failed');
+        if (!res.ok) notify(d.error || 'Action failed', 'error');
+        else notify(`Action ${action} dispatched`, 'success');
         loadAdminData();
-      } catch (err) { alert(err.message); }
+      } catch (err) { notify(err.message, 'error'); }
     }
 
     async function deleteServer(appId) {
@@ -773,10 +783,12 @@
         });
         if (!res.ok) {
           const d = await res.json();
-          alert(d.error || 'Delete failed');
+          notify(d.error || 'Delete failed', 'error');
+        } else {
+          notify('Server deleted', 'success');
         }
         loadAdminData();
-      } catch (e) { alert(e.message); }
+      } catch (e) { notify(e.message, 'error'); }
     }
 
     async function submitAdminCreateServer() {
@@ -800,9 +812,10 @@
         if (!res.ok) throw new Error(d.error || 'Deploy failed');
 
         closeCreateServerModal();
+        notify('Server deployed successfully!', 'success');
         loadAdminData();
       } catch (e) {
-        alert(e.message);
+        notify(e.message, 'error');
       } finally {
         btn.disabled = false;
         btn.innerText = 'Deploy Server';
@@ -865,9 +878,10 @@
           body: JSON.stringify({ role: newRole })
         });
         const d = await res.json();
-        if (!res.ok) alert(d.error || 'Role change failed');
+        if (!res.ok) notify(d.error || 'Role change failed', 'error');
+        else notify('User role updated', 'success');
         loadAdminData();
-      } catch (err) { alert(err.message); }
+      } catch (err) { notify(err.message, 'error'); }
     }
 
     async function deleteUser(userId) {
@@ -878,9 +892,10 @@
           headers: getHeaders()
         });
         const d = await res.json();
-        if (!res.ok) alert(d.error || 'Delete user failed');
+        if (!res.ok) notify(d.error || 'Delete user failed', 'error');
+        else notify('Operator deleted', 'success');
         loadAdminData();
-      } catch (err) { alert(err.message); }
+      } catch (err) { notify(err.message, 'error'); }
     }
 
     async function submitCreateUser() {
@@ -903,9 +918,10 @@
         if (!res.ok) throw new Error(d.error || 'Failed to create operator');
 
         closeCreateUserModal();
+        notify('Operator created successfully!', 'success');
         loadAdminData();
       } catch (err) {
-        alert(err.message);
+        notify(err.message, 'error');
       } finally {
         btn.disabled = false;
         btn.innerText = 'Create Operator';
@@ -933,9 +949,10 @@
         if (!res.ok) throw new Error(d.error || 'Update failed');
 
         closeEditUserModal();
+        notify('Operator updated successfully!', 'success');
         loadAdminData();
       } catch (err) {
-        alert(err.message);
+        notify(err.message, 'error');
       } finally {
         btn.disabled = false;
         btn.innerText = 'Save Operator';
@@ -961,10 +978,10 @@
           localStorage.setItem('eclipse_user', JSON.stringify(d.user));
           renderSelfInfo();
         }
-        alert('Profile saved successfully!');
+        notify('Profile saved successfully!', 'success');
         closeProfileModal();
       } catch (err) {
-        alert(err.message);
+        notify(err.message, 'error');
       }
     }
 
