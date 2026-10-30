@@ -330,47 +330,53 @@
           <input type="text" id="edit-server-name" class="form-control" required>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px;">
           <div class="form-group">
-            <label class="form-label" for="edit-server-ram">RAM Allocation</label>
-            <select id="edit-server-ram" class="form-control" style="cursor: pointer;">
-              <option value="512">512 MB</option>
-              <option value="1024">1,024 MB (1 GB)</option>
-              <option value="2048">2,048 MB (2 GB)</option>
-              <option value="4096">4,096 MB (4 GB)</option>
-              <option value="8192">8,192 MB (8 GB)</option>
-            </select>
+            <label class="form-label" for="edit-server-cpu">CPU Limit (%)</label>
+            <input type="number" id="edit-server-cpu" class="form-control" min="10" max="1600" step="10" required>
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="edit-server-cpu">CPU Limit (%)</label>
-            <select id="edit-server-cpu" class="form-control" style="cursor: pointer;">
-              <option value="50">50% (0.5 Core)</option>
-              <option value="100">100% (1 Core)</option>
-              <option value="200">200% (2 Cores)</option>
-              <option value="400">400% (4 Cores)</option>
-            </select>
+            <label class="form-label" for="edit-server-ram">RAM Allocation (MB)</label>
+            <input type="number" id="edit-server-ram" class="form-control" min="128" step="128" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="edit-server-disk">Disk Limit (MB)</label>
+            <input type="number" id="edit-server-disk" class="form-control" min="256" step="512" required>
           </div>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
           <div class="form-group">
-            <label class="form-label" for="edit-server-port">Dedicated Port</label>
-            <input type="number" id="edit-server-port" class="form-control" required>
+            <label class="form-label" for="edit-server-ip">Binding IP</label>
+            <input type="text" id="edit-server-ip" class="form-control" placeholder="0.0.0.0" required>
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="edit-server-entry">Entrypoint</label>
-            <input type="text" id="edit-server-entry" class="form-control" required>
+            <label class="form-label" for="edit-server-port">Dedicated Port</label>
+            <input type="number" id="edit-server-port" class="form-control" required min="1024" max="65535">
           </div>
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="edit-server-autorestart">Crash Auto-Recovery</label>
-          <select id="edit-server-autorestart" class="form-control" style="cursor: pointer;">
-            <option value="1">Enabled (Watchdog active)</option>
-            <option value="0">Disabled (Manual only)</option>
-          </select>
+          <label class="form-label" for="edit-server-domain">Domain / DNS Mapping (Optional)</label>
+          <input type="text" id="edit-server-domain" class="form-control" placeholder="srv1.yourdomain.com">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <div class="form-group">
+            <label class="form-label" for="edit-server-entry">Entrypoint</label>
+            <input type="text" id="edit-server-entry" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="edit-server-autorestart">Crash Auto-Recovery</label>
+            <select id="edit-server-autorestart" class="form-control" style="cursor: pointer;">
+              <option value="1">Enabled (Watchdog active)</option>
+              <option value="0">Disabled (Manual only)</option>
+            </select>
+          </div>
         </div>
 
         <div class="modal-footer">
@@ -398,34 +404,61 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div class="form-group">
             <label class="form-label">Runtime Engine</label>
-            <select id="admin-new-type" class="form-control">
-              <option value="nodejs">Node.js 22 (ESM/CJS)</option>
-              <option value="python">Python 3.12 (venv)</option>
+            <select id="admin-new-type" class="form-control" onchange="updateAdminNewRuntimeVersions()">
+              <option value="nodejs">Node.js (JavaScript / TypeScript)</option>
+              <option value="python">Python 3 (venv / PyPI)</option>
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label">Dedicated Port</label>
-            <input type="number" id="admin-new-port" class="form-control" required value="3000">
+            <label class="form-label">Engine Version</label>
+            <select id="admin-new-version" class="form-control">
+              <option value="22" selected>Node.js 22 LTS (Current)</option>
+              <option value="20">Node.js 20 LTS (Active)</option>
+              <option value="18">Node.js 18 LTS (Maintenance)</option>
+              <option value="24">Node.js 24 (Nightly/Next)</option>
+            </select>
           </div>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div class="form-group">
-            <label class="form-label">RAM Allocation</label>
-            <select id="admin-new-ram" class="form-control">
-              <option value="1024">1,024 MB (1 GB)</option>
-              <option value="2048">2,048 MB (2 GB)</option>
-              <option value="4096">4,096 MB (4 GB)</option>
-            </select>
+            <label class="form-label">Binding IP</label>
+            <input type="text" id="admin-new-ip" class="form-control" required value="0.0.0.0" placeholder="0.0.0.0">
           </div>
           <div class="form-group">
-            <label class="form-label">CPU Limit</label>
-            <select id="admin-new-cpu" class="form-control">
-              <option value="100">100% (1 Core)</option>
-              <option value="200">200% (2 Cores)</option>
-              <option value="400">400% (4 Cores)</option>
-            </select>
+            <label class="form-label">Dedicated Port</label>
+            <input type="number" id="admin-new-port" class="form-control" required value="3000" min="1024" max="65535">
           </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Domain / DNS Mapping (Optional)</label>
+          <input type="text" id="admin-new-domain" class="form-control" placeholder="srv1.yourdomain.com">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label class="form-label">Core / CPU (%)</label>
+            <input type="number" id="admin-new-cpu" class="form-control" value="100" min="10" max="1600" step="10" required placeholder="100">
+            <span style="font-size: 10px; color: var(--text-muted); font-family: var(--font-mono);">100% = 1 Core</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">RAM Allocation (MB)</label>
+            <input type="number" id="admin-new-ram" class="form-control" value="1024" min="128" step="128" required placeholder="1024">
+            <span style="font-size: 10px; color: var(--text-muted); font-family: var(--font-mono);">1024 MB = 1 GB</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Disk Limit (MB)</label>
+            <input type="number" id="admin-new-disk" class="form-control" value="5120" min="256" step="512" required placeholder="5120">
+            <span style="font-size: 10px; color: var(--text-muted); font-family: var(--font-mono);">5120 MB = 5 GB</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Entrypoint Script</label>
+          <input type="text" id="admin-new-entry" class="form-control" required value="index.js" placeholder="index.js or main.py">
         </div>
 
         <div class="modal-footer">
@@ -605,12 +638,44 @@
     }
     function closeEditUserModal() { document.getElementById('modal-edit-user').classList.remove('open'); }
 
+    function updateAdminNewRuntimeVersions() {
+      const type = document.getElementById('admin-new-type').value;
+      const verSelect = document.getElementById('admin-new-version');
+      const entryInput = document.getElementById('admin-new-entry');
+      verSelect.innerHTML = '';
+
+      if (type === 'nodejs') {
+        verSelect.innerHTML = `
+          <option value="22" selected>Node.js 22 LTS (Current)</option>
+          <option value="20">Node.js 20 LTS (Active)</option>
+          <option value="18">Node.js 18 LTS (Maintenance)</option>
+          <option value="24">Node.js 24 (Nightly/Next)</option>
+        `;
+        if (entryInput.value === 'main.py' || entryInput.value === 'app.py') {
+          entryInput.value = 'index.js';
+        }
+      } else {
+        verSelect.innerHTML = `
+          <option value="3.12" selected>Python 3.12 (Standard)</option>
+          <option value="3.11">Python 3.11</option>
+          <option value="3.10">Python 3.10</option>
+          <option value="3.13">Python 3.13 (Latest)</option>
+        `;
+        if (entryInput.value === 'index.js' || entryInput.value === 'server.js') {
+          entryInput.value = 'main.py';
+        }
+      }
+    }
+
     function openSpecsModal(app) {
       document.getElementById('edit-server-id').value = app.id;
-      document.getElementById('edit-server-name').value = app.name;
-      document.getElementById('edit-server-ram').value = app.memory_limit || '1024';
-      document.getElementById('edit-server-cpu').value = app.cpu_limit || '100';
-      document.getElementById('edit-server-port').value = app.port || '3000';
+      document.getElementById('edit-server-name').value = app.name || '';
+      document.getElementById('edit-server-ram').value = app.memory_limit || 1024;
+      document.getElementById('edit-server-cpu').value = app.cpu_limit || 100;
+      document.getElementById('edit-server-disk').value = app.disk_limit || 5120;
+      document.getElementById('edit-server-port').value = app.port || 3000;
+      document.getElementById('edit-server-ip').value = app.primary_ip || '0.0.0.0';
+      document.getElementById('edit-server-domain').value = app.domain || '';
       document.getElementById('edit-server-entry').value = app.entrypoint || 'index.js';
       document.getElementById('edit-server-autorestart').value = app.auto_restart ? '1' : '0';
       document.getElementById('modal-edit-specs').classList.add('open');
@@ -738,9 +803,12 @@
     async function submitAdminSpecsUpdate() {
       const id = document.getElementById('edit-server-id').value;
       const name = document.getElementById('edit-server-name').value.trim();
-      const memory_limit = parseInt(document.getElementById('edit-server-ram').value, 10);
-      const cpu_limit = parseInt(document.getElementById('edit-server-cpu').value, 10);
-      const port = parseInt(document.getElementById('edit-server-port').value, 10);
+      const memory_limit = parseInt(document.getElementById('edit-server-ram').value, 10) || 1024;
+      const cpu_limit = parseInt(document.getElementById('edit-server-cpu').value, 10) || 100;
+      const disk_limit = parseInt(document.getElementById('edit-server-disk').value, 10) || 5120;
+      const port = parseInt(document.getElementById('edit-server-port').value, 10) || 3000;
+      const primary_ip = document.getElementById('edit-server-ip').value.trim() || '0.0.0.0';
+      const domain = document.getElementById('edit-server-domain').value.trim();
       const entrypoint = document.getElementById('edit-server-entry').value.trim();
       const auto_restart = parseInt(document.getElementById('edit-server-autorestart').value, 10);
 
@@ -752,7 +820,7 @@
         const res = await fetch(`${API_BASE}/apps/${id}`, {
           method: 'PUT',
           headers: getHeaders(),
-          body: JSON.stringify({ name, memory_limit, cpu_limit, port, entrypoint, auto_restart })
+          body: JSON.stringify({ name, memory_limit, cpu_limit, disk_limit, port, primary_ip, domain, entrypoint, auto_restart })
         });
         const d = await res.json();
         if (!res.ok) throw new Error(d.error || 'Failed to update specs');
@@ -801,9 +869,14 @@
     async function submitAdminCreateServer() {
       const name = document.getElementById('admin-new-name').value.trim();
       const type = document.getElementById('admin-new-type').value;
+      const runtime_version = document.getElementById('admin-new-version').value;
+      const primary_ip = document.getElementById('admin-new-ip').value.trim() || '0.0.0.0';
       const port = parseInt(document.getElementById('admin-new-port').value, 10);
-      const memory_limit = parseInt(document.getElementById('admin-new-ram').value, 10);
-      const cpu_limit = parseInt(document.getElementById('admin-new-cpu').value, 10);
+      const domain = document.getElementById('admin-new-domain').value.trim();
+      const memory_limit = parseInt(document.getElementById('admin-new-ram').value, 10) || 1024;
+      const cpu_limit = parseInt(document.getElementById('admin-new-cpu').value, 10) || 100;
+      const disk_limit = parseInt(document.getElementById('admin-new-disk').value, 10) || 5120;
+      const entrypoint = document.getElementById('admin-new-entry').value.trim() || 'index.js';
       const btn = document.getElementById('btn-create-server-submit');
 
       btn.disabled = true;
@@ -813,13 +886,25 @@
         const res = await fetch(API_BASE + '/apps', {
           method: 'POST',
           headers: getHeaders(),
-          body: JSON.stringify({ name, type, port, memory_limit, cpu_limit })
+          body: JSON.stringify({
+            name,
+            type,
+            runtime_version,
+            port,
+            entrypoint,
+            main_file: entrypoint,
+            memory_limit,
+            cpu_limit,
+            disk_limit,
+            primary_ip,
+            domain
+          })
         });
         const d = await res.json();
         if (!res.ok) throw new Error(d.error || 'Deploy failed');
 
         closeCreateServerModal();
-        notify('Server deployed successfully!', 'success');
+        notify(`Server "${name}" deployed successfully!`, 'success');
         loadAdminData();
       } catch (e) {
         notify(e.message, 'error');

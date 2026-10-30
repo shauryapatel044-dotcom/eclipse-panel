@@ -1,5 +1,6 @@
 import path from 'path';
 import fs from 'fs';
+import { spawn } from 'child_process';
 import { config } from '../config.js';
 import { db } from '../database/index.js';
 import { logStreamer } from './logStreamer.js';
@@ -19,6 +20,63 @@ class Supervisor {
       fs.mkdirSync(dir, { recursive: true });
     }
     return dir;
+  }
+
+  spawnStartupProcess(app, appDir, customEnv = {}) {
+    const isWin = process.platform === 'win32';
+    const mainFile = app.main_file || app.entrypoint || (app.type === 'python' ? 'main.py' : 'index.js');
+    const nodePackages = app.node_packages || '';
+    const unnodePackages = app.unnode_packages || '';
+    const nodeArgs = app.node_args || '';
+    const reqFile = app.requirements_file || 'requirements.txt';
+
+    const env = {
+      ...process.env,
+      ...customEnv,
+      PORT: app.port ? String(app.port) : '3000',
+      MAIN_FILE: mainFile,
+      NODE_PACKAGES: nodePackages,
+      UNNODE_PACKAGES: unnodePackages,
+      NODE_ARGS: nodeArgs,
+      REQUIREMENTS_FILE: reqFile,
+      APP_ID: app.id,
+      APP_NAME: app.name,
+    };
+
+    if (app.memory_limit && parseInt(app.memory_limit, 10) > 0) {
+      env.NODE_OPTIONS = (env.NODE_OPTIONS || '') + ` --max-old-space-size=${parseInt(app.memory_limit, 10)}`;
+    }
+
+    let cmdStr = app.startup_cmd || '';
+    
+    // Check if on Linux or /bin/bash is available
+    if (!isWin && fs.existsSync('/bin/bash')) {
+      logStreamer.append(app.id, 'system', `[Supervisor] Spawning bash startup script...`);
+      return spawn('/bin/bash', ['-c', cmdStr], {
+        cwd: appDir,
+        env,
+        stdio: ['pipe', 'pipe', 'pipe'],
+      });
+    }
+
+    // Windows with Git Bash check
+    const gitBash = 'C:\\Program Files\\Git\\bin\\bash.exe';
+    if (isWin && fs.existsSync(gitBash)) {
+      logStreamer.append(app.id, 'system', `[Supervisor] Spawning bash startup script via Git Bash...`);
+      return spawn(gitBash, ['-c', cmdStr], {
+        cwd: appDir,
+        env,
+        stdio: ['pipe', 'pipe', 'pipe'],
+      });
+    }
+
+    // Direct native runner fallback
+    logStreamer.append(app.id, 'system', `[Supervisor] Launching native ${app.type} runner...`);
+    if (app.type === 'nodejs') {
+      return NodeRunner.spawnProcess(app, appDir, customEnv);
+    } else {
+      return PythonRunner.spawnProcess(app, appDir, customEnv);
+    }
   }
 
   async startApp(appId) {
@@ -46,7 +104,9 @@ class Supervisor {
 
     let child = null;
     try {
-      if (app.type === 'nodejs') {
+      if (app.startup_cmd && app.startup_cmd.trim()) {
+        child = this.spawnStartupProcess(app, appDir, parsedEnv);
+      } else if (app.type === 'nodejs') {
         child = NodeRunner.spawnProcess(app, appDir, parsedEnv);
       } else if (app.type === 'python') {
         child = PythonRunner.spawnProcess(app, appDir, parsedEnv);

@@ -50,8 +50,8 @@ export class FileController {
   static async getFileContent(req, res) {
     try {
       const { id } = req.params;
-      const filePath = req.query.file;
-      if (!filePath) return res.status(400).json({ error: 'Query parameter "file" is required' });
+      const filePath = req.query.file || req.query.path;
+      if (!filePath) return res.status(400).json({ error: 'Query parameter "file" or "path" is required' });
 
       const stmt = db.prepare('SELECT * FROM apps WHERE id = ?');
       const app = stmt.get(id);
@@ -83,9 +83,10 @@ export class FileController {
   static async saveFileContent(req, res) {
     try {
       const { id } = req.params;
-      const { file, content } = req.body;
+      const file = req.body.file || req.body.path;
+      const { content } = req.body;
       if (!file || content === undefined) {
-        return res.status(400).json({ error: '"file" and "content" are required' });
+        return res.status(400).json({ error: '"file" or "path" and "content" are required' });
       }
 
       const stmt = db.prepare('SELECT * FROM apps WHERE id = ?');
@@ -145,6 +146,140 @@ export class FileController {
       }
 
       return res.json({ message: `Deleted "${filePath}" successfully` });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
+  static async uploadFile(req, res) {
+    try {
+      const { id } = req.params;
+      const { path: filePath, content, isBase64 } = req.body;
+      if (!filePath || content === undefined) {
+        return res.status(400).json({ error: 'Parameters "path" and "content" are required' });
+      }
+
+      const stmt = db.prepare('SELECT * FROM apps WHERE id = ?');
+      const app = stmt.get(id);
+      if (!app) return res.status(404).json({ error: 'App not found' });
+
+      if (req.user.role !== 'admin' && app.user_id !== req.user.id) {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
+
+      const appDir = supervisor.getAppDir(id);
+      const fullPath = path.join(appDir, filePath);
+      if (!isSafePath(appDir, fullPath)) {
+        return res.status(400).json({ error: 'Invalid file path' });
+      }
+
+      const parentDir = path.dirname(fullPath);
+      if (!fs.existsSync(parentDir)) {
+        fs.mkdirSync(parentDir, { recursive: true });
+      }
+
+      if (isBase64) {
+        const buffer = Buffer.from(content, 'base64');
+        fs.writeFileSync(fullPath, buffer);
+      } else {
+        fs.writeFileSync(fullPath, content, 'utf8');
+      }
+
+      return res.json({ message: `Uploaded "${filePath}" successfully` });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
+  static async createFile(req, res) {
+    try {
+      const { id } = req.params;
+      const { path: filePath } = req.body;
+      if (!filePath) return res.status(400).json({ error: 'Parameter "path" is required' });
+
+      const stmt = db.prepare('SELECT * FROM apps WHERE id = ?');
+      const app = stmt.get(id);
+      if (!app) return res.status(404).json({ error: 'App not found' });
+
+      if (req.user.role !== 'admin' && app.user_id !== req.user.id) {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
+
+      const appDir = supervisor.getAppDir(id);
+      const fullPath = path.join(appDir, filePath);
+      if (!isSafePath(appDir, fullPath)) return res.status(400).json({ error: 'Invalid file path' });
+
+      if (fs.existsSync(fullPath)) {
+        return res.status(400).json({ error: 'File already exists' });
+      }
+
+      const parentDir = path.dirname(fullPath);
+      if (!fs.existsSync(parentDir)) fs.mkdirSync(parentDir, { recursive: true });
+
+      fs.writeFileSync(fullPath, '', 'utf8');
+      return res.json({ message: `File "${filePath}" created successfully` });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
+  static async createFolder(req, res) {
+    try {
+      const { id } = req.params;
+      const { path: folderPath } = req.body;
+      if (!folderPath) return res.status(400).json({ error: 'Parameter "path" is required' });
+
+      const stmt = db.prepare('SELECT * FROM apps WHERE id = ?');
+      const app = stmt.get(id);
+      if (!app) return res.status(404).json({ error: 'App not found' });
+
+      if (req.user.role !== 'admin' && app.user_id !== req.user.id) {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
+
+      const appDir = supervisor.getAppDir(id);
+      const fullPath = path.join(appDir, folderPath);
+      if (!isSafePath(appDir, fullPath)) return res.status(400).json({ error: 'Invalid folder path' });
+
+      if (fs.existsSync(fullPath)) {
+        return res.status(400).json({ error: 'Directory already exists' });
+      }
+
+      fs.mkdirSync(fullPath, { recursive: true });
+      return res.json({ message: `Directory "${folderPath}" created successfully` });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
+  static async renameFile(req, res) {
+    try {
+      const { id } = req.params;
+      const { oldPath, newPath } = req.body;
+      if (!oldPath || !newPath) return res.status(400).json({ error: '"oldPath" and "newPath" are required' });
+
+      const stmt = db.prepare('SELECT * FROM apps WHERE id = ?');
+      const app = stmt.get(id);
+      if (!app) return res.status(404).json({ error: 'App not found' });
+
+      if (req.user.role !== 'admin' && app.user_id !== req.user.id) {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
+
+      const appDir = supervisor.getAppDir(id);
+      const fullOld = path.join(appDir, oldPath);
+      const fullNew = path.join(appDir, newPath);
+
+      if (!isSafePath(appDir, fullOld) || !isSafePath(appDir, fullNew)) {
+        return res.status(400).json({ error: 'Invalid path' });
+      }
+
+      if (!fs.existsSync(fullOld)) {
+        return res.status(404).json({ error: 'Source file/folder does not exist' });
+      }
+
+      fs.renameSync(fullOld, fullNew);
+      return res.json({ message: `Renamed "${oldPath}" to "${newPath}" successfully` });
     } catch (err) {
       return res.status(500).json({ error: err.message });
     }

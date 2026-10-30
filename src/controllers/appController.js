@@ -94,7 +94,25 @@ export class AppController {
 
   static async createApp(req, res) {
     try {
-      const { name, type, entrypoint, port, env_vars, auto_restart, memory_limit, cpu_limit } = req.body;
+      const { 
+        name, 
+        type, 
+        entrypoint, 
+        port, 
+        env_vars, 
+        auto_restart, 
+        memory_limit, 
+        cpu_limit,
+        disk_limit,
+        primary_ip,
+        domain,
+        runtime_version,
+        startup_cmd,
+        main_file,
+        node_packages,
+        node_args,
+        requirements_file
+      } = req.body;
 
       if (!name || !type) {
         return res.status(400).json({ error: 'App name and type (nodejs | python) are required' });
@@ -106,19 +124,39 @@ export class AppController {
       }
 
       const appId = `app_${crypto.randomBytes(4).toString('hex')}`;
-      const defaultEntry = normalizedType === 'nodejs' ? (entrypoint || 'index.js') : (entrypoint || 'main.py');
+      const defaultEntry = main_file || entrypoint || (normalizedType === 'nodejs' ? 'index.js' : 'main.py');
       const envJson = typeof env_vars === 'object' ? JSON.stringify(env_vars) : (env_vars || '{}');
       const autoRestartVal = auto_restart === false || auto_restart === 0 ? 0 : 1;
       const appPort = port ? parseInt(port, 10) : null;
       const memLimit = memory_limit ? parseInt(memory_limit, 10) : 1024;
       const cpLimit = cpu_limit ? parseInt(cpu_limit, 10) : 100;
+      const diskLimit = disk_limit ? parseInt(disk_limit, 10) : 5120;
+      const serverIp = primary_ip ? primary_ip.trim() : '0.0.0.0';
+      const serverDomain = domain ? domain.trim() : '';
+      const rVersion = runtime_version ? runtime_version.trim() : (normalizedType === 'nodejs' ? '20' : '3.11');
+
+      const defaultNodeStartup = `if [[ -d .git ]] && [[ 0 == "1" ]]; then git pull; fi; if [[ ! -z "\${NODE_PACKAGES}" ]]; then npm install \${NODE_PACKAGES}; fi; if [[ ! -z "\${UNNODE_PACKAGES}" ]]; then npm uninstall \${UNNODE_PACKAGES}; fi; if [ -f package.json ]; then npm install; fi; if [[ "\${MAIN_FILE##*.}" == "js" ]]; then node "\${MAIN_FILE}" \${NODE_ARGS}; else ts-node --esm "\${MAIN_FILE}" \${NODE_ARGS}; fi`;
+      const defaultPythonStartup = `if [[ -d .git ]] && [[ "0" == "1" ]]; then git pull; fi; if [[ ! -z "" ]]; then pip install -U --prefix .local ; fi; if [[ -f "\${REQUIREMENTS_FILE}" ]]; then pip install -U --prefix .local -r "\${REQUIREMENTS_FILE}"; fi; python "\${MAIN_FILE}"`;
+
+      const startCmd = startup_cmd || (normalizedType === 'nodejs' ? defaultNodeStartup : defaultPythonStartup);
+      const reqFile = requirements_file || 'requirements.txt';
+      const nPackages = node_packages || '';
+      const nArgs = node_args || '';
 
       // Insert into database
       const insertStmt = db.prepare(`
-        INSERT INTO apps (id, name, type, user_id, entrypoint, port, env_vars, auto_restart, memory_limit, cpu_limit, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'stopped')
+        INSERT INTO apps (
+          id, name, type, user_id, entrypoint, port, env_vars, auto_restart, 
+          memory_limit, cpu_limit, disk_limit, primary_ip, domain, runtime_version, 
+          startup_cmd, main_file, node_packages, node_args, requirements_file, status
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'stopped')
       `);
-      insertStmt.run(appId, name.trim(), normalizedType, req.user.id, defaultEntry, appPort, envJson, autoRestartVal, memLimit, cpLimit);
+      insertStmt.run(
+        appId, name.trim(), normalizedType, req.user.id, defaultEntry, appPort, envJson, autoRestartVal,
+        memLimit, cpLimit, diskLimit, serverIp, serverDomain, rVersion,
+        startCmd, defaultEntry, nPackages, nArgs, reqFile
+      );
 
       // Create app directory and starter template
       const appDir = supervisor.getAppDir(appId);
@@ -204,8 +242,26 @@ if __name__ == '__main__':
 
   static async updateApp(req, res) {
     try {
-      const { id } = req.params;
-      const { name, entrypoint, port, env_vars, auto_restart, memory_limit, cpu_limit, type } = req.body;
+      const { 
+        name, 
+        entrypoint, 
+        port, 
+        env_vars, 
+        auto_restart, 
+        memory_limit, 
+        cpu_limit, 
+        disk_limit,
+        primary_ip,
+        domain,
+        type,
+        runtime_version,
+        startup_cmd,
+        main_file,
+        node_packages,
+        unnode_packages,
+        node_args,
+        requirements_file
+      } = req.body;
 
       const stmt = db.prepare('SELECT * FROM apps WHERE id = ?');
       const app = stmt.get(id);
@@ -222,18 +278,119 @@ if __name__ == '__main__':
       const newAutoRestart = auto_restart !== undefined ? (auto_restart ? 1 : 0) : app.auto_restart;
       const newMem = memory_limit !== undefined ? (memory_limit ? parseInt(memory_limit, 10) : 1024) : (app.memory_limit || 1024);
       const newCpu = cpu_limit !== undefined ? (cpu_limit ? parseInt(cpu_limit, 10) : 100) : (app.cpu_limit || 100);
+      const newDisk = disk_limit !== undefined ? (disk_limit ? parseInt(disk_limit, 10) : 5120) : (app.disk_limit || 5120);
+      const newIp = primary_ip !== undefined ? primary_ip.trim() : (app.primary_ip || '0.0.0.0');
+      const newDomain = domain !== undefined ? domain.trim() : (app.domain || '');
+      const newRVersion = runtime_version !== undefined ? runtime_version.trim() : (app.runtime_version || '');
+      const newStartupCmd = startup_cmd !== undefined ? startup_cmd : (app.startup_cmd || '');
+      const newMainFile = main_file !== undefined ? main_file.trim() : (app.main_file || app.entrypoint);
+      const newPackages = node_packages !== undefined ? node_packages : (app.node_packages || '');
+      const newUnPackages = unnode_packages !== undefined ? unnode_packages : (app.unnode_packages || '');
+      const newArgs = node_args !== undefined ? node_args : (app.node_args || '');
+      const newReqs = requirements_file !== undefined ? requirements_file : (app.requirements_file || 'requirements.txt');
       const newEnv = env_vars !== undefined ? (typeof env_vars === 'object' ? JSON.stringify(env_vars) : env_vars) : app.env_vars;
 
       const updateStmt = db.prepare(`
         UPDATE apps
-        SET name = ?, type = ?, entrypoint = ?, port = ?, env_vars = ?, auto_restart = ?, memory_limit = ?, cpu_limit = ?, updated_at = CURRENT_TIMESTAMP
+        SET name = ?, type = ?, entrypoint = ?, port = ?, env_vars = ?, auto_restart = ?, 
+            memory_limit = ?, cpu_limit = ?, disk_limit = ?, primary_ip = ?, domain = ?,
+            runtime_version = ?, startup_cmd = ?, main_file = ?, node_packages = ?,
+            unnode_packages = ?, node_args = ?, requirements_file = ?, updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
       `);
-      updateStmt.run(newName, newType, newEntrypoint, newPort, newEnv, newAutoRestart, newMem, newCpu, id);
+      updateStmt.run(
+        newName, newType, newEntrypoint, newPort, newEnv, newAutoRestart, 
+        newMem, newCpu, newDisk, newIp, newDomain,
+        newRVersion, newStartupCmd, newMainFile, newPackages,
+        newUnPackages, newArgs, newReqs, id
+      );
 
-      logStreamer.append(id, 'system', `[Config Updated] Specs updated: Port=${newPort}, RAM=${newMem}MB, CPU=${newCpu}%, Entry=${newEntrypoint}`);
+      logStreamer.append(id, 'system', `[Config Updated] Specs updated: Port=${newPort}, RAM=${newMem}MB, CPU=${newCpu}%, Disk=${newDisk}MB, IP=${newIp}, Domain=${newDomain}`);
 
-      return res.json({ message: 'Server specs and configuration updated successfully' });
+      return res.json({ message: 'Server specs and settings updated successfully' });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
+  static async getStartup(req, res) {
+    try {
+      const { id } = req.params;
+      const stmt = db.prepare('SELECT * FROM apps WHERE id = ?');
+      const app = stmt.get(id);
+      if (!app) return res.status(404).json({ error: 'App not found' });
+
+      if (req.user.role !== 'admin' && app.user_id !== req.user.id) {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
+
+      const defaultNodeStartup = `if [[ -d .git ]] && [[ 0 == "1" ]]; then git pull; fi; if [[ ! -z "\${NODE_PACKAGES}" ]]; then npm install \${NODE_PACKAGES}; fi; if [[ ! -z "\${UNNODE_PACKAGES}" ]]; then npm uninstall \${UNNODE_PACKAGES}; fi; if [ -f package.json ]; then npm install; fi; if [[ "\${MAIN_FILE##*.}" == "js" ]]; then node "\${MAIN_FILE}" \${NODE_ARGS}; else ts-node --esm "\${MAIN_FILE}" \${NODE_ARGS}; fi`;
+      const defaultPythonStartup = `if [[ -d .git ]] && [[ "0" == "1" ]]; then git pull; fi; if [[ ! -z "" ]]; then pip install -U --prefix .local ; fi; if [[ -f "\${REQUIREMENTS_FILE}" ]]; then pip install -U --prefix .local -r "\${REQUIREMENTS_FILE}"; fi; python "\${MAIN_FILE}"`;
+
+      return res.json({
+        startup: {
+          type: app.type,
+          runtime_version: app.runtime_version || (app.type === 'nodejs' ? '20' : '3.11'),
+          startup_cmd: app.startup_cmd || (app.type === 'nodejs' ? defaultNodeStartup : defaultPythonStartup),
+          main_file: app.main_file || app.entrypoint || (app.type === 'nodejs' ? 'index.js' : 'main.py'),
+          node_packages: app.node_packages || '',
+          unnode_packages: app.unnode_packages || '',
+          node_args: app.node_args || '',
+          requirements_file: app.requirements_file || 'requirements.txt',
+          defaults: {
+            nodejs: defaultNodeStartup,
+            python: defaultPythonStartup
+          }
+        }
+      });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
+  static async updateStartup(req, res) {
+    try {
+      const { id } = req.params;
+      const { 
+        type, 
+        runtime_version, 
+        startup_cmd, 
+        main_file, 
+        node_packages, 
+        unnode_packages, 
+        node_args, 
+        requirements_file 
+      } = req.body;
+
+      const stmt = db.prepare('SELECT * FROM apps WHERE id = ?');
+      const app = stmt.get(id);
+      if (!app) return res.status(404).json({ error: 'App not found' });
+
+      if (req.user.role !== 'admin' && app.user_id !== req.user.id) {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
+
+      const newType = type ? type.trim().toLowerCase() : app.type;
+      const newVersion = runtime_version ? runtime_version.trim() : (app.runtime_version || '');
+      const newCmd = startup_cmd !== undefined ? startup_cmd : app.startup_cmd;
+      const newMain = main_file ? main_file.trim() : (app.main_file || app.entrypoint);
+      const newPkg = node_packages !== undefined ? node_packages : (app.node_packages || '');
+      const newUnPkg = unnode_packages !== undefined ? unnode_packages : (app.unnode_packages || '');
+      const newArgs = node_args !== undefined ? node_args : (app.node_args || '');
+      const newReq = requirements_file !== undefined ? requirements_file : (app.requirements_file || 'requirements.txt');
+
+      const updateStmt = db.prepare(`
+        UPDATE apps
+        SET type = ?, runtime_version = ?, startup_cmd = ?, main_file = ?, entrypoint = ?,
+            node_packages = ?, unnode_packages = ?, node_args = ?, requirements_file = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `);
+      updateStmt.run(newType, newVersion, newCmd, newMain, newMain, newPkg, newUnPkg, newArgs, newReq, id);
+
+      logStreamer.append(id, 'system', `[Startup Updated] Runtime changed to ${newType} (v${newVersion}), Main=${newMain}`);
+
+      return res.json({ message: 'Startup parameters updated successfully' });
     } catch (err) {
       return res.status(500).json({ error: err.message });
     }

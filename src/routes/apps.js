@@ -15,6 +15,8 @@ router.delete('/:id', AppController.deleteApp);
 // Action endpoints: start, stop, restart, install, command
 router.post('/:id/action/:action', AppController.performAction);
 router.post('/:id/command', AppController.sendCommand);
+router.get('/:id/startup', AppController.getStartup);
+router.put('/:id/startup', AppController.updateStartup);
 router.get('/:id/logs', AppController.getLogs);
 router.get('/:id/stats', AppController.getStats);
 

@@ -311,54 +311,75 @@
 
       <form id="create-app-form" onsubmit="event.preventDefault(); submitCreateApp();">
         <div class="form-group">
-          <label class="form-label" for="app-name">Application Name</label>
-          <input type="text" id="app-name" class="form-control" placeholder="my-awesome-api" required>
+          <label class="form-label" for="app-name">Application / Server Name</label>
+          <input type="text" id="app-name" class="form-control" placeholder="my-awesome-server" required>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div class="form-group">
             <label class="form-label" for="app-type">Runtime Engine</label>
-            <select id="app-type" class="form-control" style="cursor: pointer;">
-              <option value="nodejs">Node.js (JavaScript/ESM)</option>
-              <option value="python">Python 3 (venv/script)</option>
+            <select id="app-type" class="form-control" style="cursor: pointer;" onchange="updateCreateRuntimeVersions()">
+              <option value="nodejs">Node.js (JavaScript / TypeScript)</option>
+              <option value="python">Python 3 (venv / PyPI)</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="app-port">Dedicated Port</label>
-            <input type="number" id="app-port" class="form-control" placeholder="3000" required value="3000">
+            <label class="form-label" for="app-version">Engine Version</label>
+            <select id="app-version" class="form-control" style="cursor: pointer;">
+              <option value="22">Node.js 22 LTS (Current)</option>
+              <option value="20">Node.js 20 LTS (Active)</option>
+              <option value="18">Node.js 18 LTS (Maintenance)</option>
+              <option value="24">Node.js 24 (Nightly/Next)</option>
+            </select>
           </div>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div class="form-group">
-            <label class="form-label" for="app-ram">RAM Allocation</label>
-            <select id="app-ram" class="form-control" style="cursor: pointer;">
-              <option value="512">512 MB</option>
-              <option value="1024" selected>1,024 MB (1 GB)</option>
-              <option value="2048">2,048 MB (2 GB)</option>
-              <option value="4096">4,096 MB (4 GB)</option>
-            </select>
+            <label class="form-label" for="app-ip">Binding IP Support</label>
+            <input type="text" id="app-ip" class="form-control" placeholder="0.0.0.0 or VPS IP" value="0.0.0.0" required>
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="app-cpu">CPU Limit (%)</label>
-            <select id="app-cpu" class="form-control" style="cursor: pointer;">
-              <option value="50">50% (0.5 Core)</option>
-              <option value="100" selected>100% (1 Core)</option>
-              <option value="200">200% (2 Cores)</option>
-            </select>
+            <label class="form-label" for="app-port">Dedicated Port</label>
+            <input type="number" id="app-port" class="form-control" placeholder="3000" required value="3000" min="1024" max="65535">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="app-domain">Server Domain / DNS (Optional)</label>
+          <input type="text" id="app-domain" class="form-control" placeholder="srv1.yourdomain.com">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label class="form-label" for="app-cpu">Core / CPU (%)</label>
+            <input type="number" id="app-cpu" class="form-control" value="100" min="10" max="1600" step="10" required placeholder="100">
+            <span style="font-size: 10px; color: var(--text-muted); font-family: var(--font-mono);">100% = 1 Core</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="app-ram">RAM (MB)</label>
+            <input type="number" id="app-ram" class="form-control" value="1024" min="128" step="128" required placeholder="1024">
+            <span style="font-size: 10px; color: var(--text-muted); font-family: var(--font-mono);">1024 MB = 1 GB</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="app-disk">Disk (MB)</label>
+            <input type="number" id="app-disk" class="form-control" value="5120" min="256" step="512" required placeholder="5120">
+            <span style="font-size: 10px; color: var(--text-muted); font-family: var(--font-mono);">5120 MB = 5 GB</span>
           </div>
         </div>
 
         <div class="form-group">
           <label class="form-label" for="app-entry">Entrypoint Script</label>
-          <input type="text" id="app-entry" class="form-control" placeholder="index.js or app.py" required value="index.js">
+          <input type="text" id="app-entry" class="form-control" placeholder="index.js or main.py" required value="index.js">
         </div>
 
         <div class="modal-footer">
           <button type="button" class="btn-secondary" onclick="closeCreateAppModal()">Cancel</button>
-          <button type="submit" class="btn-primary" id="btn-create-submit">Create & Deploy</button>
+          <button type="submit" class="btn-primary" id="btn-create-submit">Create & Deploy Server</button>
         </div>
       </form>
     </div>
@@ -382,35 +403,40 @@
           <input type="text" id="spec-name" class="form-control" required>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
           <div class="form-group">
-            <label class="form-label" for="spec-ram">RAM Allocation</label>
-            <select id="spec-ram" class="form-control">
-              <option value="512">512 MB</option>
-              <option value="1024">1,024 MB (1 GB)</option>
-              <option value="2048">2,048 MB (2 GB)</option>
-              <option value="4096">4,096 MB (4 GB)</option>
-            </select>
+            <label class="form-label" for="spec-cpu">Core / CPU (%)</label>
+            <input type="number" id="spec-cpu" class="form-control" min="10" max="1600" step="10" required>
           </div>
           <div class="form-group">
-            <label class="form-label" for="spec-cpu">CPU Limit (%)</label>
-            <select id="spec-cpu" class="form-control">
-              <option value="50">50% (0.5 Core)</option>
-              <option value="100">100% (1 Core)</option>
-              <option value="200">200% (2 Cores)</option>
-            </select>
+            <label class="form-label" for="spec-ram">RAM (MB)</label>
+            <input type="number" id="spec-ram" class="form-control" min="128" step="128" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="spec-disk">Disk (MB)</label>
+            <input type="number" id="spec-disk" class="form-control" min="256" step="512" required>
           </div>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div class="form-group">
-            <label class="form-label" for="spec-port">Port</label>
-            <input type="number" id="spec-port" class="form-control" required>
+            <label class="form-label" for="spec-ip">Binding IP</label>
+            <input type="text" id="spec-ip" class="form-control" placeholder="0.0.0.0" required>
           </div>
           <div class="form-group">
-            <label class="form-label" for="spec-entry">Entrypoint</label>
-            <input type="text" id="spec-entry" class="form-control" required>
+            <label class="form-label" for="spec-port">Dedicated Port</label>
+            <input type="number" id="spec-port" class="form-control" required min="1024" max="65535">
           </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="spec-domain">Server Domain / DNS (Optional)</label>
+          <input type="text" id="spec-domain" class="form-control" placeholder="srv1.yourdomain.com">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="spec-entry">Entrypoint Script</label>
+          <input type="text" id="spec-entry" class="form-control" required>
         </div>
 
         <div class="modal-footer">
@@ -616,12 +642,44 @@
       }
     }
 
+    function updateCreateRuntimeVersions() {
+      const type = document.getElementById('app-type').value;
+      const verSelect = document.getElementById('app-version');
+      const entryInput = document.getElementById('app-entry');
+      verSelect.innerHTML = '';
+
+      if (type === 'nodejs') {
+        verSelect.innerHTML = `
+          <option value="22" selected>Node.js 22 LTS (Current)</option>
+          <option value="20">Node.js 20 LTS (Active)</option>
+          <option value="18">Node.js 18 LTS (Maintenance)</option>
+          <option value="24">Node.js 24 (Nightly/Next)</option>
+        `;
+        if (entryInput.value === 'main.py' || entryInput.value === 'app.py') {
+          entryInput.value = 'index.js';
+        }
+      } else {
+        verSelect.innerHTML = `
+          <option value="3.12" selected>Python 3.12 (Standard)</option>
+          <option value="3.11">Python 3.11</option>
+          <option value="3.10">Python 3.10</option>
+          <option value="3.13">Python 3.13 (Latest)</option>
+        `;
+        if (entryInput.value === 'index.js' || entryInput.value === 'server.js') {
+          entryInput.value = 'main.py';
+        }
+      }
+    }
+
     function openSpecsModal(app) {
       document.getElementById('spec-app-id').value = app.id;
-      document.getElementById('spec-name').value = app.name;
-      document.getElementById('spec-ram').value = app.memory_limit || '1024';
-      document.getElementById('spec-cpu').value = app.cpu_limit || '100';
-      document.getElementById('spec-port').value = app.port || '3000';
+      document.getElementById('spec-name').value = app.name || '';
+      document.getElementById('spec-ram').value = app.memory_limit || 1024;
+      document.getElementById('spec-cpu').value = app.cpu_limit || 100;
+      document.getElementById('spec-disk').value = app.disk_limit || 5120;
+      document.getElementById('spec-port').value = app.port || 3000;
+      document.getElementById('spec-ip').value = app.primary_ip || '0.0.0.0';
+      document.getElementById('spec-domain').value = app.domain || '';
       document.getElementById('spec-entry').value = app.entrypoint || 'index.js';
       document.getElementById('modal-specs').classList.add('open');
     }
@@ -633,9 +691,12 @@
     async function submitSpecsUpdate() {
       const id = document.getElementById('spec-app-id').value;
       const name = document.getElementById('spec-name').value.trim();
-      const memory_limit = parseInt(document.getElementById('spec-ram').value, 10);
-      const cpu_limit = parseInt(document.getElementById('spec-cpu').value, 10);
-      const port = parseInt(document.getElementById('spec-port').value, 10);
+      const memory_limit = parseInt(document.getElementById('spec-ram').value, 10) || 1024;
+      const cpu_limit = parseInt(document.getElementById('spec-cpu').value, 10) || 100;
+      const disk_limit = parseInt(document.getElementById('spec-disk').value, 10) || 5120;
+      const port = parseInt(document.getElementById('spec-port').value, 10) || 3000;
+      const primary_ip = document.getElementById('spec-ip').value.trim() || '0.0.0.0';
+      const domain = document.getElementById('spec-domain').value.trim();
       const entrypoint = document.getElementById('spec-entry').value.trim();
       const btn = document.getElementById('btn-save-specs');
 
@@ -646,7 +707,7 @@
         const res = await fetch(`${API_BASE}/apps/${id}`, {
           method: 'PUT',
           headers: getHeaders(),
-          body: JSON.stringify({ name, memory_limit, cpu_limit, port, entrypoint })
+          body: JSON.stringify({ name, memory_limit, cpu_limit, disk_limit, port, primary_ip, domain, entrypoint })
         });
         const d = await res.json();
         if (!res.ok) throw new Error(d.error || 'Failed to update specs');
@@ -744,31 +805,54 @@
     async function submitCreateApp() {
       const name = document.getElementById('app-name').value.trim();
       const type = document.getElementById('app-type').value;
+      const runtime_version = document.getElementById('app-version').value;
       const port = parseInt(document.getElementById('app-port').value, 10);
       const entry = document.getElementById('app-entry').value.trim();
-      const memory_limit = parseInt(document.getElementById('app-ram').value, 10);
-      const cpu_limit = parseInt(document.getElementById('app-cpu').value, 10);
+      const memory_limit = parseInt(document.getElementById('app-ram').value, 10) || 1024;
+      const cpu_limit = parseInt(document.getElementById('app-cpu').value, 10) || 100;
+      const disk_limit = parseInt(document.getElementById('app-disk').value, 10) || 5120;
+      const primary_ip = document.getElementById('app-ip').value.trim() || '0.0.0.0';
+      const domain = document.getElementById('app-domain').value.trim();
       const btn = document.getElementById('btn-create-submit');
 
       btn.disabled = true;
-      btn.innerText = 'Deploying...';
+      btn.innerText = 'Deploying Server...';
 
       try {
         const res = await fetch(API_BASE + '/apps', {
           method: 'POST',
           headers: getHeaders(),
-          body: JSON.stringify({ name, type, port, entrypoint: entry, memory_limit, cpu_limit })
+          body: JSON.stringify({
+            name,
+            type,
+            runtime_version,
+            port,
+            entrypoint: entry,
+            main_file: entry,
+            memory_limit,
+            cpu_limit,
+            disk_limit,
+            primary_ip,
+            domain
+          })
         });
         const d = await res.json();
-        if (!res.ok) throw new Error(d.error || 'Failed to create application');
+        if (!res.ok) throw new Error(d.error || 'Failed to create server');
 
+        if (window.EclipseAnimations && window.EclipseAnimations.showToast) {
+          window.EclipseAnimations.showToast(`Server "${name}" deployed successfully!`, 'success');
+        }
         closeCreateAppModal();
         fetchApps();
       } catch (err) {
-        alert(err.message);
+        if (window.EclipseAnimations && window.EclipseAnimations.showToast) {
+          window.EclipseAnimations.showToast(err.message, 'error');
+        } else {
+          alert(err.message);
+        }
       } finally {
         btn.disabled = false;
-        btn.innerText = 'Create & Deploy';
+        btn.innerText = 'Create & Deploy Server';
       }
     }
 

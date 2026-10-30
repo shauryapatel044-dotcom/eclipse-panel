@@ -36,9 +36,26 @@ export function initDatabase() {
       env_vars TEXT DEFAULT '{}',
       auto_restart INTEGER DEFAULT 1,
       status TEXT DEFAULT 'stopped',
+      memory_limit INTEGER DEFAULT 1024,
+      cpu_limit INTEGER DEFAULT 100,
+      disk_limit INTEGER DEFAULT 5120,
+      primary_ip TEXT DEFAULT '0.0.0.0',
+      domain TEXT DEFAULT '',
+      runtime_version TEXT DEFAULT '',
+      startup_cmd TEXT DEFAULT '',
+      main_file TEXT DEFAULT '',
+      node_packages TEXT DEFAULT '',
+      unnode_packages TEXT DEFAULT '',
+      node_args TEXT DEFAULT '',
+      requirements_file TEXT DEFAULT 'requirements.txt',
       created_at TEXT DEFAULT CURRENT_TIMESTAMP,
       updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS panel_settings (
+      key TEXT PRIMARY KEY,
+      value TEXT
     );
 
     CREATE TABLE IF NOT EXISTS audit_logs (
@@ -53,6 +70,16 @@ export function initDatabase() {
   // Migrate columns if needed
   try { db.exec(`ALTER TABLE apps ADD COLUMN memory_limit INTEGER DEFAULT 1024;`); } catch (e) {}
   try { db.exec(`ALTER TABLE apps ADD COLUMN cpu_limit INTEGER DEFAULT 100;`); } catch (e) {}
+  try { db.exec(`ALTER TABLE apps ADD COLUMN disk_limit INTEGER DEFAULT 5120;`); } catch (e) {}
+  try { db.exec(`ALTER TABLE apps ADD COLUMN primary_ip TEXT DEFAULT '0.0.0.0';`); } catch (e) {}
+  try { db.exec(`ALTER TABLE apps ADD COLUMN domain TEXT DEFAULT '';`); } catch (e) {}
+  try { db.exec(`ALTER TABLE apps ADD COLUMN runtime_version TEXT DEFAULT '';`); } catch (e) {}
+  try { db.exec(`ALTER TABLE apps ADD COLUMN startup_cmd TEXT DEFAULT '';`); } catch (e) {}
+  try { db.exec(`ALTER TABLE apps ADD COLUMN main_file TEXT DEFAULT '';`); } catch (e) {}
+  try { db.exec(`ALTER TABLE apps ADD COLUMN node_packages TEXT DEFAULT '';`); } catch (e) {}
+  try { db.exec(`ALTER TABLE apps ADD COLUMN unnode_packages TEXT DEFAULT '';`); } catch (e) {}
+  try { db.exec(`ALTER TABLE apps ADD COLUMN node_args TEXT DEFAULT '';`); } catch (e) {}
+  try { db.exec(`ALTER TABLE apps ADD COLUMN requirements_file TEXT DEFAULT 'requirements.txt';`); } catch (e) {}
 
   // Seed default admin account if not existing (admin / admin)
   try {

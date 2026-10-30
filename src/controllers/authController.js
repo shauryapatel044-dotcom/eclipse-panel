@@ -49,7 +49,8 @@ export class AuthController {
 
   static async login(req, res) {
     try {
-      const { login, password } = req.body;
+      const login = req.body.login || req.body.username || req.body.email;
+      const { password } = req.body;
       if (!login || !password) {
         return res.status(400).json({ error: 'Username/Email and password are required' });
       }

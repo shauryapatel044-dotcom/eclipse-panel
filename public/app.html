@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Eclipse Panel - Server Console & Terminal</title>
+  <title>Eclipse Panel - Server Console & Control Matrix</title>
   <link rel="icon" type="image/jpeg" href="/assets/logo.jpg"/>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,6 +19,7 @@
       border-bottom: 1px solid var(--border-subtle);
       padding-bottom: 12px;
       margin-bottom: 20px;
+      overflow-x: auto;
     }
     .tab-nav-btn {
       padding: 9px 18px;
@@ -33,6 +34,7 @@
       align-items: center;
       gap: 8px;
       transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      white-space: nowrap;
     }
     .tab-nav-btn:hover {
       background: rgba(255, 255, 255, 0.04);
@@ -62,7 +64,7 @@
       color: var(--text-secondary);
       font-family: var(--font-mono);
       font-size: 11px;
-      padding: 3px 8px;
+      padding: 4px 10px;
       border-radius: 6px;
       cursor: pointer;
       transition: all 0.2s;
@@ -71,6 +73,54 @@
       background: rgba(239, 68, 68, 0.15);
       border-color: var(--primary);
       color: #FFF;
+    }
+    .file-item-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-main);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .file-item-row:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .file-item-row.active {
+      background: rgba(239, 68, 68, 0.15);
+      color: #FFF;
+    }
+    .startup-var-card {
+      background: rgba(18, 20, 26, 0.7);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+    .startup-var-title {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      color: #FFF;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .startup-var-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+    .danger-box {
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      background: rgba(239, 68, 68, 0.06);
+      border-radius: 12px;
+      padding: 18px;
+      margin-top: 24px;
     }
   </style>
 </head>
@@ -182,6 +232,7 @@
                 <h1 style="font-size: 22px; font-weight: 800; color: #FFF; letter-spacing: -0.01em;" id="hero-app-name">Select a Server</h1>
                 <span class="status-pill stopped" id="hero-status-pill">STOPPED</span>
                 <span class="metric-pill crimson" id="hero-runtime-pill">Node.js</span>
+                <span class="metric-pill emerald" id="hero-ip-badge">IP: 0.0.0.0</span>
               </div>
 
               <!-- Live Specs Matrix -->
@@ -191,20 +242,20 @@
                   <a id="hero-port-link" href="#" target="_blank" style="color: #FFF; text-decoration: none; font-weight: 700;">:----</a>
                 </div>
                 <div class="spec-chip">
-                  <span style="color: var(--emerald);">🧠 RAM Limit:</span>
+                  <span style="color: var(--emerald);">🧠 RAM:</span>
                   <span id="hero-ram-spec" style="font-weight: 700; color: #FFF;">1024 MB</span>
                 </div>
                 <div class="spec-chip">
-                  <span style="color: var(--amber);">⚡ CPU Limit:</span>
-                  <span id="hero-cpu-spec" style="font-weight: 700; color: #FFF;">100% (1 Core)</span>
+                  <span style="color: var(--amber);">⚡ CPU:</span>
+                  <span id="hero-cpu-spec" style="font-weight: 700; color: #FFF;">100% Core</span>
+                </div>
+                <div class="spec-chip">
+                  <span style="color: #60A5FA;">💾 Disk:</span>
+                  <span id="hero-disk-spec" style="font-weight: 700; color: #FFF;">5120 MB</span>
                 </div>
                 <div class="spec-chip">
                   <span style="color: var(--text-muted);">PID:</span>
                   <span id="hero-pid" style="color: #FFF; font-weight: 600;">--</span>
-                </div>
-                <div class="spec-chip">
-                  <span style="color: var(--text-muted);">Restarts:</span>
-                  <span id="hero-restarts" style="color: #FFF; font-weight: 600;">0</span>
                 </div>
               </div>
             </div>
@@ -223,14 +274,6 @@
                 <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
                 <span>Restart</span>
               </button>
-              <button class="btn-secondary framer-spring" onclick="openSpecsModal()" title="Modify CPU, RAM, Port, and runtime specs">
-                <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
-                <span>Edit Specs</span>
-              </button>
-              <button class="btn-secondary framer-spring" style="color: var(--primary);" onclick="deleteCurrentApp()">
-                <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
-                <span>Delete</span>
-              </button>
             </div>
           </div>
         </section>
@@ -240,11 +283,19 @@
           <div class="tab-nav">
             <button class="tab-nav-btn active" id="tab-btn-console" onclick="switchConsoleTab('console')">
               <svg style="width: 16px; height: 16px; fill: currentColor;" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-9 14H5v-2h6v2zm-2.83-5.17L4.34 9l1.41-1.41 3.54 3.54-3.54 3.54-1.41-1.41 2.83-2.84z"/></svg>
-              <span>Interactive Console</span>
+              <span>Console</span>
             </button>
             <button class="tab-nav-btn" id="tab-btn-files" onclick="switchConsoleTab('files')">
               <svg style="width: 16px; height: 16px; fill: currentColor;" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
-              <span>Workspace Files</span>
+              <span>File Manager</span>
+            </button>
+            <button class="tab-nav-btn" id="tab-btn-startup" onclick="switchConsoleTab('startup')">
+              <svg style="width: 16px; height: 16px; fill: currentColor;" viewBox="0 0 24 24"><path d="M13 2.05v3.03c3.39.49 6 3.39 6 6.92 0 .9-.18 1.75-.48 2.54l2.6 1.53c.56-1.24.88-2.62.88-4.07 0-5.18-3.95-9.45-9-9.95zM12 19c-3.87 0-7-3.13-7-7 0-3.53 2.61-6.43 6-6.92V2.05c-5.05.5-9 4.76-9 9.95 0 5.52 4.47 10 9.99 10 3.31 0 6.24-1.61 8.01-4.07l-2.6-1.53C15.42 17.82 13.82 19 12 19z"/></svg>
+              <span>Startup & Runtime</span>
+            </button>
+            <button class="tab-nav-btn" id="tab-btn-settings" onclick="switchConsoleTab('settings')">
+              <svg style="width: 16px; height: 16px; fill: currentColor;" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+              <span>Settings & Resources</span>
             </button>
             <button class="tab-nav-btn" id="tab-btn-config" onclick="switchConsoleTab('config')">
               <svg style="width: 16px; height: 16px; fill: currentColor;" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
@@ -252,10 +303,9 @@
             </button>
           </div>
 
-          <!-- TAB 1: PROFESSIONAL INTERACTIVE CONSOLE -->
+          <!-- TAB 1: CONSOLE -->
           <div id="pane-console">
             <div class="console-wrapper">
-              <!-- Console Top Bar -->
               <div class="console-header-bar">
                 <div style="display: flex; align-items: center; gap: 12px;">
                   <div class="console-dots">
@@ -267,7 +317,7 @@
                 </div>
 
                 <div style="display: flex; align-items: center; gap: 10px;">
-                  <label style="display: flex; align-items: center; gap: 5px; color: var(--text-muted); cursor: pointer;">
+                  <label style="display: flex; align-items: center; gap: 5px; color: var(--text-muted); cursor: pointer; font-size: 11px; font-family: var(--font-mono);">
                     <input type="checkbox" id="chk-autoscroll" checked> Auto-Scroll
                   </label>
                   <button class="quick-cmd-btn" onclick="clearConsole()">Clear</button>
@@ -282,7 +332,7 @@
                 <button class="quick-cmd-btn" onclick="runQuickCmd('pip install -r requirements.txt')">pip install</button>
                 <button class="quick-cmd-btn" onclick="runQuickCmd('node -v')">node -v</button>
                 <button class="quick-cmd-btn" onclick="runQuickCmd('python --version')">python -V</button>
-                <button class="quick-cmd-btn" onclick="runQuickCmd('git status')">git status</button>
+                <button class="quick-cmd-btn" onclick="runQuickCmd('ls -la')">ls -la</button>
               </div>
 
               <!-- Live Terminal Body -->
@@ -299,34 +349,203 @@
             </div>
           </div>
 
-          <!-- TAB 2: FILE MANAGER -->
+          <!-- TAB 2: ADVANCED FILE MANAGER -->
           <div id="pane-files" style="display: none;">
-            <div style="display: grid; grid-template-columns: 260px 1fr; gap: 18px;">
-              <div style="background: var(--bg-sidebar); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 14px; max-height: 520px; overflow-y: auto;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                  <span style="font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Workspace Explorer</span>
-                  <button class="quick-cmd-btn" onclick="loadFiles(currentAppId)">↻ Refresh</button>
-                </div>
+            <!-- Actions Toolbar -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <button class="btn-secondary framer-spring" onclick="triggerFileUploadPrompt()">
+                  <svg style="width: 14px; height: 14px; fill: currentColor;" viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+                  <span>Upload File</span>
+                </button>
+                <button class="btn-secondary framer-spring" onclick="openNewFilePrompt()">
+                  <span>+ New File</span>
+                </button>
+                <button class="btn-secondary framer-spring" onclick="openNewFolderPrompt()">
+                  <span>📁 New Folder</span>
+                </button>
+                <input type="file" id="file-uploader" style="display: none;" onchange="handleFileUpload(event)">
+              </div>
+              <div>
+                <button class="quick-cmd-btn" onclick="loadFiles(currentAppId)">↻ Refresh List</button>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 280px 1fr; gap: 18px;">
+              <!-- File Explorer List -->
+              <div style="background: rgba(13, 14, 18, 0.85); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 12px; max-height: 520px; overflow-y: auto;">
+                <div style="font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">Directory / Files</div>
                 <div id="file-tree-list">
-                  <div style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);">Loading files...</div>
+                  <div style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); padding: 12px;">Loading workspace...</div>
                 </div>
               </div>
 
+              <!-- Code Editor Pane -->
               <div>
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                   <span id="active-filename" style="font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: #FFF;">Select a file to edit</span>
-                  <button class="btn-primary framer-spring" style="padding: 6px 16px; font-size: 12px;" onclick="saveActiveFile()">Save Changes</button>
+                  <div style="display: flex; gap: 8px;">
+                    <button class="quick-cmd-btn" onclick="renameCurrentActiveFile()">Rename</button>
+                    <button class="quick-cmd-btn" style="color: var(--primary);" onclick="deleteCurrentActiveFile()">Delete File</button>
+                    <button class="btn-primary framer-spring" style="padding: 6px 16px; font-size: 12px;" onclick="saveActiveFile()">Save Changes (Ctrl+S)</button>
+                  </div>
                 </div>
                 <textarea id="file-editor" class="form-control" style="height: 470px; font-family: var(--font-mono); font-size: 12px; line-height: 1.6; resize: vertical;" placeholder="// Select a file from the explorer on the left..."></textarea>
               </div>
             </div>
           </div>
 
-          <!-- TAB 3: ENVIRONMENT VARIABLES -->
+          <!-- TAB 3: STARTUP & RUNTIME -->
+          <div id="pane-startup" style="display: none;">
+            <div style="max-width: 880px;">
+              <h2 style="font-size: 18px; font-weight: 800; color: #FFF; margin-bottom: 4px;">Startup Configuration & Runtime Switcher</h2>
+              <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 22px;">Switch between Node.js and Python engines, change version, and modify the automated startup execution pipeline.</p>
+
+              <!-- Runtime & Version Switcher -->
+              <div class="startup-var-card">
+                <div class="startup-var-title">
+                  <span style="color: var(--primary);">⚡ Execution Engine & Version</span>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 10px;">
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label">Runtime Engine</label>
+                    <select id="startup-type-select" class="form-control" onchange="handleRuntimeTypeChange(this.value)">
+                      <option value="nodejs">Node.js Engine (JavaScript / TypeScript)</option>
+                      <option value="python">Python Engine (3.x Virtualenv)</option>
+                    </select>
+                  </div>
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label">Runtime Version</label>
+                    <select id="startup-version-select" class="form-control">
+                      <!-- Filled dynamically -->
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Startup Command Box -->
+              <div class="startup-var-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <div class="startup-var-title" style="margin-bottom: 0;">
+                    <span>📜 Startup Command Execution Script</span>
+                  </div>
+                  <button type="button" class="quick-cmd-btn" onclick="resetStartupToDefault()">Reset to Default Script</button>
+                </div>
+                <p class="startup-var-desc">This script is executed directly upon server start to install dependencies and boot the server process.</p>
+                <textarea id="startup-cmd-editor" class="form-control" style="height: 120px; font-family: var(--font-mono); font-size: 12px; line-height: 1.5;"></textarea>
+              </div>
+
+              <!-- Variables Cards -->
+              <h3 style="font-size: 14px; font-weight: 700; color: #FFF; margin: 18px 0 10px;">Startup Variables</h3>
+
+              <!-- MAIN_FILE -->
+              <div class="startup-var-card">
+                <div class="startup-var-title">MAIN_FILE</div>
+                <p class="startup-var-desc">The entrypoint file to run upon startup (e.g. <code>index.js</code>, <code>server.js</code>, or <code>main.py</code>).</p>
+                <input type="text" id="startup-var-main" class="form-control" placeholder="index.js">
+              </div>
+
+              <!-- NODE_PACKAGES / UNNODE_PACKAGES (Node.js) -->
+              <div id="startup-node-vars">
+                <div class="startup-var-card">
+                  <div class="startup-var-title">NODE_PACKAGES</div>
+                  <p class="startup-var-desc">Additional npm packages to install upon boot, separated by space.</p>
+                  <input type="text" id="startup-var-nodepkg" class="form-control" placeholder="express socket.io dotenv">
+                </div>
+
+                <div class="startup-var-card">
+                  <div class="startup-var-title">NODE_ARGS</div>
+                  <p class="startup-var-desc">Custom CLI arguments passed to the Node.js binary.</p>
+                  <input type="text" id="startup-var-nodeargs" class="form-control" placeholder="--trace-warnings">
+                </div>
+              </div>
+
+              <!-- REQUIREMENTS_FILE (Python) -->
+              <div id="startup-py-vars" style="display: none;">
+                <div class="startup-var-card">
+                  <div class="startup-var-title">REQUIREMENTS_FILE</div>
+                  <p class="startup-var-desc">Path to the Python requirements file for pip installation.</p>
+                  <input type="text" id="startup-var-reqfile" class="form-control" placeholder="requirements.txt">
+                </div>
+              </div>
+
+              <div style="margin-top: 20px;">
+                <button type="button" class="btn-primary framer-spring" onclick="saveStartupConfig()">Save Startup Settings</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 4: SETTINGS & RESOURCES -->
+          <div id="pane-settings" style="display: none;">
+            <div style="max-width: 680px;">
+              <h2 style="font-size: 18px; font-weight: 800; color: #FFF; margin-bottom: 4px;">Server Hardware Settings & Networking</h2>
+              <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 22px;">Allocate dedicated core percentages, memory thresholds, disk storage, and network IP/DNS hostnames.</p>
+
+              <form onsubmit="event.preventDefault(); submitServerSettings();">
+                <div class="form-group">
+                  <label class="form-label" for="set-name">Server Instance Name</label>
+                  <input type="text" id="set-name" class="form-control" required>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                  <div class="form-group">
+                    <label class="form-label" for="set-ip">Primary IP / Binding</label>
+                    <input type="text" id="set-ip" class="form-control" placeholder="0.0.0.0 or VPS IP">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="set-port">Listening Port</label>
+                    <input type="number" id="set-port" class="form-control" required min="1" max="65535">
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="set-domain">Custom Domain / DNS Hostname</label>
+                  <input type="text" id="set-domain" class="form-control" placeholder="e.g. srv1.eclipsemarket.com">
+                  <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Point an A record for this domain to your VPS IP to direct traffic here.</p>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px;">
+                  <div class="form-group">
+                    <label class="form-label" for="set-ram">RAM Limit (MB)</label>
+                    <input type="number" id="set-ram" class="form-control" min="128" step="128" required>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="set-cpu">CPU Limit (%)</label>
+                    <input type="number" id="set-cpu" class="form-control" min="10" max="2200" step="10" required>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="set-disk">Disk Limit (MB)</label>
+                    <input type="number" id="set-disk" class="form-control" min="256" step="256" required>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="set-autorestart">Crash Recovery</label>
+                  <select id="set-autorestart" class="form-control">
+                    <option value="1">Enabled (Auto-Restart process if terminated)</option>
+                    <option value="0">Disabled (Stay stopped on crash)</option>
+                  </select>
+                </div>
+
+                <button type="submit" class="btn-primary framer-spring" id="btn-save-settings">Save Server Settings</button>
+              </form>
+
+              <!-- Danger Zone -->
+              <div class="danger-box">
+                <h3 style="font-size: 14px; font-weight: 800; color: #F87171; margin-bottom: 6px;">Danger Zone</h3>
+                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">Irreversible administrative operations for this server instance.</p>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                  <button class="btn-secondary" style="border-color: rgba(239, 68, 68, 0.5); color: #F87171;" onclick="deleteCurrentApp()">Purge & Delete Server</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 5: ENVIRONMENT VARIABLES -->
           <div id="pane-config" style="display: none;">
-            <div style="max-width: 640px;">
+            <div style="max-width: 680px;">
               <h3 style="font-size: 15px; font-weight: 700; color: #FFF; margin-bottom: 6px;">Environment Variables</h3>
-              <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">These key-value pairs are automatically injected into the process environment upon boot.</p>
+              <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">Key-value variables automatically injected into the process environment upon boot.</p>
               
               <form onsubmit="event.preventDefault(); saveEnvConfig();">
                 <div class="form-group">
@@ -342,152 +561,100 @@
     </main>
   </div>
 
-  <!-- MODAL: EDIT SERVER SPECS (RAM, CPU, PORT, ENTRY, TYPE) -->
-  <div class="modal-overlay" id="modal-specs">
-    <div class="modal-card">
-      <div class="modal-header">
-        <h3 class="modal-title">
-          <svg style="width: 22px; height: 22px; fill: var(--primary);" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
-          <span>Modify Server Specifications</span>
-        </h3>
-        <button class="modal-close-btn" onclick="closeSpecsModal()">
-          <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-        </button>
-      </div>
-
-      <form onsubmit="event.preventDefault(); submitSpecsUpdate();">
-        <div class="form-group">
-          <label class="form-label" for="spec-name">Server Name</label>
-          <input type="text" id="spec-name" class="form-control" required>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
-          <div class="form-group">
-            <label class="form-label" for="spec-ram">RAM Allocation (MB)</label>
-            <select id="spec-ram" class="form-control" style="cursor: pointer;">
-              <option value="512">512 MB (Standard)</option>
-              <option value="1024">1,024 MB (1 GB Recommended)</option>
-              <option value="2048">2,048 MB (2 GB)</option>
-              <option value="4096">4,096 MB (4 GB High-Compute)</option>
-              <option value="8192">8,192 MB (8 GB Dedicated)</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="spec-cpu">CPU Allocation Limit (%)</label>
-            <select id="spec-cpu" class="form-control" style="cursor: pointer;">
-              <option value="50">50% (0.5 Logical Core)</option>
-              <option value="100">100% (1 Logical Core)</option>
-              <option value="200">200% (2 Logical Cores)</option>
-              <option value="400">400% (4 Logical Cores)</option>
-            </select>
-          </div>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
-          <div class="form-group">
-            <label class="form-label" for="spec-port">Dedicated Port</label>
-            <input type="number" id="spec-port" class="form-control" required placeholder="3000">
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="spec-entry">Entrypoint Script</label>
-            <input type="text" id="spec-entry" class="form-control" required placeholder="index.js or app.py">
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="spec-autorestart">Supervisor Watchdog</label>
-          <select id="spec-autorestart" class="form-control" style="cursor: pointer;">
-            <option value="1">Enabled (Auto-Restart on Crash)</option>
-            <option value="0">Disabled (Manual Recovery Only)</option>
-          </select>
-        </div>
-
-        <div class="modal-footer">
-          <button type="button" class="btn-secondary" onclick="closeSpecsModal()">Cancel</button>
-          <button type="submit" class="btn-primary framer-spring" id="btn-save-specs">Save Specifications</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- MODAL: CREATE SERVER -->
+  <!-- MODAL: CREATE NEW SERVER -->
   <div class="modal-overlay" id="modal-create-app">
-    <div class="modal-card">
+    <div class="modal-card" style="max-width: 540px;">
       <div class="modal-header">
-        <h3 class="modal-title"><span>Create New Server</span></h3>
-        <button class="modal-close-btn" onclick="closeCreateAppModal()"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
+        <h3 class="modal-title">Deploy New Server Instance</h3>
+        <button class="modal-close-btn" onclick="closeCreateAppModal()">&times;</button>
       </div>
       <form onsubmit="event.preventDefault(); submitCreateApp();">
         <div class="form-group">
-          <label class="form-label">Server / Application Name</label>
-          <input type="text" id="new-app-name" class="form-control" required placeholder="node-api-server">
+          <label class="form-label" for="new-app-name">Server Instance Name</label>
+          <input type="text" id="new-app-name" class="form-control" placeholder="e.g. API-Production-Cluster" required>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
           <div class="form-group">
-            <label class="form-label">Runtime Engine</label>
-            <select id="new-app-type" class="form-control">
-              <option value="nodejs">Node.js 22 (ESM/CJS)</option>
-              <option value="python">Python 3.12 (venv)</option>
+            <label class="form-label" for="new-app-type">Runtime Engine</label>
+            <select id="new-app-type" class="form-control" onchange="updateNewServerVersions(this.value)">
+              <option value="nodejs">Node.js</option>
+              <option value="python">Python</option>
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label">Assigned Port</label>
-            <input type="number" id="new-app-port" class="form-control" required value="3001">
-          </div>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-          <div class="form-group">
-            <label class="form-label">RAM Limit</label>
-            <select id="new-app-ram" class="form-control">
-              <option value="1024">1,024 MB (Standard)</option>
-              <option value="2048">2,048 MB (Medium)</option>
-              <option value="4096">4,096 MB (High)</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">CPU Limit</label>
-            <select id="new-app-cpu" class="form-control">
-              <option value="100">100% (1 Core)</option>
-              <option value="200">200% (2 Cores)</option>
+            <label class="form-label" for="new-app-version">Version</label>
+            <select id="new-app-version" class="form-control">
+              <option value="20">Node.js 20 (LTS)</option>
+              <option value="22">Node.js 22 (Current)</option>
+              <option value="18">Node.js 18 (LTS)</option>
             </select>
           </div>
         </div>
 
-        <div class="modal-footer">
-          <button type="button" class="btn-secondary" onclick="closeCreateAppModal()">Cancel</button>
-          <button type="submit" class="btn-primary framer-spring">Deploy Server</button>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <div class="form-group">
+            <label class="form-label" for="new-app-ip">Binding IP</label>
+            <input type="text" id="new-app-ip" class="form-control" value="0.0.0.0">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="new-app-port">Allocated Port</label>
+            <input type="number" id="new-app-port" class="form-control" value="3000" required min="1" max="65535">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="new-app-domain">Domain / DNS Hostname (Optional)</label>
+          <input type="text" id="new-app-domain" class="form-control" placeholder="e.g. srv.eclipsemarket.com">
+        </div>
+
+        <!-- Manual Resource Limits -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label class="form-label" for="new-app-ram">RAM (MB)</label>
+            <input type="number" id="new-app-ram" class="form-control" value="1024" min="128" step="128" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="new-app-cpu">Core / CPU (%)</label>
+            <input type="number" id="new-app-cpu" class="form-control" value="100" min="10" step="10" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="new-app-disk">Disk (MB)</label>
+            <input type="number" id="new-app-disk" class="form-control" value="5120" min="256" step="256" required>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px;">
+          <button type="button" class="btn-secondary framer-spring" onclick="closeCreateAppModal()">Cancel</button>
+          <button type="submit" class="btn-primary framer-spring">Deploy Instance</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- MODAL: PROFILE -->
+  <!-- MODAL: MY ACCOUNT -->
   <div class="modal-overlay" id="modal-profile">
     <div class="modal-card">
       <div class="modal-header">
-        <h3 class="modal-title"><span>Account & Profile Settings</span></h3>
-        <button class="modal-close-btn" onclick="closeProfileModal()"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
+        <h3 class="modal-title">My Operator Account</h3>
+        <button class="modal-close-btn" onclick="closeProfileModal()">&times;</button>
       </div>
       <form onsubmit="event.preventDefault(); submitProfile();">
         <div class="form-group">
-          <label class="form-label">Username</label>
+          <label class="form-label" for="self-user">Operator Username</label>
           <input type="text" id="self-user" class="form-control" required>
         </div>
         <div class="form-group">
-          <label class="form-label">Gmail / Email</label>
+          <label class="form-label" for="self-email">Operator Gmail / Email</label>
           <input type="email" id="self-email" class="form-control" required>
         </div>
         <div class="form-group">
-          <label class="form-label">New Password (leave blank to keep current)</label>
+          <label class="form-label" for="self-pass">New Password (leave blank to keep current)</label>
           <input type="password" id="self-pass" class="form-control" placeholder="••••••••••••">
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn-secondary" onclick="closeProfileModal()">Cancel</button>
-          <button type="submit" class="btn-primary framer-spring">Save Changes</button>
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px;">
+          <button type="button" class="btn-secondary framer-spring" onclick="closeProfileModal()">Cancel</button>
+          <button type="submit" class="btn-primary framer-spring">Save Profile</button>
         </div>
       </form>
     </div>
@@ -501,6 +668,10 @@
     let currentAppObj = null;
     let activeWs = null;
     let activeFile = null;
+
+    const NODE_DEFAULT_CMD = `if [[ -d .git ]] && [[ 0 == "1" ]]; then git pull; fi; if [[ ! -z \${NODE_PACKAGES} ]]; then /usr/local/bin/npm install \${NODE_PACKAGES}; fi; if [[ ! -z \${UNNODE_PACKAGES} ]]; then /usr/local/bin/npm uninstall \${UNNODE_PACKAGES}; fi; if [ -f /home/container/package.json ]; then /usr/local/bin/npm install; fi; if [[ "\${MAIN_FILE##*.}" == "js" ]]; then /usr/local/bin/node "/home/container/\${MAIN_FILE}" \${NODE_ARGS}; else /usr/local/bin/ts-node --esm "/home/container/\${MAIN_FILE}" \${NODE_ARGS}; fi`;
+
+    const PYTHON_DEFAULT_CMD = `if [[ -d .git ]] && [[ "0" == "1" ]]; then git pull; fi; if [[ ! -z "" ]]; then pip install -U --prefix .local ; fi; if [[ -f /home/container/\${REQUIREMENTS_FILE} ]]; then pip install -U --prefix .local -r \${REQUIREMENTS_FILE}; fi; /usr/local/bin/python /home/container/main.py`;
 
     if (!token) window.location.href = '/login.html';
     else {
@@ -538,28 +709,17 @@
     }
     function closeProfileModal() { document.getElementById('modal-profile').classList.remove('open'); }
 
-    function openSpecsModal() {
-      if (!currentAppObj) return;
-      document.getElementById('spec-name').value = currentAppObj.name || '';
-      document.getElementById('spec-port').value = currentAppObj.port || '';
-      document.getElementById('spec-entry').value = currentAppObj.entrypoint || 'index.js';
-      document.getElementById('spec-ram').value = currentAppObj.memory_limit || '1024';
-      document.getElementById('spec-cpu').value = currentAppObj.cpu_limit || '100';
-      document.getElementById('spec-autorestart').value = currentAppObj.auto_restart ? '1' : '0';
-      document.getElementById('modal-specs').classList.add('open');
-    }
-    function closeSpecsModal() { document.getElementById('modal-specs').classList.remove('open'); }
-
     function switchConsoleTab(tab) {
-      document.getElementById('pane-console').style.display = tab === 'console' ? 'block' : 'none';
-      document.getElementById('pane-files').style.display = tab === 'files' ? 'block' : 'none';
-      document.getElementById('pane-config').style.display = tab === 'config' ? 'block' : 'none';
-
-      document.getElementById('tab-btn-console').className = 'tab-nav-btn' + (tab === 'console' ? ' active' : '');
-      document.getElementById('tab-btn-files').className = 'tab-nav-btn' + (tab === 'files' ? ' active' : '');
-      document.getElementById('tab-btn-config').className = 'tab-nav-btn' + (tab === 'config' ? ' active' : '');
+      ['console', 'files', 'startup', 'settings', 'config'].forEach(t => {
+        const pane = document.getElementById('pane-' + t);
+        const btn = document.getElementById('tab-btn-' + t);
+        if (pane) pane.style.display = (t === tab) ? 'block' : 'none';
+        if (btn) btn.className = 'tab-nav-btn' + (t === tab ? ' active' : '');
+      });
 
       if (tab === 'files' && currentAppId) loadFiles(currentAppId);
+      if (tab === 'startup' && currentAppId) loadStartupConfig(currentAppId);
+      if (tab === 'settings' && currentAppObj) populateSettingsTab(currentAppObj);
     }
 
     async function loadAllApps() {
@@ -567,66 +727,375 @@
         const res = await fetch(API_BASE + '/apps', { headers: getHeaders() });
         if (!res.ok) return;
         const data = await res.json();
-        const apps = data.apps || data || [];
-
+        const apps = data.apps || [];
         const selector = document.getElementById('app-selector');
-        selector.innerHTML = '<option value="">Choose Server Instance...</option>' + 
-          apps.map(a => `<option value="${a.id}">${escapeHtml(a.name)} (:${a.port})</option>`).join('');
+        
+        if (apps.length === 0) {
+          selector.innerHTML = '<option value="">No servers available</option>';
+          return;
+        }
+
+        selector.innerHTML = apps.map(a => `<option value="${a.id}">${escapeHtml(a.name)} (${a.type.toUpperCase()})</option>`).join('');
 
         const urlParams = new URLSearchParams(window.location.search);
-        const queryId = urlParams.get('id');
-
-        if (queryId && apps.some(a => a.id == queryId)) {
-          selector.value = queryId;
-          switchApp(queryId);
-        } else if (apps.length > 0) {
-          selector.value = apps[0].id;
-          switchApp(apps[0].id);
-        }
-      } catch (e) { console.error(e); }
+        const reqApp = urlParams.get('id');
+        const chosen = (reqApp && apps.find(x => x.id === reqApp)) ? reqApp : apps[0].id;
+        
+        selector.value = chosen;
+        switchApp(chosen);
+      } catch (err) {
+        console.error('Failed to load apps:', err);
+      }
     }
 
     async function switchApp(appId) {
       if (!appId) return;
       currentAppId = appId;
-      history.replaceState(null, '', `?id=${appId}`);
+      window.history.replaceState({}, '', `/app.html?id=${appId}`);
 
       try {
         const res = await fetch(`${API_BASE}/apps/${appId}`, { headers: getHeaders() });
         if (!res.ok) return;
-        const d = await res.json();
-        const app = d.app || d;
+        const data = await res.json();
+        const app = data.app;
         currentAppObj = app;
-        renderAppDetails(app);
-        connectAppWS(appId);
-        loadRecentLogs(appId);
-      } catch (e) { console.error(e); }
+
+        // Render Hero
+        document.getElementById('hero-app-name').innerText = app.name;
+        document.getElementById('header-app-name').innerText = app.name;
+        document.getElementById('hero-runtime-pill').innerText = (app.type || 'nodejs').toUpperCase() + (app.runtime_version ? ` v${app.runtime_version}` : '');
+        document.getElementById('hero-ip-badge').innerText = `IP: ${app.primary_ip || '0.0.0.0'}`;
+        
+        const isRunning = app.status === 'running';
+        const statusBadge = document.getElementById('app-status-badge');
+        statusBadge.innerText = isRunning ? 'ONLINE' : (app.status || 'STOPPED').toUpperCase();
+        statusBadge.className = isRunning ? 'metric-pill emerald' : 'metric-pill crimson';
+
+        const heroStatus = document.getElementById('hero-status-pill');
+        heroStatus.innerText = isRunning ? 'ONLINE' : (app.status || 'STOPPED').toUpperCase();
+        heroStatus.className = 'status-pill ' + (isRunning ? 'running' : 'stopped');
+
+        // Specs
+        document.getElementById('hero-port-link').innerText = ':' + (app.port || '----');
+        document.getElementById('hero-port-link').href = `http://${window.location.hostname}:${app.port}`;
+        document.getElementById('hero-ram-spec').innerText = (app.memory_limit || 1024) + ' MB';
+        document.getElementById('hero-cpu-spec').innerText = (app.cpu_limit || 100) + '%';
+        document.getElementById('hero-disk-spec').innerText = (app.disk_limit || 5120) + ' MB';
+        document.getElementById('hero-pid').innerText = app.metrics?.pid || (isRunning ? 'ACTIVE' : '--');
+
+        // Buttons
+        document.getElementById('btn-start').disabled = isRunning;
+        document.getElementById('btn-stop').disabled = !isRunning;
+
+        // Logs
+        renderTerminalLogs(app.logs || []);
+        connectAppWebSocket(appId);
+
+        // Env config
+        document.getElementById('cfg-env').value = app.env_vars ? JSON.stringify(app.env_vars, null, 2) : '{}';
+
+        populateSettingsTab(app);
+      } catch (err) {
+        console.error('Error switching app:', err);
+      }
     }
 
-    function renderAppDetails(app) {
-      document.getElementById('header-app-name').innerText = app.name;
-      document.getElementById('hero-app-name').innerText = app.name;
-      document.getElementById('console-title-app').innerText = `${app.name} (${app.type})`;
-      
-      const isRunning = app.status === 'running';
-      document.getElementById('hero-status-pill').innerText = (app.status || 'STOPPED').toUpperCase();
-      document.getElementById('hero-status-pill').className = 'status-pill ' + (isRunning ? 'running' : 'stopped');
-      document.getElementById('app-status-badge').innerText = (app.status || 'STOPPED').toUpperCase();
-      document.getElementById('hero-runtime-pill').innerText = app.type === 'python' ? 'Python 3' : 'Node.js';
-      
-      document.getElementById('hero-port-link').innerText = ':' + (app.port || 'Auto');
-      document.getElementById('hero-port-link').href = app.port ? `http://${window.location.hostname}:${app.port}` : '#';
-      document.getElementById('hero-pid').innerText = (app.metrics && app.metrics.pid) || '--';
-      document.getElementById('hero-restarts').innerText = app.restart_count || 0;
-
-      // Specs display
-      document.getElementById('hero-ram-spec').innerText = (app.memory_limit || 1024) + ' MB';
-      document.getElementById('hero-cpu-spec').innerText = (app.cpu_limit || 100) + '%';
-
-      // Config tab values
-      document.getElementById('cfg-env').value = app.env_vars ? JSON.stringify(app.env_vars, null, 2) : '{}';
+    function populateSettingsTab(app) {
+      document.getElementById('set-name').value = app.name || '';
+      document.getElementById('set-ip').value = app.primary_ip || '0.0.0.0';
+      document.getElementById('set-port').value = app.port || '3000';
+      document.getElementById('set-domain').value = app.domain || '';
+      document.getElementById('set-ram').value = app.memory_limit || '1024';
+      document.getElementById('set-cpu').value = app.cpu_limit || '100';
+      document.getElementById('set-disk').value = app.disk_limit || '5120';
+      document.getElementById('set-autorestart').value = app.auto_restart ? '1' : '0';
     }
 
+    async function submitServerSettings() {
+      if (!currentAppId) return;
+      const name = document.getElementById('set-name').value.trim();
+      const primary_ip = document.getElementById('set-ip').value.trim();
+      const port = parseInt(document.getElementById('set-port').value, 10);
+      const domain = document.getElementById('set-domain').value.trim();
+      const memory_limit = parseInt(document.getElementById('set-ram').value, 10);
+      const cpu_limit = parseInt(document.getElementById('set-cpu').value, 10);
+      const disk_limit = parseInt(document.getElementById('set-disk').value, 10);
+      const auto_restart = parseInt(document.getElementById('set-autorestart').value, 10);
+
+      const btn = document.getElementById('btn-save-settings');
+      btn.disabled = true;
+      btn.innerText = 'Saving...';
+
+      try {
+        const res = await fetch(`${API_BASE}/apps/${currentAppId}`, {
+          method: 'PUT',
+          headers: getHeaders(),
+          body: JSON.stringify({ name, primary_ip, port, domain, memory_limit, cpu_limit, disk_limit, auto_restart })
+        });
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.error || 'Failed to update settings');
+        notify('Server settings updated successfully!', 'success');
+        switchApp(currentAppId);
+      } catch (e) {
+        notify(e.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Save Server Settings';
+      }
+    }
+
+    // STARTUP TAB LOGIC
+    function updateVersionOptions(type, selectedVersion = '') {
+      const select = document.getElementById('startup-version-select');
+      if (type === 'nodejs') {
+        select.innerHTML = `
+          <option value="20" ${selectedVersion == '20' ? 'selected' : ''}>Node.js 20 (LTS Iron)</option>
+          <option value="22" ${selectedVersion == '22' ? 'selected' : ''}>Node.js 22 (Current)</option>
+          <option value="18" ${selectedVersion == '18' ? 'selected' : ''}>Node.js 18 (LTS Hydrogen)</option>
+          <option value="24" ${selectedVersion == '24' ? 'selected' : ''}>Node.js 24 (Active)</option>
+        `;
+        document.getElementById('startup-node-vars').style.display = 'block';
+        document.getElementById('startup-py-vars').style.display = 'none';
+      } else {
+        select.innerHTML = `
+          <option value="3.11" ${selectedVersion == '3.11' ? 'selected' : ''}>Python 3.11</option>
+          <option value="3.12" ${selectedVersion == '3.12' ? 'selected' : ''}>Python 3.12</option>
+          <option value="3.10" ${selectedVersion == '3.10' ? 'selected' : ''}>Python 3.10</option>
+          <option value="3.13" ${selectedVersion == '3.13' ? 'selected' : ''}>Python 3.13</option>
+        `;
+        document.getElementById('startup-node-vars').style.display = 'none';
+        document.getElementById('startup-py-vars').style.display = 'block';
+      }
+    }
+
+    function handleRuntimeTypeChange(type) {
+      updateVersionOptions(type);
+      const cmdEditor = document.getElementById('startup-cmd-editor');
+      cmdEditor.value = (type === 'nodejs') ? NODE_DEFAULT_CMD : PYTHON_DEFAULT_CMD;
+      document.getElementById('startup-var-main').value = (type === 'nodejs') ? 'index.js' : 'main.py';
+    }
+
+    function resetStartupToDefault() {
+      const type = document.getElementById('startup-type-select').value;
+      document.getElementById('startup-cmd-editor').value = (type === 'nodejs') ? NODE_DEFAULT_CMD : PYTHON_DEFAULT_CMD;
+      notify('Startup script reset to default.', 'info');
+    }
+
+    async function loadStartupConfig(appId) {
+      try {
+        const res = await fetch(`${API_BASE}/apps/${appId}/startup`, { headers: getHeaders() });
+        if (!res.ok) return;
+        const { startup } = await res.json();
+
+        document.getElementById('startup-type-select').value = startup.type || 'nodejs';
+        updateVersionOptions(startup.type || 'nodejs', startup.runtime_version);
+        document.getElementById('startup-cmd-editor').value = startup.startup_cmd || (startup.type === 'nodejs' ? NODE_DEFAULT_CMD : PYTHON_DEFAULT_CMD);
+        document.getElementById('startup-var-main').value = startup.main_file || 'index.js';
+        document.getElementById('startup-var-nodepkg').value = startup.node_packages || '';
+        document.getElementById('startup-var-nodeargs').value = startup.node_args || '';
+        document.getElementById('startup-var-reqfile').value = startup.requirements_file || 'requirements.txt';
+      } catch (e) {
+        console.error('Load startup error:', e);
+      }
+    }
+
+    async function saveStartupConfig() {
+      if (!currentAppId) return;
+      const type = document.getElementById('startup-type-select').value;
+      const runtime_version = document.getElementById('startup-version-select').value;
+      const startup_cmd = document.getElementById('startup-cmd-editor').value;
+      const main_file = document.getElementById('startup-var-main').value.trim();
+      const node_packages = document.getElementById('startup-var-nodepkg').value.trim();
+      const node_args = document.getElementById('startup-var-nodeargs').value.trim();
+      const requirements_file = document.getElementById('startup-var-reqfile').value.trim();
+
+      try {
+        const res = await fetch(`${API_BASE}/apps/${currentAppId}/startup`, {
+          method: 'PUT',
+          headers: getHeaders(),
+          body: JSON.stringify({ type, runtime_version, startup_cmd, main_file, node_packages, node_args, requirements_file })
+        });
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.error || 'Failed to save startup config');
+        notify('Startup configuration successfully applied!', 'success');
+        switchApp(currentAppId);
+      } catch (e) {
+        notify(e.message, 'error');
+      }
+    }
+
+    // FILE MANAGER LOGIC
+    function triggerFileUploadPrompt() {
+      document.getElementById('file-uploader').click();
+    }
+
+    async function handleFileUpload(event) {
+      if (!currentAppId) return;
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      const isBinary = !file.name.match(/\.(js|ts|py|txt|json|env|md|html|css|yaml|yml|sh|bash)$/i);
+
+      reader.onload = async function() {
+        let content = reader.result;
+        let isBase64 = false;
+
+        if (isBinary) {
+          content = content.split(',')[1]; // Strip data:application/...;base64,
+          isBase64 = true;
+        }
+
+        try {
+          notify(`Uploading ${file.name}...`, 'info');
+          const res = await fetch(`${API_BASE}/files/${currentAppId}/upload`, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify({ path: file.name, content, isBase64 })
+          });
+          const d = await res.json();
+          if (!res.ok) throw new Error(d.error || 'Upload failed');
+          notify(`File "${file.name}" uploaded successfully!`, 'success');
+          loadFiles(currentAppId);
+        } catch (e) {
+          notify(e.message, 'error');
+        }
+      };
+
+      if (isBinary) reader.readAsDataURL(file);
+      else reader.readAsText(file);
+    }
+
+    async function openNewFilePrompt() {
+      if (!currentAppId) return;
+      const filename = prompt('Enter new file name (e.g. server.js, config.json, test.py):');
+      if (!filename || !filename.trim()) return;
+
+      try {
+        const res = await fetch(`${API_BASE}/files/${currentAppId}/create`, {
+          method: 'POST',
+          headers: getHeaders(),
+          body: JSON.stringify({ path: filename.trim() })
+        });
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.error || 'Failed to create file');
+        notify(`Created file "${filename.trim()}"`, 'success');
+        loadFiles(currentAppId);
+        openFile(filename.trim());
+      } catch (e) { notify(e.message, 'error'); }
+    }
+
+    async function openNewFolderPrompt() {
+      if (!currentAppId) return;
+      const folder = prompt('Enter new directory/folder name (e.g. src, controllers, data):');
+      if (!folder || !folder.trim()) return;
+
+      try {
+        const res = await fetch(`${API_BASE}/files/${currentAppId}/mkdir`, {
+          method: 'POST',
+          headers: getHeaders(),
+          body: JSON.stringify({ path: folder.trim() })
+        });
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.error || 'Failed to create directory');
+        notify(`Created directory "${folder.trim()}"`, 'success');
+        loadFiles(currentAppId);
+      } catch (e) { notify(e.message, 'error'); }
+    }
+
+    async function renameCurrentActiveFile() {
+      if (!currentAppId || !activeFile) return notify('Select a file to rename', 'error');
+      const newName = prompt(`Rename "${activeFile}" to:`, activeFile);
+      if (!newName || newName.trim() === activeFile) return;
+
+      try {
+        const res = await fetch(`${API_BASE}/files/${currentAppId}/rename`, {
+          method: 'POST',
+          headers: getHeaders(),
+          body: JSON.stringify({ oldPath: activeFile, newPath: newName.trim() })
+        });
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.error || 'Rename failed');
+        notify(`Renamed to "${newName.trim()}"`, 'success');
+        loadFiles(currentAppId);
+        openFile(newName.trim());
+      } catch (e) { notify(e.message, 'error'); }
+    }
+
+    async function deleteCurrentActiveFile() {
+      if (!currentAppId || !activeFile) return notify('Select a file to delete', 'error');
+      if (!confirm(`Permanently delete "${activeFile}"?`)) return;
+
+      try {
+        const res = await fetch(`${API_BASE}/files/${currentAppId}/delete?file=${encodeURIComponent(activeFile)}`, {
+          method: 'DELETE',
+          headers: getHeaders()
+        });
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.error || 'Delete failed');
+        notify(`Deleted "${activeFile}"`, 'success');
+        activeFile = null;
+        document.getElementById('active-filename').innerText = 'Select a file to edit';
+        document.getElementById('file-editor').value = '';
+        loadFiles(currentAppId);
+      } catch (e) { notify(e.message, 'error'); }
+    }
+
+    async function loadFiles(appId) {
+      try {
+        const res = await fetch(`${API_BASE}/files/${appId}/list`, { headers: getHeaders() });
+        if (res.ok) {
+          const data = await res.json();
+          const list = document.getElementById('file-tree-list');
+          if (!data.files || data.files.length === 0) {
+            list.innerHTML = '<div style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); padding: 8px;">Workspace is empty.</div>';
+            return;
+          }
+
+          list.innerHTML = data.files.map(f => {
+            const icon = f.isDirectory ? '📁' : '📄';
+            const sizeStr = f.isDirectory ? 'dir' : (f.size > 1024 ? (f.size / 1024).toFixed(1) + ' KB' : f.size + ' B');
+            return `
+              <div class="file-item-row" onclick="openFile('${escapeHtml(f.name)}')">
+                <div style="display: flex; align-items: center; gap: 8px; overflow: hidden; text-overflow: ellipsis;">
+                  <span>${icon}</span>
+                  <span style="font-weight: 600;">${escapeHtml(f.name)}</span>
+                </div>
+                <span style="color: var(--text-muted); font-size: 10px;">${sizeStr}</span>
+              </div>
+            `;
+          }).join('');
+        }
+      } catch (e) {}
+    }
+
+    async function openFile(filename) {
+      if (!currentAppId) return;
+      activeFile = filename;
+      document.getElementById('active-filename').innerText = filename;
+      try {
+        const res = await fetch(`${API_BASE}/files/${currentAppId}/content?file=${encodeURIComponent(filename)}`, { headers: getHeaders() });
+        if (res.ok) {
+          const data = await res.json();
+          document.getElementById('file-editor').value = data.content || '';
+        }
+      } catch (e) {}
+    }
+
+    async function saveActiveFile() {
+      if (!currentAppId || !activeFile) return notify('Select a file to save', 'error');
+      const content = document.getElementById('file-editor').value;
+      try {
+        const res = await fetch(`${API_BASE}/files/${currentAppId}/content`, {
+          method: 'POST',
+          headers: getHeaders(),
+          body: JSON.stringify({ file: activeFile, content })
+        });
+        if (res.ok) notify(`"${activeFile}" saved successfully!`, 'success');
+      } catch (e) { notify(e.message, 'error'); }
+    }
+
+    // ACTION RUNNER
     async function execAction(action) {
       if (!currentAppId) return;
       try {
@@ -649,109 +1118,31 @@
       } catch (e) { notify(e.message, 'error'); }
     }
 
-    // Submit Specs Changes
-    async function submitSpecsUpdate() {
-      if (!currentAppId) return;
-      const name = document.getElementById('spec-name').value.trim();
-      const port = parseInt(document.getElementById('spec-port').value, 10);
-      const entrypoint = document.getElementById('spec-entry').value.trim();
-      const memory_limit = parseInt(document.getElementById('spec-ram').value, 10);
-      const cpu_limit = parseInt(document.getElementById('spec-cpu').value, 10);
-      const auto_restart = parseInt(document.getElementById('spec-autorestart').value, 10);
-
-      const btn = document.getElementById('btn-save-specs');
-      btn.disabled = true;
-      btn.innerText = 'Applying Specs...';
-
-      try {
-        const res = await fetch(`${API_BASE}/apps/${currentAppId}`, {
-          method: 'PUT',
-          headers: getHeaders(),
-          body: JSON.stringify({ name, port, entrypoint, memory_limit, cpu_limit, auto_restart })
-        });
-        const d = await res.json();
-        if (!res.ok) throw new Error(d.error || 'Failed to update specs');
-
-        closeSpecsModal();
-        notify('Server specifications successfully updated!', 'success');
-        switchApp(currentAppId);
-      } catch (err) {
-        notify(err.message, 'error');
-      } finally {
-        btn.disabled = false;
-        btn.innerText = 'Save Specifications';
-      }
-    }
-
-    // Interactive Console Command Runner
     async function submitConsoleCommand() {
       if (!currentAppId) return;
       const input = document.getElementById('console-cmd-input');
-      const cmd = input.value.trim();
-      if (!cmd) return;
+      const command = input.value.trim();
+      if (!command) return;
 
-      appendLog('system', `> ${cmd}`);
+      appendLogLine({ type: 'system', message: `> ${command}` });
       input.value = '';
 
       try {
         const res = await fetch(`${API_BASE}/apps/${currentAppId}/command`, {
           method: 'POST',
           headers: getHeaders(),
-          body: JSON.stringify({ command: cmd })
+          body: JSON.stringify({ command })
         });
         const d = await res.json();
-        if (!res.ok) appendLog('stderr', `[Error] ${d.error || 'Execution failed'}`);
+        if (!res.ok) appendLogLine({ type: 'stderr', message: d.error || 'Execution failed' });
       } catch (e) {
-        appendLog('stderr', `[Network Error] ${e.message}`);
+        appendLogLine({ type: 'stderr', message: e.message });
       }
     }
 
     function runQuickCmd(cmd) {
       document.getElementById('console-cmd-input').value = cmd;
       submitConsoleCommand();
-    }
-
-    function connectAppWS(appId) {
-      if (activeWs) { activeWs.close(); activeWs = null; }
-      const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      activeWs = new WebSocket(`${proto}//${window.location.host}/ws?token=${token}`);
-
-      activeWs.onopen = () => {
-        activeWs.send(JSON.stringify({ type: 'subscribe', channel: `logs:${appId}` }));
-      };
-
-      activeWs.onmessage = (evt) => {
-        try {
-          const msg = JSON.parse(evt.data);
-          if (msg.type === 'log' && msg.appId == appId) {
-            appendLog(msg.stream, msg.message);
-          }
-        } catch (e) {}
-      };
-    }
-
-    async function loadRecentLogs(appId) {
-      try {
-        const res = await fetch(`${API_BASE}/apps/${appId}/logs`, { headers: getHeaders() });
-        if (res.ok) {
-          const data = await res.json();
-          const term = document.getElementById('terminal-output');
-          term.innerHTML = '';
-          (data.logs || []).forEach(l => appendLog(l.stream, l.message));
-        }
-      } catch (e) {}
-    }
-
-    function appendLog(stream, msg) {
-      const term = document.getElementById('terminal-output');
-      const div = document.createElement('div');
-      div.className = 'terminal-line ' + (stream || '');
-      div.innerText = msg;
-      term.appendChild(div);
-
-      if (document.getElementById('chk-autoscroll').checked) {
-        term.scrollTop = term.scrollHeight;
-      }
     }
 
     function clearConsole() {
@@ -763,46 +1154,44 @@
       navigator.clipboard.writeText(text).then(() => notify('Console log stream copied to clipboard!', 'success'));
     }
 
-    async function loadFiles(appId) {
-      try {
-        const res = await fetch(`${API_BASE}/files/list?appId=${appId}`, { headers: getHeaders() });
-        if (res.ok) {
-          const data = await res.json();
-          const list = document.getElementById('file-tree-list');
-          list.innerHTML = (data.files || []).map(f => `
-            <div class="file-tree-item" onclick="openFile('${escapeHtml(f.name)}')">
-              <span>📄</span>
-              <span>${escapeHtml(f.name)}</span>
-            </div>
-          `).join('');
-        }
-      } catch (e) {}
+    function renderTerminalLogs(logs) {
+      const out = document.getElementById('terminal-output');
+      out.innerHTML = logs.map(l => `<div class="terminal-line ${l.type}">${escapeHtml(l.message)}</div>`).join('');
+      scrollTerminal();
     }
 
-    async function openFile(filename) {
-      if (!currentAppId) return;
-      activeFile = filename;
-      document.getElementById('active-filename').innerText = filename;
-      try {
-        const res = await fetch(`${API_BASE}/files/read?appId=${currentAppId}&path=${encodeURIComponent(filename)}`, { headers: getHeaders() });
-        if (res.ok) {
-          const data = await res.json();
-          document.getElementById('file-editor').value = data.content || '';
-        }
-      } catch (e) {}
+    function appendLogLine(log) {
+      const out = document.getElementById('terminal-output');
+      const div = document.createElement('div');
+      div.className = `terminal-line ${log.type}`;
+      div.innerText = log.message;
+      out.appendChild(div);
+      scrollTerminal();
     }
 
-    async function saveActiveFile() {
-      if (!currentAppId || !activeFile) return notify('Select a file to save', 'error');
-      const content = document.getElementById('file-editor').value;
-      try {
-        const res = await fetch(`${API_BASE}/files/write`, {
-          method: 'POST',
-          headers: getHeaders(),
-          body: JSON.stringify({ appId: currentAppId, path: activeFile, content })
-        });
-        if (res.ok) notify('File saved successfully!', 'success');
-      } catch (e) { notify(e.message, 'error'); }
+    function scrollTerminal() {
+      if (document.getElementById('chk-autoscroll').checked) {
+        const out = document.getElementById('terminal-output');
+        out.scrollTop = out.scrollHeight;
+      }
+    }
+
+    function connectAppWebSocket(appId) {
+      if (activeWs) { activeWs.close(); activeWs = null; }
+      const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${proto}//${window.location.host}/ws?token=${token}`;
+      activeWs = new WebSocket(wsUrl);
+
+      activeWs.onopen = () => {
+        activeWs.send(JSON.stringify({ type: 'subscribe', channel: `app:${appId}` }));
+      };
+
+      activeWs.onmessage = (e) => {
+        try {
+          const msg = JSON.parse(e.data);
+          if (msg.type === 'log') appendLogLine(msg.data);
+        } catch (err) {}
+      };
     }
 
     async function saveEnvConfig() {
@@ -826,23 +1215,44 @@
       } catch (e) { notify(e.message, 'error'); }
     }
 
+    function updateNewServerVersions(type) {
+      const sel = document.getElementById('new-app-version');
+      if (type === 'nodejs') {
+        sel.innerHTML = `
+          <option value="20">Node.js 20 (LTS)</option>
+          <option value="22">Node.js 22 (Current)</option>
+          <option value="18">Node.js 18 (LTS)</option>
+        `;
+      } else {
+        sel.innerHTML = `
+          <option value="3.11">Python 3.11</option>
+          <option value="3.12">Python 3.12</option>
+          <option value="3.10">Python 3.10</option>
+        `;
+      }
+    }
+
     async function submitCreateApp() {
       const name = document.getElementById('new-app-name').value.trim();
       const type = document.getElementById('new-app-type').value;
+      const runtime_version = document.getElementById('new-app-version').value;
+      const primary_ip = document.getElementById('new-app-ip').value.trim();
       const port = parseInt(document.getElementById('new-app-port').value, 10);
+      const domain = document.getElementById('new-app-domain').value.trim();
       const memory_limit = parseInt(document.getElementById('new-app-ram').value, 10);
       const cpu_limit = parseInt(document.getElementById('new-app-cpu').value, 10);
+      const disk_limit = parseInt(document.getElementById('new-app-disk').value, 10);
 
       try {
         const res = await fetch(API_BASE + '/apps', {
           method: 'POST',
           headers: getHeaders(),
-          body: JSON.stringify({ name, type, port, memory_limit, cpu_limit })
+          body: JSON.stringify({ name, type, runtime_version, primary_ip, port, domain, memory_limit, cpu_limit, disk_limit })
         });
         const d = await res.json();
         if (!res.ok) throw new Error(d.error || 'Failed to create server');
         closeCreateAppModal();
-        notify('Server created successfully!', 'success');
+        notify('Server deployed successfully!', 'success');
         loadAllApps();
       } catch (e) { notify(e.message, 'error'); }
     }
@@ -880,13 +1290,19 @@
       return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
+    // Keyboard Shortcuts (Ctrl+S to save in file editor)
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        if (document.getElementById('pane-files').style.display !== 'none' && activeFile) {
+          e.preventDefault();
+          saveActiveFile();
+        }
+      }
+    });
+
     document.addEventListener('DOMContentLoaded', () => {
       renderSelf();
       loadAllApps();
-      fetch(API_BASE + '/system/metrics')
-        .then(r => r.json())
-        .then(d => { if (d.hostname) document.getElementById('sidebar-hostname').innerText = d.hostname; })
-        .catch(() => {});
     });
   </script>
 </body>

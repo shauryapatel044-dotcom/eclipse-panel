@@ -307,20 +307,53 @@ print_step "Opening firewall ports (80 & 8090)..."
 if command -v ufw >/dev/null 2>&1; then
     ufw allow 80/tcp comment "HTTP Web" >/dev/null 2>&1 || true
     ufw allow 8090/tcp comment "Eclipse Panel Port 8090" >/dev/null 2>&1 || true
+    ufw allow 3000:4000/tcp comment "Eclipse Apps Range" >/dev/null 2>&1 || true
 elif command -v firewall-cmd >/dev/null 2>&1; then
     firewall-cmd --permanent --add-port=80/tcp >/dev/null 2>&1 || true
     firewall-cmd --permanent --add-port=8090/tcp >/dev/null 2>&1 || true
+    firewall-cmd --permanent --add-port=3000-4000/tcp >/dev/null 2>&1 || true
     firewall-cmd --reload >/dev/null 2>&1 || true
 fi
 
 # Detect Public IP
-PUBLIC_IP=$(curl -s https://api.ipify.org || hostname -I | awk '{print $1}')
+PUBLIC_IP=$(curl -s https://api.ipify.org || curl -s ifconfig.me || hostname -I | awk '{print $1}')
+
+echo ""
+echo -e "${PURPLE}================================================================${NC}"
+echo -e "${BOLD_RED}  🌐 VPS PUBLIC IP & DNS CONFIGURATION 🌐${NC}"
+echo -e "${PURPLE}================================================================${NC}"
+echo -e "  Your detected VPS IP is: ${CYAN}${PUBLIC_IP}${NC}"
+echo -e "  To set up custom domains for your Panel and Hosted Servers:"
+echo -e "  1. Point your ${YELLOW}Panel DNS${NC} (e.g. A record: ${CYAN}panel.yourdomain.com${NC} -> ${CYAN}${PUBLIC_IP}${NC})"
+echo -e "  2. Point your ${YELLOW}Servers DNS${NC} (e.g. A record: ${CYAN}*.servers.yourdomain.com${NC} or ${CYAN}srv1.yourdomain.com${NC} -> ${CYAN}${PUBLIC_IP}${NC})"
+echo -e "${PURPLE}================================================================${NC}"
+
+# Optional interactive DNS prompt if running interactively
+USER_PANEL_DOMAIN=""
+USER_SERVERS_DOMAIN=""
+if [ -t 0 ]; then
+    read -r -p "Enter Panel Domain [optional, press Enter to use IP]: " USER_PANEL_DOMAIN
+    read -r -p "Enter Servers Wildcard Domain [optional, press Enter to use IP]: " USER_SERVERS_DOMAIN
+    
+    if [ ! -z "$USER_PANEL_DOMAIN" ]; then
+        echo "PANEL_DOMAIN=${USER_PANEL_DOMAIN}" >> "${INSTALL_DIR}/.env"
+        sed -i "s/server_name _;/server_name ${USER_PANEL_DOMAIN} _;/g" "$NGINX_CONF" 2>/dev/null || true
+        systemctl reload nginx 2>/dev/null || true
+    fi
+    if [ ! -z "$USER_SERVERS_DOMAIN" ]; then
+        echo "SERVERS_DOMAIN=${USER_SERVERS_DOMAIN}" >> "${INSTALL_DIR}/.env"
+    fi
+    echo "VPS_PUBLIC_IP=${PUBLIC_IP}" >> "${INSTALL_DIR}/.env"
+fi
 
 echo ""
 echo -e "${GREEN}================================================================${NC}"
 echo -e "${BOLD_RED}  🌑 ECLIPSE PANEL & MARIADB SUCCESSFULLY INSTALLED! 🌑${NC}"
 echo -e "${GREEN}================================================================${NC}"
 echo -e "  ● Web Dashboard (Port 8090) : ${CYAN}http://${PUBLIC_IP}:8090${NC}"
+if [ ! -z "$USER_PANEL_DOMAIN" ]; then
+echo -e "  ● Panel Custom Domain       : ${CYAN}http://${USER_PANEL_DOMAIN}${NC}"
+fi
 echo -e "  ● Web Dashboard (Port 80)   : ${CYAN}http://${PUBLIC_IP}${NC}"
 echo -e "  ● Real-Time VPS Telemetry   : ${CYAN}http://${PUBLIC_IP}:8090/admin-stats.html${NC}"
 echo -e "  ● Backend REST API          : ${CYAN}http://${PUBLIC_IP}:8090/api${NC}"
@@ -334,4 +367,5 @@ echo -e "  ● Database User : ${YELLOW}eclipse_user${NC}"
 echo -e "  ● Database Pass : ${YELLOW}${DB_PASS}${NC}"
 echo -e "  ● Database Host : ${YELLOW}127.0.0.1:3306${NC}"
 echo -e "  ● Connection URI: ${CYAN}mysql://eclipse_user:${DB_PASS}@127.0.0.1:3306/eclipse_panel${NC}"
-echo -e "${GREEN}================================================================${NC}\n"
+echo -e "${GREEN}================================================================${NC}
+"
