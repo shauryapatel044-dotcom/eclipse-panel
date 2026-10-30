@@ -1,931 +1,722 @@
 <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Eclipse Panel - Control Matrix & Cockpit</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/eclipse.css"/>
 
-<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=JetBrains+Mono:wght@100..900&display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
-  <script>
-    window.tailwind = {
-      darkMode: "class",
-      theme: {
-        extend: {
-          colors: {
-            "surface": "#0A0B0E",
-            "surface-dim": "#0A0B0E",
-            "surface-container-lowest": "#0D0E11",
-            "surface-container-low": "#12141A",
-            "surface-container": "#181B22",
-            "surface-container-high": "#222631",
-            "surface-container-highest": "#2D3240",
-            "on-surface": "#E3E2E6",
-            "on-surface-variant": "#E4BEBA",
-            "outline-variant": "#3D2528",
-            "secondary": "#94A3B8",
-            "primary": "#F87171",
-            "primary-container": "#DC2626",
-            "tertiary": "#10B981",
-            "tertiary-container": "#059669"
-          },
-          fontFamily: {
-            "body-lg": ["Geist", "-apple-system", "sans-serif"],
-            "body-md": ["Geist", "-apple-system", "sans-serif"],
-            "body-sm": ["Geist", "-apple-system", "sans-serif"],
-            "headline-xl": ["Geist", "-apple-system", "sans-serif"],
-            "headline-lg": ["Geist", "-apple-system", "sans-serif"],
-            "headline-md": ["Geist", "-apple-system", "sans-serif"],
-            "headline-sm": ["Geist", "-apple-system", "sans-serif"],
-            "code-lg": ["JetBrains Mono", "monospace"],
-            "code-md": ["JetBrains Mono", "monospace"],
-            "code-sm": ["JetBrains Mono", "monospace"],
-            "label-md": ["JetBrains Mono", "monospace"],
-            "label-sm": ["JetBrains Mono", "monospace"]
-          }
-        }
-      }
-    };
-  </script>
-  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    * { box-sizing: border-box; }
-    html, body {
-      background-color: #0A0B0E !important;
-      color: #E3E2E6 !important;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    .pulse-glow {
+      animation: pulseGlow 2.5s infinite;
     }
-    .bg-surface { background-color: #0A0B0E !important; }
-    .bg-surface-container-lowest { background-color: #0D0E11 !important; }
-    .bg-surface-container-low { background-color: #12141A !important; }
-    .bg-surface-container { background-color: #181B22 !important; }
-    .bg-surface-container-high { background-color: #222631 !important; }
-    .bg-surface-container-highest { background-color: #2D3240 !important; }
-    .bg-primary-container { background-color: #DC2626 !important; }
-    .text-primary { color: #F87171 !important; }
-    .text-on-surface { color: #E3E2E6 !important; }
-    .text-secondary { color: #94A3B8 !important; }
-    .text-tertiary { color: #10B981 !important; }
-    .material-symbols-outlined {
-      font-family: 'Material Symbols Outlined', sans-serif;
-      font-weight: normal;
-      font-style: normal;
-      display: inline-block;
-      line-height: 1;
-      text-transform: none;
-      letter-spacing: normal;
-      word-wrap: normal;
-      white-space: nowrap;
-      direction: ltr;
+    @keyframes pulseGlow {
+      0% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.2); }
+      50% { box-shadow: 0 0 25px rgba(239, 68, 68, 0.45); }
+      100% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.2); }
+    }
+    .empty-state-box {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--text-muted);
+    }
+    .empty-state-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 16px;
+      color: var(--primary);
+      opacity: 0.8;
     }
   </style>
-</head><body class="bg-surface font-body-md text-on-surface antialiased min-h-screen"><aside class="fixed left-0 top-0 h-screen w-64 bg-surface-container-lowest/95 backdrop-blur-xl z-50 flex flex-col justify-between border-r border-outline-variant/30 shadow-[0_4px_30px_rgba(0,0,0,0.5)]"><div class="flex flex-col"><div class="h-16 px-space-md flex items-center justify-between border-b border-outline-variant/20"><div class="flex items-center gap-space-xs">
-    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-red-600 to-red-950 flex items-center justify-center text-white border border-red-500/40 shadow-[0_0_12px_rgba(239,68,68,0.4)]">
-      <i class="fa-solid fa-fire text-base text-white"></i>
-    </div>
-  <span class="font-headline-sm text-headline-sm font-bold tracking-wider text-on-surface uppercase">ECLIPSE PANEL</span></div><span class="font-label-sm text-label-sm px-1.5 py-0.5 rounded bg-primary-container/20 text-primary border border-primary-container/40 shadow-[0_0_8px_rgba(255,84,81,0.3)]">v2.4 LTS</span></div><div class="px-space-md pt-space-md pb-space-xs"><span class="font-label-sm text-label-sm uppercase tracking-widest text-on-secondary-container/70">Control Matrix</span></div><nav class="flex flex-col gap-1 px-space-xs" data-active-classes="bg-surface-container-high text-primary border-l-2 border-primary-container shadow-[inset_0_0_12px_rgba(255,84,81,0.1)]"><a aria-current="page" class="group flex items-center gap-space-sm px-space-sm py-2 rounded transition-all font-body-md bg-surface-container-high text-primary border-l-2 border-primary-container shadow-[inset_0_0_12px_rgba(255,84,81,0.1)]" data-path="overview" href="#"><span class="material-symbols-outlined text-xl text-on-surface-variant group-hover:text-primary transition-colors">monitoring</span><span>Overview</span></a><a class="group flex items-center gap-space-sm px-space-sm py-2 rounded text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-all font-body-md text-body-md" data-path="applications" href="#"><span class="material-symbols-outlined text-xl text-on-surface-variant group-hover:text-primary transition-colors">rocket_launch</span><span>Applications</span></a><a class="group flex items-center gap-space-sm px-space-sm py-2 rounded text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-all font-body-md text-body-md" data-path="live-terminal" href="#"><span class="material-symbols-outlined text-xl text-on-surface-variant group-hover:text-primary transition-colors">terminal</span><span>Live Terminal</span></a><a class="group flex items-center gap-space-sm px-space-sm py-2 rounded text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-all font-body-md text-body-md" data-path="file-manager" href="#"><span class="material-symbols-outlined text-xl text-on-surface-variant group-hover:text-primary transition-colors">folder_open</span><span>File Manager / Editor</span></a><a class="group flex items-center justify-between px-space-sm py-2 rounded text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-all font-body-md text-body-md" data-path="admin-center" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-xl text-on-surface-variant group-hover:text-primary transition-colors">shield</span><span>Admin Center</span></div><span class="font-label-sm text-label-sm px-1 py-0.2 bg-outline-variant/30 text-on-surface-variant rounded">ROLE</span></a></nav></div><div class="flex flex-col gap-space-xs p-space-xs border-t border-outline-variant/20 bg-surface-container-lowest/80"><div class="p-space-xs rounded bg-surface-container-low/60 border border-outline-variant/20 flex items-center justify-between"><div class="flex items-center gap-space-xs truncate"><span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-tertiary opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-tertiary shadow-[0_0_8px_#4edea3]"></span></span><span class="font-code-sm text-code-sm text-on-surface truncate">ubuntu-vps-fra1</span></div><span class="font-label-sm text-label-sm text-on-surface-variant font-mono">192.241.148.82</span></div><div class="p-space-xs rounded bg-surface-container-low/40 border border-outline-variant/20 flex items-center justify-between"><div class="flex items-center gap-space-xs truncate"><img alt="Profile" class="w-8 h-8 rounded-full object-cover ring-1 ring-outline-variant/40" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAA8IRmZrjztXrOA8Ct35jMWd1euNrahdA4MHvidTjQfankcSHIcIoUDVOtYWdhEOKLQ9H0Rjb9DDbLF6JjMbpHxstw_HbOaU3_B9t60FYeg2g_qvFh3gqD3qtn6rymxfS0dqA214CGRtPUio9b-DR4gZoppzvD3bpVhhu7wpEqzOALJAToIEUVm9z6Qwninm3ueCp2oodI0MZq6gpeKvgNIZH6g60V7zOm07EM0UM"/><div class="flex flex-col truncate"><span class="font-body-sm text-body-sm font-semibold text-on-surface truncate leading-tight">Alex Vance</span><span class="font-label-sm text-label-sm text-primary tracking-wider font-mono uppercase leading-tight">SUPERADMIN</span></div></div><button class="p-1 text-on-surface-variant hover:text-primary transition-colors rounded hover:bg-surface-container-high" title="Sign out" type="button"><span class="material-symbols-outlined text-lg leading-none">logout</span></button></div></div></aside><div class="pl-64"><header class="fixed top-0 left-64 right-0 h-16 bg-surface/85 backdrop-blur-xl border-b border-outline-variant/20 z-40 flex items-center justify-between px-gutter-desktop"><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-xs font-body-sm text-body-sm text-on-surface-variant"><span class="material-symbols-outlined text-base">dns</span><span class="hover:text-on-surface cursor-pointer transition-colors">Infrastructure</span><span class="text-outline-variant">/</span><span class="text-on-surface font-semibold">Console</span></div><div class="flex items-center gap-1.5 px-2 py-0.5 rounded bg-surface-container-low border border-outline-variant/25 font-label-sm text-label-sm text-tertiary"><span class="inline-block w-1.5 h-1.5 rounded-full bg-tertiary shadow-[0_0_6px_#4edea3]"></span><span>18ms</span></div></div><div class="flex items-center gap-space-md"><div class="relative flex items-center"><span class="material-symbols-outlined absolute left-2.5 text-base text-on-surface-variant pointer-events-none">search</span><input class="w-72 bg-surface-container-lowest border border-outline-variant/30 rounded pl-8 pr-3 py-1 font-code-sm text-code-sm text-on-surface placeholder:text-on-secondary-container/50 focus:outline-none focus:border-primary-container focus:shadow-[0_0_12px_rgba(255,84,81,0.25)] transition-all" placeholder="Search services, logs, ports (cmd+k)" type="text"/></div><div class="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded bg-surface-container-lowest border border-tertiary-container/30 font-code-sm text-code-sm text-tertiary"><span class="inline-block w-1.5 h-1.5 rounded-full bg-tertiary animate-pulse"></span><span>WS: Connected (ws://192.241.148.82:4000/ws)</span></div><div class="flex items-center gap-space-xs"><button class="relative p-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high rounded transition-colors" title="Notifications" type="button"><span class="material-symbols-outlined text-xl leading-none">notifications</span><span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-primary-container shadow-[0_0_6px_#ff5451]"></span></button><button class="flex items-center gap-1 px-3 py-1.5 rounded bg-primary-container text-on-primary-container font-headline-sm text-headline-sm font-semibold hover:bg-primary hover:text-on-primary shadow-[0_0_16px_rgba(255,84,81,0.4)] transition-all border border-white/10" type="button"><span class="material-symbols-outlined text-base">add</span><span>New App</span></button></div></div></header><main class="w-full pt-16 bg-surface px-gutter-desktop min-h-screen"><div class="flex flex-col w-full">
-<div class="flex flex-col gap-space-lg pb-space-xl">
-<!-- Top Telemetry Row: 3 High-density Cockpit Cards -->
-<section class="grid grid-cols-1 lg:grid-cols-3 gap-space-md">
-<!-- Card 1: VPS CPU Telemetry -->
-<div class="relative overflow-hidden rounded-xl bg-surface-container-low p-space-md shadow-xl transition-all duration-300 hover:shadow-[0_0_24px_rgba(255,84,81,0.2)] hover:-translate-y-0.5">
-<div class="absolute -top-12 -right-12 w-36 h-36 bg-primary-container/10 rounded-full blur-2xl pointer-events-none"></div>
-<div class="flex items-center justify-between">
-<div class="flex items-center gap-space-xs">
-<span class="p-1 rounded bg-surface-container-highest text-primary">
-<span class="material-symbols-outlined text-lg leading-none">memory</span>
-</span>
-<span class="font-headline-sm text-headline-sm text-on-surface">Compute Cluster</span>
-</div>
-<span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-primary-container/20 text-primary uppercase tracking-wider">8x Cores</span>
-</div>
-<div class="mt-space-md flex items-end justify-between">
-<div>
-<div class="flex items-baseline gap-1">
-<span class="font-headline-xl text-headline-xl text-on-surface tracking-tight" id="cpu-metric-val">24.8</span>
-<span class="font-headline-sm text-headline-sm text-primary">%</span>
-</div>
-<p class="font-code-sm text-code-sm text-on-surface-variant">AMD EPYC 7763 @ 2.80GHz</p>
-</div>
-<!-- Circular Gauge Representation -->
-<div class="relative w-16 h-16 flex items-center justify-center">
-<svg class="w-full h-full transform -rotate-90" viewbox="0 0 36 36">
-<path class="text-surface-container-highest stroke-current" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke-width="3.5"></path>
-<path class="text-primary-container stroke-current" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke-dasharray="24.8, 100" stroke-linecap="round" stroke-width="3.8"></path>
-</svg>
-<span class="material-symbols-outlined absolute text-primary text-sm">thermostat</span>
-</div>
-</div>
-<!-- Telemetry Sparkline & Thermal Sub-bar -->
-<div class="mt-space-sm pt-space-xs flex flex-col gap-1.5">
-<div class="w-full h-1.5 bg-surface-container-highest rounded-full overflow-hidden">
-<div class="h-full bg-gradient-to-r from-primary-container to-primary rounded-full transition-all duration-700" style="width: 24.8%"></div>
-</div>
-<div class="flex items-center justify-between font-code-sm text-code-sm text-on-surface-variant">
-<span class="flex items-center gap-1">
-<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
-              Core Temp: 42°C
-            </span>
-<span>Load Avg: 0.44, 0.38, 0.31</span>
-</div>
-</div>
-</div>
-<!-- Card 2: VPS Memory Telemetry -->
-<div class="relative overflow-hidden rounded-xl bg-surface-container-low p-space-md shadow-xl transition-all duration-300 hover:shadow-[0_0_24px_rgba(78,222,163,0.15)] hover:-translate-y-0.5">
-<div class="absolute -top-12 -right-12 w-36 h-36 bg-tertiary/10 rounded-full blur-2xl pointer-events-none"></div>
-<div class="flex items-center justify-between">
-<div class="flex items-center gap-space-xs">
-<span class="p-1 rounded bg-surface-container-highest text-tertiary">
-<span class="material-symbols-outlined text-lg leading-none">developer_board</span>
-</span>
-<span class="font-headline-sm text-headline-sm text-on-surface">Memory Subsystem</span>
-</div>
-<span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-surface-container-high text-on-surface-variant font-mono">DDR4 ECC</span>
-</div>
-<div class="mt-space-md flex items-end justify-between">
-<div>
-<div class="flex items-baseline gap-1">
-<span class="font-headline-xl text-headline-xl text-on-surface tracking-tight">6,412</span>
-<span class="font-label-md text-label-md text-secondary">/ 16,384 MB</span>
-</div>
-<p class="font-code-sm text-code-sm text-tertiary">39.1% Utilized · 9,972 MB Free</p>
-</div>
-<div class="text-right">
-<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-secondary-container">Swap Active</span>
-<p class="font-code-md text-code-md text-on-surface font-semibold">512 MB <span class="text-on-surface-variant text-code-sm">(12%)</span></p>
-</div>
-</div>
-<!-- Dual Progress Gauge Bar -->
-<div class="mt-space-sm pt-space-xs flex flex-col gap-1.5">
-<div class="w-full h-1.5 bg-surface-container-highest rounded-full flex overflow-hidden">
-<div class="h-full bg-tertiary rounded-l-full" style="width: 39.1%"></div>
-<div class="h-full bg-primary-container" style="width: 3.1%"></div>
-</div>
-<div class="flex items-center justify-between font-code-sm text-code-sm text-on-surface-variant">
-<span class="flex items-center gap-1">
-<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
-              Buffers: 1.2 GB
-            </span>
-<span>Cached: 4.8 GB</span>
-</div>
-</div>
-</div>
-<!-- Card 3: Active Apps & Network Throughput -->
-<div class="relative overflow-hidden rounded-xl bg-surface-container-low p-space-md shadow-xl transition-all duration-300 hover:shadow-[0_0_24px_rgba(255,84,81,0.2)] hover:-translate-y-0.5">
-<div class="absolute -top-12 -right-12 w-36 h-36 bg-surface-bright/10 rounded-full blur-2xl pointer-events-none"></div>
-<div class="flex items-center justify-between">
-<div class="flex items-center gap-space-xs">
-<span class="p-1 rounded bg-surface-container-highest text-primary">
-<span class="material-symbols-outlined text-lg leading-none">cloud_sync</span>
-</span>
-<span class="font-headline-sm text-headline-sm text-on-surface">Process Network</span>
-</div>
-<span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-tertiary-container/20 text-tertiary flex items-center gap-1">
-<span class="w-1.5 h-1.5 rounded-full bg-tertiary animate-pulse"></span>
-            HEALTHY
-          </span>
-</div>
-<div class="mt-space-md flex items-end justify-between">
-<div>
-<div class="flex items-baseline gap-1.5">
-<span class="font-headline-xl text-headline-xl text-on-surface tracking-tight">5 <span class="text-headline-lg text-on-surface-variant">/ 6</span></span>
-<span class="font-label-md text-label-md text-tertiary uppercase tracking-wider">Online</span>
-</div>
-<p class="font-code-sm text-code-sm text-on-surface-variant">1 Suspended · 0 Fatal</p>
-</div>
-<div class="flex flex-col items-end">
-<div class="flex items-center gap-1 font-code-sm text-code-sm text-tertiary">
-<span class="material-symbols-outlined text-sm">arrow_downward</span>
-<span>142.6 MB/s</span>
-</div>
-<div class="flex items-center gap-1 font-code-sm text-code-sm text-primary">
-<span class="material-symbols-outlined text-sm">arrow_upward</span>
-<span>48.2 MB/s</span>
-</div>
-</div>
-</div>
-<!-- Network I/O Mini SVG Sparkline -->
-<div class="mt-space-sm pt-space-xs flex flex-col gap-1.5">
-<div class="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden flex">
-<div class="h-full bg-tertiary" style="width: 83.3%"></div>
-<div class="h-full bg-surface-variant" style="width: 16.7%"></div>
-</div>
-<div class="flex items-center justify-between font-code-sm text-code-sm text-on-surface-variant">
-<span>Interface: eth0 (Gigabit)</span>
-<span class="text-tertiary">0 dropped pkts</span>
-</div>
-</div>
-</div>
-</section>
-<!-- Quick Deploy Modal Slide / Configuration Strip -->
-<section class="rounded-xl bg-gradient-to-r from-surface-container-low via-surface-container to-surface-container-low p-space-md shadow-2xl relative overflow-hidden">
-<div class="flex flex-col xl:flex-row xl:items-center justify-between gap-space-md relative z-10">
-<div class="flex items-start gap-space-sm">
-<div class="p-2 rounded-lg bg-primary-container/20 text-primary shadow-[0_0_12px_rgba(255,84,81,0.25)]">
-<span class="material-symbols-outlined text-2xl leading-none">bolt</span>
-</div>
-<div>
-<div class="flex items-center gap-space-xs">
-<span class="font-headline-sm text-headline-sm text-on-surface">Express App Provisioning</span>
-<span class="font-label-sm text-label-sm px-1.5 py-0.2 rounded bg-tertiary-container/30 text-tertiary uppercase">Zero Downtime</span>
-</div>
-<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Spin up a sandboxed daemon instantly with isolated environment bindings.</p>
-</div>
-</div>
-<!-- Inline Config Fields -->
-<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-space-xs items-center bg-surface-container-lowest/80 p-space-xs rounded-lg">
-<!-- Runtime Choice -->
-<div class="col-span-2 sm:col-span-1 flex bg-surface-container-high rounded p-0.5">
-<button class="flex-1 py-1 px-2 rounded font-label-sm text-label-sm text-center bg-surface-container-lowest text-primary shadow-sm" type="button">Node.js 22</button>
-<button class="flex-1 py-1 px-2 rounded font-label-sm text-label-sm text-center text-on-surface-variant hover:text-on-surface" type="button">Py 3.12</button>
-</div>
-<!-- Name Input -->
-<input class="w-full bg-surface-container-high rounded px-2.5 py-1 font-code-sm text-code-sm text-on-surface placeholder:text-on-secondary-container/40 focus:outline-none focus:bg-surface-container-highest transition-colors" placeholder="service-identifier" type="text" value="gateway-worker-alpha"/>
-<!-- Port Input -->
-<div class="relative flex items-center">
-<span class="font-code-sm text-code-sm text-on-surface-variant absolute left-2 pointer-events-none">:</span>
-<input class="w-full bg-surface-container-high rounded pl-4 pr-2 py-1 font-code-sm text-code-sm text-on-surface focus:outline-none focus:bg-surface-container-highest transition-colors" placeholder="Port" type="text" value="3005"/>
-</div>
-<!-- Entry File -->
-<input class="w-full bg-surface-container-high rounded px-2.5 py-1 font-code-sm text-code-sm text-on-surface focus:outline-none focus:bg-surface-container-highest transition-colors" placeholder="Entrypoint" type="text" value="src/server.ts"/>
-<!-- Deploy Trigger -->
-<div class="col-span-2 md:col-span-4 lg:col-span-1 flex items-center gap-space-xs">
-<button class="w-full flex items-center justify-center gap-1.5 px-3 py-1 rounded bg-primary-container text-on-primary-container font-headline-sm text-headline-sm font-semibold hover:bg-primary hover:text-on-primary shadow-[0_0_16px_rgba(255,84,81,0.45)] transition-all" type="button">
-<span class="material-symbols-outlined text-base">rocket</span>
-<span>Launch</span>
-</button>
-</div>
-</div>
-</div>
-</section>
-<!-- Main Applications Section -->
-<section class="flex flex-col gap-space-md">
-<!-- Quick Action & Filter Bar -->
-<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-sm bg-surface-container-low p-space-sm rounded-xl">
-<div class="flex flex-wrap items-center gap-space-xs">
-<div class="flex items-center gap-1.5 mr-space-xs">
-<span class="font-headline-sm text-headline-sm text-on-surface">Registered Workloads</span>
-<span class="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-surface-container-highest text-on-surface-variant">6</span>
-</div>
-<div class="flex items-center gap-1 bg-surface-container-lowest p-0.5 rounded">
-<button class="px-2.5 py-1 rounded font-label-sm text-label-sm bg-surface-container-high text-on-surface font-semibold shadow-sm" type="button">All (6)</button>
-<button class="px-2.5 py-1 rounded font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors" type="button">Node.js (3)</button>
-<button class="px-2.5 py-1 rounded font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors" type="button">Python (3)</button>
-</div>
-</div>
-<div class="flex items-center gap-space-xs">
-<div class="relative flex items-center">
-<span class="material-symbols-outlined absolute left-2.5 text-base text-on-surface-variant">tune</span>
-<input class="w-60 bg-surface-container-lowest rounded pl-8 pr-3 py-1 font-code-sm text-code-sm text-on-surface placeholder:text-on-secondary-container/50 focus:outline-none focus:bg-surface-container-high transition-all" placeholder="Filter instance by port, pid..." type="text"/>
-</div>
-<button class="p-1.5 rounded bg-surface-container-lowest text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors" title="Reload Process Table" type="button">
-<span class="material-symbols-outlined text-lg leading-none">refresh</span>
-</button>
-</div>
-</div>
-<!-- Application Table / Matrix -->
-<div class="overflow-x-auto rounded-xl bg-surface-container-low shadow-xl">
-<table class="w-full text-left font-body-sm text-body-sm">
-<thead class="bg-surface-container-lowest/70 text-on-secondary-container uppercase font-label-sm text-label-sm tracking-wider">
-<tr>
-<th class="py-3 px-space-md" scope="col">Application Entity</th>
-<th class="py-3 px-space-sm" scope="col">Runtime</th>
-<th class="py-3 px-space-sm" scope="col">Port Bind</th>
-<th class="py-3 px-space-sm" scope="col">Status / Health</th>
-<th class="py-3 px-space-sm" scope="col">CPU Load</th>
-<th class="py-3 px-space-sm" scope="col">Memory</th>
-<th class="py-3 px-space-sm" scope="col">Uptime</th>
-<th class="py-3 px-space-md text-right" scope="col">Process Controls</th>
-</tr>
-</thead>
-<tbody class="divide-y divide-transparent">
-<!-- App 1: fastapi-backend-api -->
-<tr class="group hover:bg-surface-container-high/60 transition-colors">
-<td class="py-3 px-space-md">
-<div class="flex items-center gap-space-xs">
-<div class="w-2 h-2 rounded-full bg-tertiary shadow-[0_0_8px_#4edea3]"></div>
-<div class="flex flex-col">
-<span class="font-headline-sm text-headline-sm text-on-surface font-semibold group-hover:text-primary transition-colors">fastapi-backend-api</span>
-<span class="font-code-sm text-code-sm text-on-surface-variant font-mono">PID: 49201 · /app/main.py</span>
-</div>
-</div>
-</td>
-<td class="py-3 px-space-sm">
-<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-surface-container-highest font-label-sm text-label-sm text-secondary">
-<span class="material-symbols-outlined text-sm text-primary">terminal</span>
-                  Python 3.12
-                </span>
-</td>
-<td class="py-3 px-space-sm">
-<span class="font-code-sm text-code-sm text-tertiary px-1.5 py-0.5 rounded bg-tertiary-container/10 font-mono">:8000</span>
-</td>
-<td class="py-3 px-space-sm">
-<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-tertiary-container/20 text-tertiary font-label-sm text-label-sm">
-<span class="w-1.5 h-1.5 rounded-full bg-tertiary animate-pulse"></span>
-                  Running
-                </span>
-</td>
-<td class="py-3 px-space-sm">
-<div class="flex items-center gap-2">
-<span class="font-code-sm text-code-sm text-on-surface font-mono">3.2%</span>
-<div class="w-12 h-1 bg-surface-container-highest rounded-full overflow-hidden">
-<div class="h-full bg-primary-container" style="width: 14%"></div>
-</div>
-</div>
-</td>
-<td class="py-3 px-space-sm">
-<span class="font-code-sm text-code-sm text-on-surface font-mono">184 MB</span>
-</td>
-<td class="py-3 px-space-sm">
-<span class="font-code-sm text-code-sm text-on-surface-variant">14d 6h</span>
-</td>
-<td class="py-3 px-space-md text-right">
-<div class="flex items-center justify-end gap-1">
-<button class="p-1.5 rounded bg-surface-container-highest text-on-surface hover:text-primary transition-colors" title="Restart Process" type="button">
-<span class="material-symbols-outlined text-base leading-none">refresh</span>
-</button>
-<button class="p-1.5 rounded bg-surface-container-highest text-on-surface hover:text-error transition-colors" title="Stop Process" type="button">
-<span class="material-symbols-outlined text-base leading-none">stop</span>
-</button>
-<button class="p-1.5 rounded bg-surface-container-highest text-on-surface hover:text-tertiary transition-colors" title="Open Terminal Console" type="button">
-<span class="material-symbols-outlined text-base leading-none">terminal</span>
-</button>
-<button class="ml-1 px-2 py-1 rounded bg-surface-container-highest text-on-surface hover:bg-surface-container font-label-sm text-label-sm transition-colors" type="button">
-                    Manage
-                  </button>
-</div>
-</td>
-</tr>
-<!-- App 2: nextjs-web-client -->
-<tr class="group hover:bg-surface-container-high/60 transition-colors">
-<td class="py-3 px-space-md">
-<div class="flex items-center gap-space-xs">
-<div class="w-2 h-2 rounded-full bg-tertiary shadow-[0_0_8px_#4edea3]"></div>
-<div class="flex flex-col">
-<span class="font-headline-sm text-headline-sm text-on-surface font-semibold group-hover:text-primary transition-colors">nextjs-web-client</span>
-<span class="font-code-sm text-code-sm text-on-surface-variant font-mono">PID: 49410 · standalone/server.js</span>
-</div>
-</div>
-</td>
-<td class="py-3 px-space-sm">
-<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-surface-container-highest font-label-sm text-label-sm text-secondary">
-<span class="material-symbols-outlined text-sm text-tertiary">javascript</span>
-                  Node.js 22
-                </span>
-</td>
-<td class="py-3 px-space-sm">
-<span class="font-code-sm text-code-sm text-tertiary px-1.5 py-0.5 rounded bg-tertiary-container/10 font-mono">:3000</span>
-</td>
-<td class="py-3 px-space-sm">
-<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-tertiary-container/20 text-tertiary font-label-sm text-label-sm">
-<span class="w-1.5 h-1.5 rounded-full bg-tertiary animate-pulse"></span>
-                  Running
-                </span>
-</td>
-<td class="py-3 px-space-sm">
-<div class="flex items-center gap-2">
-<span class="font-code-sm text-code-sm text-on-surface font-mono">8.4%</span>
-<div class="w-12 h-1 bg-surface-container-highest rounded-full overflow-hidden">
-<div class="h-full bg-primary-container" style="width: 32%"></div>
-</div>
-</div>
-</td>
-<td class="py-3 px-space-sm">
-<span class="font-code-sm text-code-sm text-on-surface font-mono">342 MB</span>
-</td>
-<td class="py-3 px-space-sm">
-<span class="font-code-sm text-code-sm text-on-surface-variant">4d 18h</span>
-</td>
-<td class="py-3 px-space-md text-right">
-<div class="flex items-center justify-end gap-1">
-<button class="p-1.5 rounded bg-surface-container-highest text-on-surface hover:text-primary transition-colors" title="Restart Process" type="button">
-<span class="material-symbols-outlined text-base leading-none">refresh</span>
-</button>
-<button class="p-1.5 rounded bg-surface-container-highest text-on-surface hover:text-error transition-colors" title="Stop Process" type="button">
-<span class="material-symbols-outlined text-base leading-none">stop</span>
-</button>
-<button class="p-1.5 rounded bg-surface-container-highest text-on-surface hover:text-tertiary transition-colors" title="Open Terminal Console" type="button">
-<span class="material-symbols-outlined text-base leading-none">terminal</span>
-</button>
-<button class="ml-1 px-2 py-1 rounded bg-surface-container-highest text-on-surface hover:bg-surface-container font-label-sm text-label-sm transition-colors" type="button">
-                    Manage
-                  </button>
-</div>
-</td>
-</tr>
-<!-- App 3: celery-async-worker -->
-<tr class="group hover:bg-surface-container-high/60 transition-colors">
-<td class="py-3 px-space-md">
-<div class="flex items-center gap-space-xs">
-<div class="w-2 h-2 rounded-full bg-tertiary shadow-[0_0_8px_#4edea3]"></div>
-<div class="flex flex-col">
-<span class="font-headline-sm text-headline-sm text-on-surface font-semibold group-hover:text-primary transition-colors">celery-async-worker</span>
-<span class="font-code-sm text-code-sm text-on-surface-variant font-mono">PID: 50112 · -A tasks worker -l info</span>
-</div>
-</div>
-</td>
-<td class="py-3 px-space-sm">
-<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-surface-container-highest font-label-sm text-label-sm text-secondary">
-<span class="material-symbols-outlined text-sm text-primary">terminal</span>
-                  Python 3.12
-                </span>
-</td>
-<td class="py-3 px-space-sm">
-<span class="font-code-sm text-code-sm text-on-secondary px-1.5 py-0.5 rounded bg-surface-container-highest font-mono">Internal</span>
-</td>
-<td class="py-3 px-space-sm">
-<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-tertiary-container/20 text-tertiary font-label-sm text-label-sm">
-<span class="w-1.5 h-1.5 rounded-full bg-tertiary animate-pulse"></span>
-                  Running
-                </span>
-</td>
-<td class="py-3 px-space-sm">
-<div class="flex items-center gap-2">
-<span class="font-code-sm text-code-sm text-on-surface font-mono">11.0%</span>
-<div class="w-12 h-1 bg-surface-container-highest rounded-full overflow-hidden">
-<div class="h-full bg-primary-container" style="width: 44%"></div>
-</div>
-</div>
-</td>
-<td class="py-3 px-space-sm">
-<span class="font-code-sm text-code-sm text-on-surface font-mono">410 MB</span>
-</td>
-<td class="py-3 px-space-sm">
-<span class="font-code-sm text-code-sm text-on-surface-variant">14d 6h</span>
-</td>
-<td class="py-3 px-space-md text-right">
-<div class="flex items-center justify-end gap-1">
-<button class="p-1.5 rounded bg-surface-container-highest text-on-surface hover:text-primary transition-colors" title="Restart Process" type="button">
-<span class="material-symbols-outlined text-base leading-none">refresh</span>
-</button>
-<button class="p-1.5 rounded bg-surface-container-highest text-on-surface hover:text-error transition-colors" title="Stop Process" type="button">
-<span class="material-symbols-outlined text-base leading-none">stop</span>
-</button>
-<button class="p-1.5 rounded bg-surface-container-highest text-on-surface hover:text-tertiary transition-colors" title="Open Terminal Console" type="button">
-<span class="material-symbols-outlined text-base leading-none">terminal</span>
-</button>
-<button class="ml-1 px-2 py-1 rounded bg-surface-container-highest text-on-surface hover:bg-surface-container font-label-sm text-label-sm transition-colors" type="button">
-                    Manage
-                  </button>
-</div>
-</td>
-</tr>
-<!-- App 4: socket-gateway-service -->
-<tr class="group hover:bg-surface-container-high/60 transition-colors">
-<td class="py-3 px-space-md">
-<div class="flex items-center gap-space-xs">
-<div class="w-2 h-2 rounded-full bg-tertiary shadow-[0_0_8px_#4edea3]"></div>
-<div class="flex flex-col">
-<span class="font-headline-sm text-headline-sm text-on-surface font-semibold group-hover:text-primary transition-colors">socket-gateway-service</span>
-<span class="font-code-sm text-code-sm text-on-surface-variant font-mono">PID: 38202 · WebSocket Gateway</span>
-</div>
-</div>
-</td>
-<td class="py-3 px-space-sm">
-<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-surface-container-highest font-label-sm text-label-sm text-secondary">
-<span class="material-symbols-outlined text-sm text-tertiary">javascript</span>
-                  Node.js 22
-                </span>
-</td>
-<td class="py-3 px-space-sm">
-<span class="font-code-sm text-code-sm text-tertiary px-1.5 py-0.5 rounded bg-tertiary-container/10 font-mono">:4000</span>
-</td>
-<td class="py-3 px-space-sm">
-<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-tertiary-container/20 text-tertiary font-label-sm text-label-sm">
-<span class="w-1.5 h-1.5 rounded-full bg-tertiary animate-pulse"></span>
-                  Running
-                </span>
-</td>
-<td class="py-3 px-space-sm">
-<div class="flex items-center gap-2">
-<span class="font-code-sm text-code-sm text-on-surface font-mono">1.8%</span>
-<div class="w-12 h-1 bg-surface-container-highest rounded-full overflow-hidden">
-<div class="h-full bg-primary-container" style="width: 8%"></div>
-</div>
-</div>
-</td>
-<td class="py-3 px-space-sm">
-<span class="font-code-sm text-code-sm text-on-surface font-mono">112 MB</span>
-</td>
-<td class="py-3 px-space-sm">
-<span class="font-code-sm text-code-sm text-on-surface-variant">22d 2h</span>
-</td>
-<td class="py-3 px-space-md text-right">
-<div class="flex items-center justify-end gap-1">
-<button class="p-1.5 rounded bg-surface-container-highest text-on-surface hover:text-primary transition-colors" title="Restart Process" type="button">
-<span class="material-symbols-outlined text-base leading-none">refresh</span>
-</button>
-<button class="p-1.5 rounded bg-surface-container-highest text-on-surface hover:text-error transition-colors" title="Stop Process" type="button">
-<span class="material-symbols-outlined text-base leading-none">stop</span>
-</button>
-<button class="p-1.5 rounded bg-surface-container-highest text-on-surface hover:text-tertiary transition-colors" title="Open Terminal Console" type="button">
-<span class="material-symbols-outlined text-base leading-none">terminal</span>
-</button>
-<button class="ml-1 px-2 py-1 rounded bg-surface-container-highest text-on-surface hover:bg-surface-container font-label-sm text-label-sm transition-colors" type="button">
-                    Manage
-                  </button>
-</div>
-</td>
-</tr>
-<!-- App 5: ml-inference-torch (STOPPED) -->
-<tr class="group hover:bg-surface-container-high/60 transition-colors opacity-75 hover:opacity-100">
-<td class="py-3 px-space-md">
-<div class="flex items-center gap-space-xs">
-<div class="w-2 h-2 rounded-full bg-secondary-container"></div>
-<div class="flex flex-col">
-<span class="font-headline-sm text-headline-sm text-on-surface font-semibold group-hover:text-primary transition-colors">ml-inference-torch</span>
-<span class="font-code-sm text-code-sm text-on-surface-variant font-mono">PID: -- · python runner.py</span>
-</div>
-</div>
-</td>
-<td class="py-3 px-space-sm">
-<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-surface-container-highest font-label-sm text-label-sm text-secondary">
-<span class="material-symbols-outlined text-sm text-primary">terminal</span>
-                  Python 3.12
-                </span>
-</td>
-<td class="py-3 px-space-sm">
-<span class="font-code-sm text-code-sm text-on-secondary px-1.5 py-0.5 rounded bg-surface-container-highest font-mono">:8080</span>
-</td>
-<td class="py-3 px-space-sm">
-<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-surface-container-highest text-secondary font-label-sm text-label-sm">
-<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
-                  Stopped
-                </span>
-</td>
-<td class="py-3 px-space-sm">
-<span class="font-code-sm text-code-sm text-on-surface-variant font-mono">0.0%</span>
-</td>
-<td class="py-3 px-space-sm">
-<span class="font-code-sm text-code-sm text-on-surface-variant font-mono">0 MB</span>
-</td>
-<td class="py-3 px-space-sm">
-<span class="font-code-sm text-code-sm text-error">Terminated</span>
-</td>
-<td class="py-3 px-space-md text-right">
-<div class="flex items-center justify-end gap-1">
-<!-- Start button is highlighted -->
-<button class="flex items-center gap-1 px-2.5 py-1 rounded bg-primary-container text-on-primary-container font-headline-sm text-headline-sm font-semibold hover:bg-primary transition-all shadow-[0_0_10px_rgba(255,84,81,0.35)]" title="Start Process" type="button">
-<span class="material-symbols-outlined text-sm leading-none">play_arrow</span>
-<span>Start</span>
-</button>
-<button class="p-1.5 rounded bg-surface-container-highest text-on-surface hover:text-on-surface-variant transition-colors" title="Open Logs" type="button">
-<span class="material-symbols-outlined text-base leading-none">terminal</span>
-</button>
-</div>
-</td>
-</tr>
-<!-- App 6: express-auth-proxy -->
-<tr class="group hover:bg-surface-container-high/60 transition-colors">
-<td class="py-3 px-space-md">
-<div class="flex items-center gap-space-xs">
-<div class="w-2 h-2 rounded-full bg-tertiary shadow-[0_0_8px_#4edea3]"></div>
-<div class="flex flex-col">
-<span class="font-headline-sm text-headline-sm text-on-surface font-semibold group-hover:text-primary transition-colors">express-auth-proxy</span>
-<span class="font-code-sm text-code-sm text-on-surface-variant font-mono">PID: 51090 · dist/index.js</span>
-</div>
-</div>
-</td>
-<td class="py-3 px-space-sm">
-<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-surface-container-highest font-label-sm text-label-sm text-secondary">
-<span class="material-symbols-outlined text-sm text-tertiary">javascript</span>
-                  Node.js 22
-                </span>
-</td>
-<td class="py-3 px-space-sm">
-<span class="font-code-sm text-code-sm text-tertiary px-1.5 py-0.5 rounded bg-tertiary-container/10 font-mono">:5000</span>
-</td>
-<td class="py-3 px-space-sm">
-<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-tertiary-container/20 text-tertiary font-label-sm text-label-sm">
-<span class="w-1.5 h-1.5 rounded-full bg-tertiary animate-pulse"></span>
-                  Running
-                </span>
-</td>
-<td class="py-3 px-space-sm">
-<div class="flex items-center gap-2">
-<span class="font-code-sm text-code-sm text-on-surface font-mono">0.6%</span>
-<div class="w-12 h-1 bg-surface-container-highest rounded-full overflow-hidden">
-<div class="h-full bg-primary-container" style="width: 4%"></div>
-</div>
-</div>
-</td>
-<td class="py-3 px-space-sm">
-<span class="font-code-sm text-code-sm text-on-surface font-mono">88 MB</span>
-</td>
-<td class="py-3 px-space-sm">
-<span class="font-code-sm text-code-sm text-on-surface-variant">2d 11h</span>
-</td>
-<td class="py-3 px-space-md text-right">
-<div class="flex items-center justify-end gap-1">
-<button class="p-1.5 rounded bg-surface-container-highest text-on-surface hover:text-primary transition-colors" title="Restart Process" type="button">
-<span class="material-symbols-outlined text-base leading-none">refresh</span>
-</button>
-<button class="p-1.5 rounded bg-surface-container-highest text-on-surface hover:text-error transition-colors" title="Stop Process" type="button">
-<span class="material-symbols-outlined text-base leading-none">stop</span>
-</button>
-<button class="p-1.5 rounded bg-surface-container-highest text-on-surface hover:text-tertiary transition-colors" title="Open Terminal Console" type="button">
-<span class="material-symbols-outlined text-base leading-none">terminal</span>
-</button>
-<button class="ml-1 px-2 py-1 rounded bg-surface-container-highest text-on-surface hover:bg-surface-container font-label-sm text-label-sm transition-colors" type="button">
-                    Manage
-                  </button>
-</div>
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-</section>
-<!-- Visual Activity Scrim / Live Tail Preview -->
-<section class="grid grid-cols-1 xl:grid-cols-3 gap-space-md">
-<!-- Visual Context Placeholder Card 1 -->
-<div class="xl:col-span-2 rounded-xl bg-surface-container-low p-space-md relative overflow-hidden flex flex-col justify-between">
-<div class="flex items-center justify-between mb-space-sm">
-<div class="flex items-center gap-space-xs">
-<span class="material-symbols-outlined text-primary">analytics</span>
-<span class="font-headline-sm text-headline-sm text-on-surface">Compute Node Telemetry History</span>
-</div>
-<span class="font-code-sm text-code-sm text-on-surface-variant">Sampling rate: 500ms</span>
-</div>
-<div class="relative w-full h-44 rounded-lg overflow-hidden flex items-center justify-center bg-surface-container-lowest">
-<img class="object-cover w-full h-full opacity-35" data-alt="High tech server room telemetry dashboard glowing with crimson red and neon emerald waveforms displaying server load curves in dark mode" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBPZjmrplmoD5wOn1kBWRtUDiQCFu0ns1kq3IxSLZPvhS3aeX1rUBEPA72wlWO-avHRoQ-0tJH9Av4IzQfZZvVTqHilcsL_8d2mvSjJmbkFd1NZaz6tRik6pL2UdbWMeiLPArVdnsYxkVEsXp7cdO7hBgyuI54hZW1WokUY3fJkynBvFnGNKSAa4NTvAVvs_j0CtoXu6olMmkNwYi-S8NrzxxDRtrr1pAsmsq8Hyg"/>
-<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent"></div>
-<div class="absolute bottom-3 left-4 right-4 flex items-center justify-between">
-<div class="flex items-center gap-2">
-<span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-surface-container-high text-primary font-mono">AMD EPYC 7763</span>
-<span class="font-code-sm text-code-sm text-on-surface-variant">Thread pool healthy, all cores responsive</span>
-</div>
-<span class="font-label-sm text-label-sm text-tertiary">STABLE 99.98%</span>
-</div>
-</div>
-</div>
-<!-- Quick Maintenance Actions Widget -->
-<div class="rounded-xl bg-surface-container-low p-space-md flex flex-col justify-between">
-<div>
-<div class="flex items-center justify-between mb-space-xs">
-<span class="font-headline-sm text-headline-sm text-on-surface">Daemon Operations</span>
-<span class="material-symbols-outlined text-on-surface-variant">security</span>
-</div>
-<p class="font-body-sm text-body-sm text-on-surface-variant">Perform high-priority node maintenance across internal container groups.</p>
-</div>
-<div class="flex flex-col gap-2 my-space-sm">
-<button class="w-full flex items-center justify-between px-3 py-2 rounded bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors" type="button">
-<div class="flex items-center gap-2">
-<span class="material-symbols-outlined text-sm text-tertiary">cleaning_services</span>
-<span class="font-body-sm text-body-sm">Prune Inactive Logs</span>
-</div>
-<span class="font-code-sm text-code-sm text-on-surface-variant">142 MB</span>
-</button>
-<button class="w-full flex items-center justify-between px-3 py-2 rounded bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors" type="button">
-<div class="flex items-center gap-2">
-<span class="material-symbols-outlined text-sm text-primary">sync</span>
-<span class="font-body-sm text-body-sm">Flush DNS & Socket Buffer</span>
-</div>
-<span class="font-code-sm text-code-sm text-tertiary">READY</span>
-</button>
-<button class="w-full flex items-center justify-between px-3 py-2 rounded bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors" type="button">
-<div class="flex items-center gap-2">
-<span class="material-symbols-outlined text-sm text-on-secondary-container">save</span>
-<span class="font-body-sm text-body-sm">Take Snapshot Backup</span>
-</div>
-<span class="font-code-sm text-code-sm text-on-surface-variant font-mono">v2.4-snap</span>
-</button>
-</div>
-<div class="pt-space-xs flex items-center justify-between font-code-sm text-code-sm text-on-surface-variant">
-<span>Cron Tasks: 12 Active</span>
-<span class="text-tertiary font-mono">Next: 00:00 UTC</span>
-</div>
-</div>
-</section>
-</div>
-</div></main></div>
+</head>
+<body>
 
-<!-- Framer Motion CDN & Real-Time Client Core -->
-<script src="https://cdn.jsdelivr.net/npm/framer-motion@11.11.11/dist/framer-motion.js"></script>
-<script>
-  const API_BASE = window.location.origin + '/api';
-  const WS_BASE = (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host + '/ws';
-  let token = localStorage.getItem('eclipse_token') || '';
-
-  function getHeaders() {
-    const h = { 'Content-Type': 'application/json' };
-    if (token) h['Authorization'] = 'Bearer ' + token;
-    return h;
-  }
-
-  function logout() {
-    localStorage.removeItem('eclipse_token');
-    window.location.href = '/login.html';
-  }
-
-  function requireAuth() {
-    if (!token && !window.location.pathname.endsWith('login.html')) {
-      window.location.href = '/login.html';
-    }
-  }
-
-  // Update navigation hrefs across pages
-  document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('a[data-path="overview"]').forEach(el => el.href = '/');
-    document.querySelectorAll('a[data-path="applications"]').forEach(el => el.href = '/app.html');
-    document.querySelectorAll('a[data-path="live-terminal"]').forEach(el => el.href = '/app.html');
-    document.querySelectorAll('a[data-path="file-manager"]').forEach(el => el.href = '/app.html');
-    document.querySelectorAll('a[data-path="admin-center"]').forEach(el => el.href = '/admin.html');
-    document.querySelectorAll('a[data-path="vps-stats"]').forEach(el => el.href = '/admin-stats.html');
-    document.querySelectorAll('button[title="Sign out"]').forEach(el => el.onclick = logout);
-
-    // Add Telemetry link to nav if missing
-    const nav = document.querySelector('nav');
-    if (nav && !nav.querySelector('a[href="/admin-stats.html"]')) {
-      const statsLink = document.createElement('a');
-      statsLink.href = '/admin-stats.html';
-      statsLink.className = 'group flex items-center justify-between px-space-sm py-2 rounded text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-all font-body-md text-body-md';
-      statsLink.innerHTML = '<div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-xl text-on-surface-variant group-hover:text-primary transition-colors">speed</span><span>VPS Telemetry</span></div><span class="font-label-sm text-label-sm px-1 py-0.2 bg-tertiary/20 text-tertiary rounded font-mono">LIVE</span>';
-      nav.appendChild(statsLink);
-    }
-  });
-</script>
-
-<script>
-  requireAuth();
-
-  // Load real telemetry from WebSocket or REST
-  async function fetchSystemStats() {
-    try {
-      const res = await fetch(API_BASE + '/admin/system', { headers: getHeaders() });
-      if (res.ok) {
-        const d = await res.json();
-        const load = d.system.cpu.overallPercent !== undefined ? d.system.cpu.overallPercent : (d.system.loadAvg[0] || 0);
-        const cpuEl = document.getElementById('cpu-metric-val');
-        if (cpuEl) cpuEl.innerText = load;
-
-        // Update RAM
-        if (d.system.memory) {
-          const ramVal = d.system.memory.usedMB;
-          const ramTotal = d.system.memory.totalMB;
-          const ramEl = document.querySelector('[class*="headline-xl"]:has(+ [class*="label-md"])');
-          if (ramEl) ramEl.innerText = ramVal.toLocaleString();
-        }
-      }
-    } catch (e) {}
-  }
-
-  // Load dynamic applications list
-  async function loadApplications() {
-    try {
-      const res = await fetch(API_BASE + '/apps', { headers: getHeaders() });
-      if (!res.ok) {
-        if (res.status === 401) logout();
-        return;
-      }
-      const data = await res.json();
-      console.log('Applications loaded:', data.apps);
-    } catch (e) {}
-  }
-
-  // Real-time WebSocket connection
-  function connectWs() {
-    const ws = new WebSocket(WS_BASE);
-    ws.onopen = () => {
-      if (token) ws.send(JSON.stringify({ type: 'auth', token }));
-      ws.send(JSON.stringify({ type: 'subscribe', channel: 'system:stats' }));
-    };
-    ws.onmessage = (evt) => {
-      try {
-        const msg = JSON.parse(evt.data);
-        if (msg.type === 'system_stats' && msg.data) {
-          const cpuVal = msg.data.cpu.overallPercent;
-          const cpuEl = document.getElementById('cpu-metric-val');
-          if (cpuEl && cpuVal !== undefined) cpuEl.innerText = cpuVal;
-        }
-      } catch (e) {}
-    };
-    ws.onclose = () => setTimeout(connectWs, 3000);
-  }
-
-  // Hook New App button
-  document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('button').forEach(btn => {
-      if (btn.innerText.includes('New App')) {
-        btn.onclick = async () => {
-          const name = prompt('Enter application name (e.g. node-api, py-fastapi):');
-          if (!name) return;
-          const type = confirm('Press OK for Python 3 (venv), or Cancel for Node.js 22') ? 'python' : 'nodejs';
-          const port = prompt('Enter port number (e.g. 3000, 8000, or leave blank):');
-          try {
-            const res = await fetch(API_BASE + '/apps', {
-              method: 'POST',
-              headers: getHeaders(),
-              body: JSON.stringify({ name, type, port: port ? parseInt(port, 10) : undefined })
-            });
-            const d = await res.json();
-            if (res.ok) {
-              alert('Application created successfully: ' + d.name);
-              window.location.href = '/app.html?id=' + d.appId;
-            } else {
-              alert(d.error);
-            }
-          } catch (e) {
-            alert(e.message);
-          }
-        };
-      }
-    });
-    fetchSystemStats();
-    loadApplications();
-    connectWs();
-  });
-</script>
-
-  <!-- Profile & Account Settings Modal (Framer Motion / CSS Animated) -->
-  <div id="profileModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-[#1b1b1f] border border-[#5b403e]/40 rounded-2xl w-full max-w-md p-6 relative shadow-2xl">
-      <button onclick="closeProfileModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
-        <span class="material-symbols-outlined text-xl">close</span>
-      </button>
-      <h3 class="text-lg font-bold text-white flex items-center gap-2 mb-1">
-        <span class="material-symbols-outlined text-red-400">manage_accounts</span>
-        Account & Profile Settings
-      </h3>
-      <p class="text-xs text-gray-400 mb-5 font-mono">Update your username, Gmail/email address, or master password.</p>
-
-      <!-- Profile Form -->
-      <form onsubmit="event.preventDefault(); saveProfileChanges();" class="space-y-3 pb-4 border-b border-[#292a2d]">
-        <div>
-          <label class="block text-xs font-semibold text-gray-300 uppercase font-mono mb-1">Username</label>
-          <input id="editUsername" type="text" required class="w-full bg-[#0d0e11] border border-[#343538] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-red-500 font-mono">
+  <div class="app-layout">
+    <!-- Left Sidebar -->
+    <aside class="sidebar">
+      <div>
+        <div class="sidebar-brand">
+          <a href="/" class="brand-link">
+            <div class="brand-logo-icon">
+              <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+            </div>
+            <div>
+              <span class="brand-text">ECLIPSE PANEL</span>
+            </div>
+          </a>
+          <span class="brand-badge">8090</span>
         </div>
-        <div>
-          <label class="block text-xs font-semibold text-gray-300 uppercase font-mono mb-1">Gmail / Email Address</label>
-          <input id="editEmail" type="email" required class="w-full bg-[#0d0e11] border border-[#343538] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-red-500 font-mono">
-        </div>
-        <button type="submit" class="w-full py-2 rounded-lg bg-red-600 text-white font-semibold text-xs tracking-wider uppercase transition-all hover:bg-red-500 shadow-md">Save Profile Changes</button>
-      </form>
 
-      <!-- Password Change Form -->
-      <form onsubmit="event.preventDefault(); savePasswordChanges();" class="space-y-3 pt-4">
-        <h4 class="text-xs font-bold text-white uppercase tracking-wider font-mono">Change Master Password</h4>
-        <div>
-          <label class="block text-xs text-gray-400 font-mono mb-1">Current Password (optional for admin)</label>
-          <input id="editCurrentPass" type="password" placeholder="••••••••" class="w-full bg-[#0d0e11] border border-[#343538] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-red-500 font-mono">
+        <div class="sidebar-section-title">Control Matrix</div>
+        <nav class="sidebar-nav">
+          <a href="/" class="nav-link active">
+            <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+            <span>Overview</span>
+          </a>
+          <a href="/app.html" class="nav-link">
+            <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
+            <span>Applications</span>
+            <span class="nav-link-pill" id="nav-app-count">0</span>
+          </a>
+          <a href="/admin-stats.html" class="nav-link">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.49 2 2 6.49 2 12s4.49 10 10 10 10-4.49 10-10S17.51 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3-8c0 1.66-1.34 3-3 3s-3-1.34-3-3 1.34-3 3-3 3 1.34 3 3z"/></svg>
+            <span>VPS Telemetry</span>
+            <span class="nav-link-pill live">LIVE</span>
+          </a>
+          <a href="/admin.html" class="nav-link">
+            <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+            <span>Admin Center</span>
+          </a>
+        </nav>
+      </div>
+
+      <!-- Bottom Host Metadata -->
+      <div class="sidebar-bottom">
+        <div class="host-badge-box">
+          <div style="display: flex; align-items: center; overflow: hidden;">
+            <span class="status-dot-green"></span>
+            <span id="sidebar-hostname" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #FFF;">Detecting...</span>
+          </div>
+          <span id="sidebar-port" style="color: var(--primary); font-weight: 700;">:8090</span>
         </div>
-        <div>
-          <label class="block text-xs text-gray-400 font-mono mb-1">New Password</label>
-          <input id="editNewPass" type="password" required placeholder="••••••••" class="w-full bg-[#0d0e11] border border-[#343538] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-red-500 font-mono">
+
+        <div class="user-profile-bar" onclick="openProfileModal()" title="Click to edit profile, Gmail, or password">
+          <div class="user-avatar-sm" id="sidebar-user-avatar">A</div>
+          <div class="user-info-text">
+            <span class="user-name-label" id="sidebar-user-name">admin</span>
+            <span class="user-role-label" id="sidebar-user-role">SUPERADMIN</span>
+          </div>
+          <button class="btn-icon-logout" onclick="event.stopPropagation(); logout();" title="Sign out">
+            <svg viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+          </button>
         </div>
-        <button type="submit" class="w-full py-2 rounded-lg bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 text-white font-semibold text-xs tracking-wider uppercase transition-all">Update Password</button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-wrapper">
+      <!-- Top Header -->
+      <header class="top-header">
+        <div class="header-left">
+          <div class="breadcrumbs">
+            <span>Cockpit</span>
+            <span>/</span>
+            <span class="current">Infrastructure Overview</span>
+          </div>
+          <div class="badge-ws-status" id="header-ws-badge">
+            <span class="status-dot-green"></span>
+            <span id="ws-status-text">WS: Connected</span>
+          </div>
+        </div>
+
+        <div class="header-right">
+          <button class="btn-secondary" onclick="openProfileModal()">
+            <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            <span>My Account</span>
+          </button>
+          <button class="btn-primary" onclick="openCreateAppModal()">
+            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            <span>Deploy App</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Page Body -->
+      <div class="page-container">
+        <!-- REAL HARDWARE TELEMETRY CARDS -->
+        <section class="metrics-cockpit">
+          <!-- CARD 1: REAL PROCESSOR & CPU TELEMETRY -->
+          <div class="metric-card">
+            <div class="metric-card-glow" style="background: rgba(239, 68, 68, 0.15);"></div>
+            <div class="metric-header">
+              <div class="metric-title-group">
+                <div class="metric-icon-box cpu">
+                  <svg viewBox="0 0 24 24"><path d="M15 9H9v6h6V9zm-2 4h-2v-2h2v2zm8-2V9h-2V7c0-1.1-.9-2-2-2h-2V3h-2v2h-2V3H9v2H7c-1.1 0-2 .9-2 2v2H3v2h2v2H3v2h2v2c0 1.1.9 2 2 2h2v2h2v-2h2v2h2v-2h2c1.1 0 2-.9 2-2v-2h2v-2h-2v-2h2zm-4 6H7V7h10v10z"/></svg>
+                </div>
+                <span class="metric-card-title">Processor & Cores</span>
+              </div>
+              <span class="metric-pill crimson" id="cpu-core-badge">Detecting Cores...</span>
+            </div>
+
+            <div class="metric-main-row">
+              <div>
+                <div class="metric-number-big">
+                  <span id="cpu-percent">0</span><span class="metric-unit" style="color: var(--primary);">%</span>
+                </div>
+                <p class="metric-subtitle" id="cpu-model-name">Detecting Processor...</p>
+              </div>
+            </div>
+
+            <div class="progress-track">
+              <div class="progress-fill crimson" id="cpu-progress-bar" style="width: 0%;"></div>
+            </div>
+
+            <div class="metric-footer-row">
+              <span id="cpu-load-text">Load: 0.00, 0.00, 0.00</span>
+              <a href="/admin-stats.html" style="color: var(--primary); text-decoration: none; font-weight: 600;">View 22-Core Grid →</a>
+            </div>
+          </div>
+
+          <!-- CARD 2: REAL MEMORY / RAM TELEMETRY -->
+          <div class="metric-card">
+            <div class="metric-card-glow" style="background: rgba(16, 185, 129, 0.15);"></div>
+            <div class="metric-header">
+              <div class="metric-title-group">
+                <div class="metric-icon-box ram">
+                  <svg viewBox="0 0 24 24"><path d="M4 6h16v12H4zM2 4v16h20V4H2zm3 3h2v10H5V7zm4 0h2v10H9V7zm4 0h2v10h-2V7zm4 0h2v10h-2V7z"/></svg>
+                </div>
+                <span class="metric-card-title">Memory Subsystem</span>
+              </div>
+              <span class="metric-pill emerald" id="ram-usage-pill">0% Utilized</span>
+            </div>
+
+            <div class="metric-main-row">
+              <div>
+                <div class="metric-number-big">
+                  <span id="ram-used-gb">0.0</span><span class="metric-unit" style="color: var(--emerald); font-size: 14px; font-weight: 600;"> / <span id="ram-total-gb">0.0</span> GB</span>
+                </div>
+                <p class="metric-subtitle" id="ram-free-text" style="color: var(--emerald);">0 GB Available</p>
+              </div>
+            </div>
+
+            <div class="progress-track">
+              <div class="progress-fill emerald" id="ram-progress-bar" style="width: 0%;"></div>
+            </div>
+
+            <div class="metric-footer-row">
+              <span id="ram-mb-detail">0 MB / 0 MB</span>
+              <span id="arch-badge">Node.js 24 · x64</span>
+            </div>
+          </div>
+
+          <!-- CARD 3: REAL DISK & HOST TELEMETRY -->
+          <div class="metric-card">
+            <div class="metric-card-glow" style="background: rgba(245, 158, 11, 0.15);"></div>
+            <div class="metric-header">
+              <div class="metric-title-group">
+                <div class="metric-icon-box disk">
+                  <svg viewBox="0 0 24 24"><path d="M19 2H5c-1.11 0-2 .9-2 2v16c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 18H5V4h14v16zm-7-2c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm0-8c1.65 0 3 1.35 3 3s-1.35 3-3 3-3-1.35-3-3 1.35-3 3-3z"/></svg>
+                </div>
+                <span class="metric-card-title">Storage & Volume</span>
+              </div>
+              <span class="metric-pill amber" id="disk-usage-pill">0% Used</span>
+            </div>
+
+            <div class="metric-main-row">
+              <div>
+                <div class="metric-number-big">
+                  <span id="disk-used-gb">0.0</span><span class="metric-unit" style="color: var(--amber); font-size: 14px; font-weight: 600;"> / <span id="disk-total-gb">0.0</span> GB</span>
+                </div>
+                <p class="metric-subtitle" id="disk-free-text" style="color: var(--amber);">0 GB Free Space</p>
+              </div>
+            </div>
+
+            <div class="progress-track">
+              <div class="progress-fill amber" id="disk-progress-bar" style="width: 0%;"></div>
+            </div>
+
+            <div class="metric-footer-row">
+              <span id="disk-mount-path">Root Volume</span>
+              <span id="os-platform-badge">Windows / Linux</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- APPLICATION INSTANCE MATRIX -->
+        <section class="content-section">
+          <div class="section-header">
+            <div class="section-title-wrap">
+              <h2>
+                <svg style="width: 20px; height: 20px; fill: var(--primary);" viewBox="0 0 24 24"><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/></svg>
+                <span>Managed Application Matrix</span>
+              </h2>
+              <p>Process supervisor engine running Python 3 & Node.js workloads with zero-downtime watchdogs.</p>
+            </div>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn-secondary" onclick="fetchApps()">
+                <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+                <span>Refresh</span>
+              </button>
+              <button class="btn-primary" onclick="openCreateAppModal()">
+                <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                <span>Deploy New App</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Apps Table -->
+          <div class="data-table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Application</th>
+                  <th>Runtime</th>
+                  <th>Status</th>
+                  <th>Port</th>
+                  <th>Restarts</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="apps-tbody">
+                <tr>
+                  <td colspan="6">
+                    <div class="empty-state-box">
+                      <div class="empty-state-icon">
+                        <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
+                      </div>
+                      <p style="font-size: 14px; font-weight: 600; color: #FFF; margin-bottom: 6px;">No Applications Deployed</p>
+                      <p style="font-size: 12px; margin-bottom: 16px;">Deploy your first Node.js or Python application to get started.</p>
+                      <button class="btn-primary" onclick="openCreateAppModal()">Deploy Application</button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- MODAL: DEPLOY NEW APPLICATION -->
+  <div class="modal-overlay" id="modal-create-app">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">
+          <svg style="width: 22px; height: 22px; fill: var(--primary);" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+          <span>Deploy Application</span>
+        </h3>
+        <button class="modal-close-btn" onclick="closeCreateAppModal()">
+          <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </div>
+
+      <form id="create-app-form" onsubmit="event.preventDefault(); submitCreateApp();">
+        <div class="form-group">
+          <label class="form-label" for="app-name">Application Name</label>
+          <input type="text" id="app-name" class="form-control" placeholder="my-awesome-api" required>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label class="form-label" for="app-type">Runtime Engine</label>
+            <select id="app-type" class="form-control" style="cursor: pointer;">
+              <option value="nodejs">Node.js (JavaScript/ESM)</option>
+              <option value="python">Python 3 (venv/script)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="app-port">Dedicated Port</label>
+            <input type="number" id="app-port" class="form-control" placeholder="3000" required value="3000">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="app-entry">Entrypoint Script</label>
+          <input type="text" id="app-entry" class="form-control" placeholder="index.js or app.py" required value="index.js">
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeCreateAppModal()">Cancel</button>
+          <button type="submit" class="btn-primary" id="btn-create-submit">Create & Deploy</button>
+        </div>
       </form>
     </div>
   </div>
 
+  <!-- MODAL: PROFILE & ACCOUNT SETTINGS -->
+  <div class="modal-overlay" id="modal-profile">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">
+          <svg style="width: 22px; height: 22px; fill: var(--primary);" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+          <span>Account & Profile Settings</span>
+        </h3>
+        <button class="modal-close-btn" onclick="closeProfileModal()">
+          <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </div>
+
+      <form id="profile-form" onsubmit="event.preventDefault(); submitUpdateProfile();">
+        <div class="form-group">
+          <label class="form-label" for="profile-username">Username</label>
+          <input type="text" id="profile-username" class="form-control" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="profile-email">Gmail / Email Address</label>
+          <input type="email" id="profile-email" class="form-control" placeholder="admin@gmail.com" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="profile-new-password">New Password (leave blank to keep current)</label>
+          <input type="password" id="profile-new-password" class="form-control" placeholder="••••••••••••">
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeProfileModal()">Cancel</button>
+          <button type="submit" class="btn-primary" id="btn-profile-submit">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- CLIENT-SIDE SCRIPT -->
   <script>
+    const API_BASE = window.location.origin + '/api';
+    let token = localStorage.getItem('eclipse_token') || '';
+    let currentUser = null;
+
+    // Authenticate or redirect
+    if (!token) {
+      window.location.href = '/login.html';
+    } else {
+      try {
+        currentUser = JSON.parse(localStorage.getItem('eclipse_user') || '{}');
+      } catch (e) {}
+    }
+
+    function getHeaders() {
+      const h = { 'Content-Type': 'application/json' };
+      if (token) h['Authorization'] = 'Bearer ' + token;
+      return h;
+    }
+
+    function logout() {
+      localStorage.removeItem('eclipse_token');
+      localStorage.removeItem('eclipse_user');
+      window.location.href = '/login.html';
+    }
+
+    // Modal helpers
+    function openCreateAppModal() {
+      document.getElementById('modal-create-app').classList.add('open');
+    }
+    function closeCreateAppModal() {
+      document.getElementById('modal-create-app').classList.remove('open');
+    }
     function openProfileModal() {
-      fetch(API_BASE + '/auth/me', { headers: getHeaders() })
-        .then(r => r.json())
-        .then(d => {
-          if (d.user) {
-            document.getElementById('editUsername').value = d.user.username;
-            document.getElementById('editEmail').value = d.user.email;
-            document.getElementById('profileModal').classList.remove('hidden');
-          }
-        })
-        .catch(e => {
-          document.getElementById('profileModal').classList.remove('hidden');
-        });
+      if (currentUser) {
+        document.getElementById('profile-username').value = currentUser.username || '';
+        document.getElementById('profile-email').value = currentUser.email || '';
+      }
+      document.getElementById('modal-profile').classList.add('open');
     }
-
     function closeProfileModal() {
-      document.getElementById('profileModal').classList.add('hidden');
+      document.getElementById('modal-profile').classList.remove('open');
     }
 
-    async function saveProfileChanges() {
-      const username = document.getElementById('editUsername').value.trim();
-      const email = document.getElementById('editEmail').value.trim();
+    // Update UI with real host metrics
+    function updateMetricsUI(data) {
+      if (!data) return;
+
+      // 1. Processor & Cores
+      if (data.cpu) {
+        const model = data.cpu.model || 'Host Processor';
+        const cores = data.cpu.cores || 1;
+        const percent = data.cpu.overallPercent !== undefined ? data.cpu.overallPercent : 0;
+
+        document.getElementById('cpu-model-name').innerText = model;
+        document.getElementById('cpu-core-badge').innerText = cores + 'x Cores';
+        document.getElementById('cpu-percent').innerText = percent;
+        document.getElementById('cpu-progress-bar').style.width = Math.min(100, Math.max(0, percent)) + '%';
+      }
+
+      if (data.loadAvg) {
+        const loads = Array.isArray(data.loadAvg) ? data.loadAvg.map(n => Number(n).toFixed(2)).join(', ') : '0.00, 0.00, 0.00';
+        document.getElementById('cpu-load-text').innerText = 'Load: ' + loads;
+      }
+
+      // 2. Memory / RAM
+      if (data.memory) {
+        const usedGB = data.memory.usedGB || (data.memory.usedMB ? (data.memory.usedMB / 1024).toFixed(2) : '0.0');
+        const totalGB = data.memory.totalGB || (data.memory.totalMB ? (data.memory.totalMB / 1024).toFixed(2) : '0.0');
+        const freeGB = data.memory.freeGB || (data.memory.freeMB ? (data.memory.freeMB / 1024).toFixed(2) : '0.0');
+        const percent = data.memory.usagePercent !== undefined ? data.memory.usagePercent : 0;
+
+        document.getElementById('ram-used-gb').innerText = usedGB;
+        document.getElementById('ram-total-gb').innerText = totalGB;
+        document.getElementById('ram-usage-pill').innerText = percent + '% Utilized';
+        document.getElementById('ram-free-text').innerText = freeGB + ' GB Available';
+        document.getElementById('ram-progress-bar').style.width = Math.min(100, Math.max(0, percent)) + '%';
+
+        if (data.memory.usedMB && data.memory.totalMB) {
+          document.getElementById('ram-mb-detail').innerText = data.memory.usedMB.toLocaleString() + ' / ' + data.memory.totalMB.toLocaleString() + ' MB';
+        }
+      }
+
+      // 3. Storage / Disk
+      if (data.disk) {
+        const usedGB = data.disk.usedGB || '0.0';
+        const totalGB = data.disk.totalGB || '0.0';
+        const freeGB = data.disk.freeGB || '0.0';
+        const percent = data.disk.usagePercent !== undefined ? data.disk.usagePercent : 0;
+
+        document.getElementById('disk-used-gb').innerText = usedGB;
+        document.getElementById('disk-total-gb').innerText = totalGB;
+        document.getElementById('disk-usage-pill').innerText = percent + '% Used';
+        document.getElementById('disk-free-text').innerText = freeGB + ' GB Free Space';
+        document.getElementById('disk-progress-bar').style.width = Math.min(100, Math.max(0, percent)) + '%';
+
+        if (data.disk.path) {
+          document.getElementById('disk-mount-path').innerText = 'Mount: ' + data.disk.path;
+        }
+      }
+
+      // Host metadata
+      if (data.hostname) {
+        document.getElementById('sidebar-hostname').innerText = data.hostname;
+      }
+      if (data.platform) {
+        document.getElementById('os-platform-badge').innerText = data.platform.toUpperCase() + ' (' + (data.arch || 'x64') + ')';
+      }
+    }
+
+    // Fetch real metrics from HTTP endpoint
+    async function fetchLiveMetrics() {
+      try {
+        const res = await fetch(API_BASE + '/system/metrics');
+        if (res.ok) {
+          const data = await res.json();
+          updateMetricsUI(data);
+        }
+      } catch (err) {
+        console.warn('Metrics polling error:', err.message);
+      }
+    }
+
+    // Fetch managed applications
+    async function fetchApps() {
+      try {
+        const res = await fetch(API_BASE + '/apps', { headers: getHeaders() });
+        if (!res.ok) return;
+        const apps = await res.json();
+        renderAppsTable(apps);
+        document.getElementById('nav-app-count').innerText = apps.length;
+      } catch (err) {
+        console.error('Fetch apps error:', err);
+      }
+    }
+
+    function renderAppsTable(apps) {
+      const tbody = document.getElementById('apps-tbody');
+      if (!apps || apps.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6">
+              <div class="empty-state-box">
+                <div class="empty-state-icon">
+                  <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
+                </div>
+                <p style="font-size: 14px; font-weight: 600; color: #FFF; margin-bottom: 6px;">No Applications Deployed</p>
+                <p style="font-size: 12px; margin-bottom: 16px;">Deploy your first Node.js or Python application to get started.</p>
+                <button class="btn-primary" onclick="openCreateAppModal()">Deploy Application</button>
+              </div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = apps.map(app => {
+        const isRunning = app.status === 'running';
+        const isCrashed = app.status === 'crashed';
+        const pillClass = isRunning ? 'running' : (isCrashed ? 'crashed' : 'stopped');
+        const runtimeIcon = app.type === 'python' ? '🐍 Python' : '🟢 Node.js';
+
+        return `
+          <tr>
+            <td>
+              <div style="font-weight: 700; color: #FFF;">${escapeHtml(app.name)}</div>
+              <div style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);">${escapeHtml(app.entry_point || 'index.js')}</div>
+            </td>
+            <td>
+              <span style="font-family: var(--font-mono); font-size: 12px;">${runtimeIcon}</span>
+            </td>
+            <td>
+              <span class="status-pill ${pillClass}">
+                <span style="width: 6px; height: 6px; border-radius: 50%; background: currentColor;"></span>
+                ${app.status || 'STOPPED'}
+              </span>
+            </td>
+            <td>
+              <a href="http://${window.location.hostname}:${app.port}" target="_blank" style="color: var(--primary); font-family: var(--font-mono); text-decoration: none; font-weight: 600;">:${app.port} ↗</a>
+            </td>
+            <td style="font-family: var(--font-mono); font-size: 12px;">
+              ${app.restart_count || 0}
+            </td>
+            <td>
+              <div style="display: flex; gap: 6px;">
+                ${isRunning 
+                  ? `<button class="btn-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="triggerAppAction('${app.id}', 'stop')">Stop</button>`
+                  : `<button class="btn-primary" style="padding: 4px 8px; font-size: 11px;" onclick="triggerAppAction('${app.id}', 'start')">Start</button>`
+                }
+                <button class="btn-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="triggerAppAction('${app.id}', 'restart')">Restart</button>
+                <a href="/app.html?id=${app.id}" class="btn-secondary" style="padding: 4px 8px; font-size: 11px; text-decoration: none;">Console</a>
+                <button class="btn-secondary" style="padding: 4px 8px; font-size: 11px; color: var(--primary);" onclick="deleteApp('${app.id}')">Delete</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function triggerAppAction(appId, action) {
+      try {
+        const res = await fetch(`${API_BASE}/apps/${appId}/action/${action}`, {
+          method: 'POST',
+          headers: getHeaders()
+        });
+        const d = await res.json();
+        if (!res.ok) alert(d.error || 'Action failed');
+        fetchApps();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    async function deleteApp(appId) {
+      if (!confirm('Are you sure you want to permanently delete this application?')) return;
+      try {
+        const res = await fetch(`${API_BASE}/apps/${appId}`, {
+          method: 'DELETE',
+          headers: getHeaders()
+        });
+        if (!res.ok) {
+          const d = await res.json();
+          alert(d.error || 'Delete failed');
+        }
+        fetchApps();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    async function submitCreateApp() {
+      const name = document.getElementById('app-name').value.trim();
+      const type = document.getElementById('app-type').value;
+      const port = parseInt(document.getElementById('app-port').value, 10);
+      const entry = document.getElementById('app-entry').value.trim();
+      const btn = document.getElementById('btn-create-submit');
+
+      btn.disabled = true;
+      btn.innerText = 'Creating...';
+
+      try {
+        const res = await fetch(API_BASE + '/apps', {
+          method: 'POST',
+          headers: getHeaders(),
+          body: JSON.stringify({ name, type, port, entry_point: entry })
+        });
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.error || 'Failed to create application');
+
+        closeCreateAppModal();
+        fetchApps();
+      } catch (err) {
+        alert(err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Create & Deploy';
+      }
+    }
+
+    // Update profile
+    async function submitUpdateProfile() {
+      const username = document.getElementById('profile-username').value.trim();
+      const email = document.getElementById('profile-email').value.trim();
+      const newPassword = document.getElementById('profile-new-password').value;
+      const btn = document.getElementById('btn-profile-submit');
+
+      btn.disabled = true;
+      btn.innerText = 'Saving...';
+
       try {
         const res = await fetch(API_BASE + '/auth/profile', {
           method: 'PUT',
           headers: getHeaders(),
-          body: JSON.stringify({ username, email })
+          body: JSON.stringify({ username, email, password: newPassword || undefined })
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error);
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.error || 'Update failed');
+
+        if (d.user) {
+          currentUser = d.user;
+          localStorage.setItem('eclipse_user', JSON.stringify(d.user));
+          renderUserData();
+        }
         alert('Profile updated successfully!');
         closeProfileModal();
-        location.reload();
-      } catch (err) { alert(err.message); }
+      } catch (err) {
+        alert(err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Save Changes';
+      }
     }
 
-    async function savePasswordChanges() {
-      const currentPassword = document.getElementById('editCurrentPass').value;
-      const newPassword = document.getElementById('editNewPass').value;
-      try {
-        const res = await fetch(API_BASE + '/auth/password', {
-          method: 'PUT',
-          headers: getHeaders(),
-          body: JSON.stringify({ currentPassword, newPassword })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error);
-        alert('Password updated successfully!');
-        closeProfileModal();
-      } catch (err) { alert(err.message); }
+    function renderUserData() {
+      if (!currentUser) return;
+      const name = currentUser.username || 'admin';
+      const role = currentUser.role || 'operator';
+
+      document.getElementById('sidebar-user-name').innerText = name;
+      document.getElementById('sidebar-user-role').innerText = role.toUpperCase();
+      document.getElementById('sidebar-user-avatar').innerText = name.charAt(0).toUpperCase();
     }
+
+    // WebSocket Real-Time Connection
+    function connectWS() {
+      const wsProto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${wsProto}//${window.location.host}/ws?token=${token}`;
+      const ws = new WebSocket(wsUrl);
+
+      ws.onopen = () => {
+        document.getElementById('ws-status-text').innerText = 'WS: Connected';
+        document.getElementById('header-ws-badge').style.borderColor = 'rgba(16, 185, 129, 0.4)';
+        ws.send(JSON.stringify({ type: 'subscribe', channel: 'system:stats' }));
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          if (msg.type === 'system_stats' && msg.data) {
+            updateMetricsUI(msg.data);
+          }
+        } catch (e) {}
+      };
+
+      ws.onclose = () => {
+        document.getElementById('ws-status-text').innerText = 'WS: Reconnecting...';
+        document.getElementById('header-ws-badge').style.borderColor = 'rgba(239, 68, 68, 0.4)';
+        setTimeout(connectWS, 4000);
+      };
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // Boot
+    document.addEventListener('DOMContentLoaded', () => {
+      renderUserData();
+      fetchLiveMetrics();
+      fetchApps();
+      connectWS();
+
+      // Polling fallback every 3s
+      setInterval(fetchLiveMetrics, 3000);
+    });
   </script>
-</body></html>
+</body>
+</html>

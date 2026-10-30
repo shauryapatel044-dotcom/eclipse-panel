@@ -1,269 +1,443 @@
 <!DOCTYPE html>
-<html class="dark" lang="en">
+<html lang="en">
 <head>
   <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-  <title>Eclipse Panel - Operator Sign In</title>
-  <!-- Material Symbols & Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
-
-  <!-- Tailwind Configuration MUST be loaded BEFORE cdn.tailwindcss.com -->
-  <script>
-    window.tailwind = {
-      darkMode: "class",
-      theme: {
-        extend: {
-          colors: {
-            "surface": "#0A0B0E",
-            "surface-container-lowest": "#0D0E11",
-            "surface-container-low": "#12141A",
-            "surface-container": "#181B22",
-            "surface-container-high": "#222631",
-            "surface-container-highest": "#2D3240",
-            "on-surface": "#E3E2E6",
-            "on-surface-variant": "#E4BEBA",
-            "outline-variant": "#3D2528",
-            "secondary": "#94A3B8",
-            "primary": "#F87171",
-            "primary-container": "#DC2626",
-            "tertiary": "#10B981",
-          },
-          fontFamily: {
-            "body": ["Geist", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "sans-serif"],
-            "mono": ["JetBrains Mono", "monospace"]
-          }
-        }
-      }
-    };
-  </script>
-  <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Comprehensive CSS Fallback & Styling -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Eclipse Panel - Sign In</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
-    * { box-sizing: border-box; }
-    html, body {
+    :root {
+      --bg: #0A0B0E;
+      --card-bg: #12141A;
+      --card-border: #2D1519;
+      --input-bg: #0D0E11;
+      --input-border: #262933;
+      --primary: #EF4444;
+      --primary-hover: #DC2626;
+      --primary-glow: rgba(239, 68, 68, 0.25);
+      --text-main: #F1F5F9;
+      --text-muted: #94A3B8;
+      --accent-emerald: #10B981;
+    }
+
+    * {
+      box-sizing: border-box;
       margin: 0;
       padding: 0;
-      background-color: #0A0B0E !important;
-      color: #E3E2E6 !important;
-      font-family: 'Geist', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
+      padding: 20px;
+      position: relative;
+      overflow-x: hidden;
     }
-    .crimson-glow {
-      box-shadow: 0 0 35px rgba(220, 38, 38, 0.25);
+
+    /* Ambient Background Glow */
+    .ambient-glow {
+      position: absolute;
+      width: 450px;
+      height: 450px;
+      background: radial-gradient(circle, rgba(239, 68, 68, 0.12) 0%, rgba(10, 11, 14, 0) 70%);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 0;
     }
-    .crimson-glow:hover {
-      box-shadow: 0 0 45px rgba(220, 38, 38, 0.4);
+
+    /* Login Card Container */
+    .login-card {
+      width: 100%;
+      max-width: 440px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 36px 32px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 35px var(--primary-glow);
+      position: relative;
+      z-index: 10;
+      backdrop-filter: blur(16px);
+      transition: border-color 0.3s ease;
     }
-    .material-symbols-outlined {
-      font-family: 'Material Symbols Outlined', sans-serif;
-      font-weight: normal;
-      font-style: normal;
+
+    .login-card:hover {
+      border-color: rgba(239, 68, 68, 0.4);
+    }
+
+    /* Brand Header */
+    .brand-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .brand-icon-box {
+      width: 52px;
+      height: 52px;
+      margin: 0 auto 14px;
+      background: linear-gradient(135deg, #DC2626 0%, #450A0A 100%);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 20px rgba(220, 38, 38, 0.35);
+    }
+
+    .brand-icon-box svg {
+      width: 28px;
+      height: 28px;
+      color: #FFFFFF;
+      fill: currentColor;
+    }
+
+    .brand-title {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .brand-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #F87171;
+      padding: 2px 7px;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+
+    .brand-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    /* Tab Switcher */
+    .tab-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 20px;
+      gap: 4px;
+    }
+
+    .tab-btn {
+      padding: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    .tab-btn.active {
+      background: #1E222D;
+      color: #FFFFFF;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    }
+
+    .tab-btn svg {
+      width: 15px;
+      height: 15px;
+      fill: currentColor;
+    }
+
+    /* Superadmin Alert */
+    .admin-notice {
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 12px;
+      color: #E2E8F0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .admin-notice svg {
+      width: 16px;
+      height: 16px;
+      fill: #EF4444;
+      flex-shrink: 0;
+    }
+
+    .admin-notice strong {
+      color: #F87171;
+    }
+
+    /* Form Fields */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 12px;
+      width: 16px;
+      height: 16px;
+      fill: #64748B;
+      pointer-events: none;
+    }
+
+    .input-control {
+      width: 100%;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 10px;
+      padding: 11px 14px 11px 38px;
+      font-size: 14px;
+      color: #FFFFFF;
+      font-family: 'JetBrains Mono', monospace;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .input-control:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.2);
+    }
+
+    .input-control::placeholder {
+      color: #475569;
+    }
+
+    /* Submit Button */
+    .btn-submit {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      color: #FFFFFF;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 10px;
+      box-shadow: 0 8px 24px rgba(239, 68, 68, 0.35);
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    .btn-submit:hover {
+      background: linear-gradient(135deg, #F87171 0%, #EF4444 100%);
+      box-shadow: 0 10px 30px rgba(239, 68, 68, 0.5);
+      transform: translateY(-1px);
+    }
+
+    .btn-submit:active {
+      transform: translateY(0);
+    }
+
+    .btn-submit svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+
+    /* Footer Metadata */
+    .card-footer {
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #64748B;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent-emerald);
+      box-shadow: 0 0 8px var(--accent-emerald);
       display: inline-block;
-      line-height: 1;
-      text-transform: none;
-      letter-spacing: normal;
-      word-wrap: normal;
-      white-space: nowrap;
-      direction: ltr;
+      margin-right: 6px;
     }
   </style>
 </head>
-<body class="bg-[#0A0B0E] text-[#E3E2E6] font-body antialiased min-h-screen flex items-center justify-center p-4">
+<body>
 
-  <!-- Ambient Glow Orbs -->
-  <div class="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-    <div class="absolute -top-32 left-1/2 -translate-x-1/2 w-96 h-96 bg-red-600/15 rounded-full blur-3xl"></div>
-    <div class="absolute -bottom-24 left-1/3 w-80 h-80 bg-red-950/20 rounded-full blur-3xl"></div>
+  <div class="ambient-glow"></div>
+
+  <div class="login-card">
+    <!-- Brand -->
+    <div class="brand-header">
+      <div class="brand-icon-box">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+        </svg>
+      </div>
+      <div class="brand-title">
+        <span>ECLIPSE PANEL</span>
+        <span class="brand-badge">PORT 8090</span>
+      </div>
+      <p class="brand-subtitle">Python & Node.js Hosting Daemon Control Matrix</p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tab-group">
+      <button type="button" class="tab-btn active" id="tab-login" onclick="switchTab('login')">
+        <svg viewBox="0 0 24 24"><path d="M10 17l5-5-5-5v10zM4 19h4v2H4c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2h4v2H4v14zm16-16h-4v2h4v14h-4v2h4c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>
+        Sign In
+      </button>
+      <button type="button" class="tab-btn" id="tab-register" onclick="switchTab('register')">
+        <svg viewBox="0 0 24 24"><path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        Register
+      </button>
+    </div>
+
+    <!-- Notice -->
+    <div class="admin-notice">
+      <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+      <span>Default admin credentials: <strong>admin</strong> / <strong>admin</strong></span>
+    </div>
+
+    <!-- Form -->
+    <form id="auth-form" onsubmit="event.preventDefault(); handleSubmit();">
+      <div class="form-group">
+        <label class="form-label" for="username">Operator Identity</label>
+        <div class="input-wrapper">
+          <svg class="input-icon" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+          <input type="text" id="username" class="input-control" placeholder="admin" required value="admin" autocomplete="username">
+        </div>
+      </div>
+
+      <div class="form-group" id="email-group" style="display: none;">
+        <label class="form-label" for="email">Gmail / Email Address</label>
+        <div class="input-wrapper">
+          <svg class="input-icon" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+          <input type="email" id="email" class="input-control" placeholder="admin@gmail.com" autocomplete="email">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="password">Master Password</label>
+        <div class="input-wrapper">
+          <svg class="input-icon" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+          <input type="password" id="password" class="input-control" placeholder="admin" required value="admin" autocomplete="current-password">
+        </div>
+      </div>
+
+      <button type="submit" class="btn-submit" id="btn-submit">
+        <span id="btn-text">Authenticate & Access Console</span>
+        <svg viewBox="0 0 24 24"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
+      </button>
+    </form>
+
+    <!-- Footer -->
+    <div class="card-footer">
+      <div>
+        <span class="status-dot"></span>
+        <span>Daemon Active</span>
+      </div>
+      <div>MariaDB :3306</div>
+    </div>
   </div>
 
-  <main class="w-full max-w-md">
-    <div class="w-full bg-[#12141A]/95 border border-[#2D1519] backdrop-blur-xl rounded-2xl shadow-2xl p-6 sm:p-8 flex flex-col gap-5 crimson-glow">
-
-      <!-- Header & Logo -->
-      <div class="flex flex-col items-center text-center gap-2">
-        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-red-600 to-red-950 flex items-center justify-center shadow-lg shadow-red-900/40 border border-red-500/30">
-          <svg class="w-8 h-8 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.7)]" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
-          </svg>
-        </div>
-        <div class="flex items-center gap-2 mt-1">
-          <h1 class="text-2xl font-bold tracking-wider text-white uppercase font-body">ECLIPSE PANEL</h1>
-          <span class="bg-red-950 border border-red-800 text-red-400 font-mono text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider">v1.0</span>
-        </div>
-        <p class="text-xs text-gray-400">High-Performance Node.js & Python VPS Runtime Manager</p>
-      </div>
-
-      <!-- Tab Switcher (Sign In / Register) -->
-      <div class="grid grid-cols-2 p-1 bg-[#0D0E11] rounded-xl border border-zinc-800 gap-1 font-mono text-xs">
-        <button class="py-2.5 px-3 rounded-lg font-semibold transition-all text-white bg-[#1E222D] shadow-sm flex items-center justify-center gap-2 cursor-pointer" id="tab-login" onclick="switchAuthTab('login')">
-          <i class="fa-solid fa-right-to-bracket text-red-400"></i>
-          <span>Sign In</span>
-        </button>
-        <button class="py-2.5 px-3 rounded-lg font-semibold transition-all text-gray-400 hover:text-white flex items-center justify-center gap-2 cursor-pointer" id="tab-register" onclick="switchAuthTab('register')">
-          <i class="fa-solid fa-user-plus text-xs"></i>
-          <span>Register</span>
-        </button>
-      </div>
-
-      <!-- SuperAdmin Notice Badge -->
-      <div class="bg-[#181B22] border border-red-900/30 p-3 rounded-xl flex items-center gap-3" id="superadmin-badge">
-        <div class="flex items-center justify-center w-7 h-7 rounded-lg bg-red-600/20 text-red-400 shrink-0">
-          <i class="fa-solid fa-shield-halved text-xs"></i>
-        </div>
-        <p class="font-mono text-[11px] text-gray-300 leading-snug">
-          First operator to register automatically ascends to <span class="text-red-400 font-bold">SuperAdmin</span> role.
-        </p>
-      </div>
-
-      <!-- Form -->
-      <form class="flex flex-col gap-4" id="auth-form" onsubmit="event.preventDefault(); handleAuthSubmit();">
-        <div class="flex flex-col gap-1.5">
-          <label class="font-mono text-xs text-gray-400 uppercase tracking-wider flex items-center gap-1.5" for="operator-id">
-            <i class="fa-solid fa-terminal text-[10px] text-red-400"></i>
-            <span>Operator Identity</span>
-          </label>
-          <div class="relative flex items-center">
-            <i class="fa-solid fa-at absolute left-3.5 text-gray-500 text-xs"></i>
-            <input class="w-full bg-[#0D0E11] text-white font-mono text-sm pl-10 pr-4 py-2.5 rounded-xl border border-zinc-800 focus:outline-none focus:border-red-500 placeholder:text-zinc-600 transition-colors" id="operator-id" placeholder="admin" required="" type="text" value="admin"/>
-          </div>
-        </div>
-
-        <div class="flex flex-col gap-1.5">
-          <div class="flex justify-between items-center">
-            <label class="font-mono text-xs text-gray-400 uppercase tracking-wider flex items-center gap-1.5" for="password">
-              <i class="fa-solid fa-key text-[10px] text-red-400"></i>
-              <span>Master Key / Password</span>
-            </label>
-          </div>
-          <div class="relative flex items-center">
-            <i class="fa-solid fa-lock absolute left-3.5 text-gray-500 text-xs"></i>
-            <input class="w-full bg-[#0D0E11] text-white font-mono text-sm pl-10 pr-10 py-2.5 rounded-xl border border-zinc-800 focus:outline-none focus:border-red-500 placeholder:text-zinc-600 transition-colors" id="password" placeholder="admin" required="" type="password" value="admin"/>
-            <button class="absolute right-3.5 text-gray-500 hover:text-white transition-colors" onclick="togglePassVisibility('password', this)" type="button">
-              <i class="fa-solid fa-eye text-xs"></i>
-            </button>
-          </div>
-        </div>
-
-        <!-- Register Extra Fields (Confirm Password & Email) -->
-        <div class="hidden flex-col gap-4" id="register-fields">
-          <div class="flex flex-col gap-1.5">
-            <label class="font-mono text-xs text-gray-400 uppercase tracking-wider flex items-center gap-1.5" for="confirm-password">
-              <i class="fa-solid fa-check-double text-[10px] text-red-400"></i>
-              <span>Confirm Password</span>
-            </label>
-            <div class="relative flex items-center">
-              <i class="fa-solid fa-lock absolute left-3.5 text-gray-500 text-xs"></i>
-              <input class="w-full bg-[#0D0E11] text-white font-mono text-sm pl-10 pr-10 py-2.5 rounded-xl border border-zinc-800 focus:outline-none focus:border-red-500 placeholder:text-zinc-600 transition-colors" id="confirm-password" placeholder="Confirm your password" type="password"/>
-            </div>
-          </div>
-        </div>
-
-        <!-- Submit Button -->
-        <button class="w-full mt-2 py-3 px-4 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-lg shadow-red-900/40 transition-all active:scale-[0.98] cursor-pointer" id="submit-cta" type="submit">
-          <span id="btn-text">Authenticate & Access Console</span>
-          <i class="fa-solid fa-arrow-right text-xs"></i>
-        </button>
-      </form>
-
-      <!-- Bottom Info -->
-      <div class="flex flex-col gap-2 pt-2 border-t border-zinc-800/80 font-mono text-xs text-gray-500">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>Daemon Online (Port 8090)</span>
-          </div>
-          <span class="text-gray-400">MariaDB :3306</span>
-        </div>
-      </div>
-
-    </div>
-  </main>
-
   <script>
+    let isRegisterMode = false;
     const API_BASE = window.location.origin + '/api';
 
-    function switchAuthTab(mode) {
-      const tabLogin = document.getElementById('tab-login');
-      const tabRegister = document.getElementById('tab-register');
-      const registerFields = document.getElementById('register-fields');
-      const btnText = document.getElementById('btn-text');
-      const confirmInput = document.getElementById('confirm-password');
+    function switchTab(mode) {
+      isRegisterMode = (mode === 'register');
+      document.getElementById('tab-login').className = isRegisterMode ? 'tab-btn' : 'tab-btn active';
+      document.getElementById('tab-register').className = isRegisterMode ? 'tab-btn active' : 'tab-btn';
+      document.getElementById('email-group').style.display = isRegisterMode ? 'block' : 'none';
+      document.getElementById('btn-text').innerText = isRegisterMode ? 'Register Operator Account' : 'Authenticate & Access Console';
 
-      if (mode === 'register') {
-        tabRegister.className = "py-2.5 px-3 rounded-lg font-semibold transition-all text-white bg-[#1E222D] shadow-sm flex items-center justify-center gap-2 cursor-pointer";
-        tabLogin.className = "py-2.5 px-3 rounded-lg font-semibold transition-all text-gray-400 hover:text-white flex items-center justify-center gap-2 cursor-pointer";
-        registerFields.classList.remove('hidden');
-        registerFields.classList.add('flex');
-        btnText.innerText = "Register & Launch Console";
-        confirmInput.setAttribute('required', 'true');
-        document.getElementById('operator-id').value = '';
+      if (isRegisterMode) {
+        document.getElementById('username').value = '';
         document.getElementById('password').value = '';
-      } else {
-        tabLogin.className = "py-2.5 px-3 rounded-lg font-semibold transition-all text-white bg-[#1E222D] shadow-sm flex items-center justify-center gap-2 cursor-pointer";
-        tabRegister.className = "py-2.5 px-3 rounded-lg font-semibold transition-all text-gray-400 hover:text-white flex items-center justify-center gap-2 cursor-pointer";
-        registerFields.classList.add('hidden');
-        registerFields.classList.remove('flex');
-        btnText.innerText = "Authenticate & Access Console";
-        confirmInput.removeAttribute('required');
       }
     }
 
-    function togglePassVisibility(inputId, triggerBtn) {
-      const field = document.getElementById(inputId);
-      const icon = triggerBtn.querySelector('i');
-      if (field.type === 'password') {
-        field.type = 'text';
-        icon.className = 'fa-solid fa-eye-slash text-xs';
-      } else {
-        field.type = 'password';
-        icon.className = 'fa-solid fa-eye text-xs';
-      }
-    }
-
-    async function handleAuthSubmit() {
-      const isRegister = !document.getElementById('register-fields').classList.contains('hidden');
-      const operatorId = document.getElementById('operator-id').value.trim();
+    async function handleSubmit() {
+      const username = document.getElementById('username').value.trim();
       const password = document.getElementById('password').value;
-      const confirmPassword = document.getElementById('confirm-password')?.value;
+      const email = document.getElementById('email').value.trim();
+      const btn = document.getElementById('btn-submit');
+      const origText = btn.innerHTML;
 
-      if (isRegister && password !== confirmPassword) {
-        alert('Passwords do not match.');
-        return;
-      }
-
-      const btn = document.getElementById('submit-cta');
-      const origHtml = btn.innerHTML;
       btn.disabled = true;
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-sm"></i> <span>Authenticating...</span>';
+      btn.innerHTML = 'Connecting...';
 
       try {
-        const endpoint = isRegister ? '/api/auth/register' : '/api/auth/login';
-        const payload = isRegister 
-          ? { username: operatorId.split('@')[0], email: operatorId.includes('@') ? operatorId : operatorId + '@eclipsepanel.local', password }
-          : { login: operatorId, password };
+        const endpoint = isRegisterMode ? '/api/auth/register' : '/api/auth/login';
+        const payload = isRegisterMode 
+          ? { username, email: email || (username + '@eclipsepanel.local'), password }
+          : { login: username, password };
 
         const res = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
+
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Authentication rejected');
+        if (!res.ok) throw new Error(data.error || 'Authentication failed');
 
         localStorage.setItem('eclipse_token', data.token);
         localStorage.setItem('eclipse_user', JSON.stringify(data.user));
 
-        btn.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-400"></i> <span>Authorized!</span>';
-        setTimeout(() => { window.location.href = '/'; }, 500);
+        btn.innerHTML = 'Authorized! Redirecting...';
+        setTimeout(() => { window.location.href = '/'; }, 400);
       } catch (err) {
         alert(err.message);
-        btn.innerHTML = origHtml;
+        btn.innerHTML = origText;
         btn.disabled = false;
       }
     }

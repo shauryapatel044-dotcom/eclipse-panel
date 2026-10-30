@@ -7,6 +7,7 @@ import { config } from './config.js';
 import { initDatabase } from './database/index.js';
 import { supervisor } from './daemon/supervisor.js';
 import { setupWebSocket } from './websocket/wsServer.js';
+import { getSystemStats } from './daemon/metrics.js';
 
 // Route handlers
 import authRoutes from './routes/auth.js';
@@ -41,11 +42,23 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Real-Time System Metrics (CPU model, Cores count, RAM, Disk)
+app.get('/api/system/metrics', (req, res) => {
+  res.json(getSystemStats());
+});
+
 // Mount API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/apps', appRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/files', fileRoutes);
+
+// Convenient Page Route Mappings
+app.get('/login', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'login.html')));
+app.get('/admin', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'admin.html')));
+app.get('/app', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'app.html')));
+app.get('/stats', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'admin-stats.html')));
+app.get('/admin-stats', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'admin-stats.html')));
 
 // Static frontend serving
 app.use(express.static(PUBLIC_DIR));

@@ -1,755 +1,643 @@
 <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Eclipse Panel - Application Console & Terminal</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/eclipse.css"/>
 
-<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=JetBrains+Mono:wght@100..900&display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
-  <script>
-    window.tailwind = {
-      darkMode: "class",
-      theme: {
-        extend: {
-          colors: {
-            "surface": "#0A0B0E",
-            "surface-dim": "#0A0B0E",
-            "surface-container-lowest": "#0D0E11",
-            "surface-container-low": "#12141A",
-            "surface-container": "#181B22",
-            "surface-container-high": "#222631",
-            "surface-container-highest": "#2D3240",
-            "on-surface": "#E3E2E6",
-            "on-surface-variant": "#E4BEBA",
-            "outline-variant": "#3D2528",
-            "secondary": "#94A3B8",
-            "primary": "#F87171",
-            "primary-container": "#DC2626",
-            "tertiary": "#10B981",
-            "tertiary-container": "#059669"
-          },
-          fontFamily: {
-            "body-lg": ["Geist", "-apple-system", "sans-serif"],
-            "body-md": ["Geist", "-apple-system", "sans-serif"],
-            "body-sm": ["Geist", "-apple-system", "sans-serif"],
-            "headline-xl": ["Geist", "-apple-system", "sans-serif"],
-            "headline-lg": ["Geist", "-apple-system", "sans-serif"],
-            "headline-md": ["Geist", "-apple-system", "sans-serif"],
-            "headline-sm": ["Geist", "-apple-system", "sans-serif"],
-            "code-lg": ["JetBrains Mono", "monospace"],
-            "code-md": ["JetBrains Mono", "monospace"],
-            "code-sm": ["JetBrains Mono", "monospace"],
-            "label-md": ["JetBrains Mono", "monospace"],
-            "label-sm": ["JetBrains Mono", "monospace"]
-          }
-        }
-      }
-    };
-  </script>
-  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    * { box-sizing: border-box; }
-    html, body {
-      background-color: #0A0B0E !important;
-      color: #E3E2E6 !important;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    .terminal-container {
+      background: #07080B;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      padding: 16px;
+      min-height: 420px;
+      max-height: 540px;
+      overflow-y: auto;
+      color: #E2E8F0;
+      line-height: 1.6;
+      box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.6);
     }
-    .bg-surface { background-color: #0A0B0E !important; }
-    .bg-surface-container-lowest { background-color: #0D0E11 !important; }
-    .bg-surface-container-low { background-color: #12141A !important; }
-    .bg-surface-container { background-color: #181B22 !important; }
-    .bg-surface-container-high { background-color: #222631 !important; }
-    .bg-surface-container-highest { background-color: #2D3240 !important; }
-    .bg-primary-container { background-color: #DC2626 !important; }
-    .text-primary { color: #F87171 !important; }
-    .text-on-surface { color: #E3E2E6 !important; }
-    .text-secondary { color: #94A3B8 !important; }
-    .text-tertiary { color: #10B981 !important; }
-    .material-symbols-outlined {
-      font-family: 'Material Symbols Outlined', sans-serif;
-      font-weight: normal;
-      font-style: normal;
-      display: inline-block;
-      line-height: 1;
-      text-transform: none;
-      letter-spacing: normal;
-      word-wrap: normal;
-      white-space: nowrap;
-      direction: ltr;
+    .terminal-line {
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .terminal-line.stderr {
+      color: #F87171;
+    }
+    .terminal-line.system {
+      color: #10B981;
+    }
+    .tab-nav {
+      display: flex;
+      gap: 4px;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 8px;
+      margin-bottom: 20px;
+    }
+    .tab-nav-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .tab-nav-btn.active {
+      background: var(--bg-card);
+      border-color: var(--border-crimson);
+      color: #FFFFFF;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+    .file-tree-item {
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-secondary);
+      transition: all 0.15s;
+    }
+    .file-tree-item:hover, .file-tree-item.active {
+      background: var(--bg-card-hover);
+      color: #FFF;
     }
   </style>
-</head><body class="bg-surface font-body-md text-on-surface antialiased min-h-screen"><aside class="fixed left-0 top-0 h-screen w-64 bg-surface-container-lowest/95 backdrop-blur-xl z-50 flex flex-col justify-between border-r border-outline-variant/30 shadow-[0_4px_30px_rgba(0,0,0,0.5)]"><div class="flex flex-col"><div class="h-16 px-space-md flex items-center justify-between border-b border-outline-variant/20"><div class="flex items-center gap-space-xs">
-    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-red-600 to-red-950 flex items-center justify-center text-white border border-red-500/40 shadow-[0_0_12px_rgba(239,68,68,0.4)]">
-      <i class="fa-solid fa-fire text-base text-white"></i>
-    </div>
-  <span class="font-headline-sm text-headline-sm font-bold tracking-wider text-on-surface uppercase">ECLIPSE PANEL</span></div><span class="font-label-sm text-label-sm px-1.5 py-0.5 rounded bg-primary-container/20 text-primary border border-primary-container/40 shadow-[0_0_8px_rgba(255,84,81,0.3)]">v2.4 LTS</span></div><div class="px-space-md pt-space-md pb-space-xs"><span class="font-label-sm text-label-sm uppercase tracking-widest text-on-secondary-container/70">Control Matrix</span></div><nav class="flex flex-col gap-1 px-space-xs" data-active-classes="bg-surface-container-high text-primary border-l-2 border-primary-container shadow-[inset_0_0_12px_rgba(255,84,81,0.1)]"><a class="group flex items-center gap-space-sm px-space-sm py-2 rounded text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-all font-body-md text-body-md" data-path="overview" href="#"><span class="material-symbols-outlined text-xl text-on-surface-variant group-hover:text-primary transition-colors">monitoring</span><span>Overview</span></a><a aria-current="page" class="group flex items-center gap-space-sm px-space-sm py-2 rounded transition-all font-body-md bg-surface-container-high text-primary border-l-2 border-primary-container shadow-[inset_0_0_12px_rgba(255,84,81,0.1)]" data-path="applications" href="#"><span class="material-symbols-outlined text-xl text-on-surface-variant group-hover:text-primary transition-colors">rocket_launch</span><span>Applications</span></a><a class="group flex items-center gap-space-sm px-space-sm py-2 rounded text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-all font-body-md text-body-md" data-path="live-terminal" href="#"><span class="material-symbols-outlined text-xl text-on-surface-variant group-hover:text-primary transition-colors">terminal</span><span>Live Terminal</span></a><a class="group flex items-center gap-space-sm px-space-sm py-2 rounded text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-all font-body-md text-body-md" data-path="file-manager" href="#"><span class="material-symbols-outlined text-xl text-on-surface-variant group-hover:text-primary transition-colors">folder_open</span><span>File Manager / Editor</span></a><a class="group flex items-center justify-between px-space-sm py-2 rounded text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-all font-body-md text-body-md" data-path="admin-center" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-xl text-on-surface-variant group-hover:text-primary transition-colors">shield</span><span>Admin Center</span></div><span class="font-label-sm text-label-sm px-1 py-0.2 bg-outline-variant/30 text-on-surface-variant rounded">ROLE</span></a></nav></div><div class="flex flex-col gap-space-xs p-space-xs border-t border-outline-variant/20 bg-surface-container-lowest/80"><div class="p-space-xs rounded bg-surface-container-low/60 border border-outline-variant/20 flex items-center justify-between"><div class="flex items-center gap-space-xs truncate"><span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-tertiary opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-tertiary shadow-[0_0_8px_#4edea3]"></span></span><span class="font-code-sm text-code-sm text-on-surface truncate">ubuntu-vps-fra1</span></div><span class="font-label-sm text-label-sm text-on-surface-variant font-mono">192.241.148.82</span></div><div class="p-space-xs rounded bg-surface-container-low/40 border border-outline-variant/20 flex items-center justify-between"><div class="flex items-center gap-space-xs truncate"><img alt="Profile" class="w-8 h-8 rounded-full object-cover ring-1 ring-outline-variant/40" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAA8IRmZrjztXrOA8Ct35jMWd1euNrahdA4MHvidTjQfankcSHIcIoUDVOtYWdhEOKLQ9H0Rjb9DDbLF6JjMbpHxstw_HbOaU3_B9t60FYeg2g_qvFh3gqD3qtn6rymxfS0dqA214CGRtPUio9b-DR4gZoppzvD3bpVhhu7wpEqzOALJAToIEUVm9z6Qwninm3ueCp2oodI0MZq6gpeKvgNIZH6g60V7zOm07EM0UM"/><div class="flex flex-col truncate"><span class="font-body-sm text-body-sm font-semibold text-on-surface truncate leading-tight">Alex Vance</span><span class="font-label-sm text-label-sm text-primary tracking-wider font-mono uppercase leading-tight">SUPERADMIN</span></div></div><button class="p-1 text-on-surface-variant hover:text-primary transition-colors rounded hover:bg-surface-container-high" title="Sign out" type="button"><span class="material-symbols-outlined text-lg leading-none">logout</span></button></div></div></aside><div class="pl-64"><header class="fixed top-0 left-64 right-0 h-16 bg-surface/85 backdrop-blur-xl border-b border-outline-variant/20 z-40 flex items-center justify-between px-gutter-desktop"><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-xs font-body-sm text-body-sm text-on-surface-variant"><span class="material-symbols-outlined text-base">dns</span><span class="hover:text-on-surface cursor-pointer transition-colors">Infrastructure</span><span class="text-outline-variant">/</span><span class="text-on-surface font-semibold">Console</span></div><div class="flex items-center gap-1.5 px-2 py-0.5 rounded bg-surface-container-low border border-outline-variant/25 font-label-sm text-label-sm text-tertiary"><span class="inline-block w-1.5 h-1.5 rounded-full bg-tertiary shadow-[0_0_6px_#4edea3]"></span><span>18ms</span></div></div><div class="flex items-center gap-space-md"><div class="relative flex items-center"><span class="material-symbols-outlined absolute left-2.5 text-base text-on-surface-variant pointer-events-none">search</span><input class="w-72 bg-surface-container-lowest border border-outline-variant/30 rounded pl-8 pr-3 py-1 font-code-sm text-code-sm text-on-surface placeholder:text-on-secondary-container/50 focus:outline-none focus:border-primary-container focus:shadow-[0_0_12px_rgba(255,84,81,0.25)] transition-all" placeholder="Search services, logs, ports (cmd+k)" type="text"/></div><div class="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded bg-surface-container-lowest border border-tertiary-container/30 font-code-sm text-code-sm text-tertiary"><span class="inline-block w-1.5 h-1.5 rounded-full bg-tertiary animate-pulse"></span><span>WS: Connected (ws://192.241.148.82:4000/ws)</span></div><div class="flex items-center gap-space-xs"><button class="relative p-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high rounded transition-colors" title="Notifications" type="button"><span class="material-symbols-outlined text-xl leading-none">notifications</span><span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-primary-container shadow-[0_0_6px_#ff5451]"></span></button><button class="flex items-center gap-1 px-3 py-1.5 rounded bg-primary-container text-on-primary-container font-headline-sm text-headline-sm font-semibold hover:bg-primary hover:text-on-primary shadow-[0_0_16px_rgba(255,84,81,0.4)] transition-all border border-white/10" type="button"><span class="material-symbols-outlined text-base">add</span><span>New App</span></button></div></div></header><main class="w-full pt-16 bg-surface px-gutter-desktop min-h-screen"><div class="flex flex-col w-full pb-space-xl">
-<!-- Subtle Ambient Glow Orbs -->
-<div class="relative w-full">
-<div class="absolute -top-10 left-1/4 w-96 h-36 bg-primary/10 rounded-full blur-3xl pointer-events-none -z-10"></div>
-<div class="absolute top-20 right-10 w-80 h-44 bg-tertiary/10 rounded-full blur-3xl pointer-events-none -z-10"></div>
-<!-- Application Master Header Banner -->
-<section class="w-full bg-surface-container-lowest/80 backdrop-blur-xl rounded-xl p-space-lg mb-space-lg shadow-xl relative overflow-hidden">
-<div class="flex flex-col xl:flex-row xl:items-center justify-between gap-space-lg">
-<!-- App Identity & Badges Block -->
-<div class="flex flex-col gap-space-xs">
-<div class="flex flex-wrap items-center gap-space-sm">
-<h1 class="font-headline-lg text-headline-lg font-bold text-on-surface tracking-tight">fastapi-backend-api</h1>
-<!-- Live Status Indicator -->
-<div class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-tertiary/10 text-tertiary">
-<span class="relative flex h-2 w-2">
-<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-tertiary opacity-75"></span>
-<span class="relative inline-flex rounded-full h-2 w-2 bg-tertiary shadow-[0_0_8px_currentColor]"></span>
-</span>
-<span class="font-label-sm text-label-sm font-bold uppercase tracking-widest">RUNNING</span>
-</div>
-<span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-surface-container-high text-on-surface-variant font-mono">
-              PID: 18492
-            </span>
-<span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-surface-container-high text-primary font-mono">
-              PYTHON 3.12.3
-            </span>
-</div>
-<!-- Metadata Ribbon -->
-<div class="flex flex-wrap items-center gap-space-md text-on-secondary-container text-body-sm font-body-sm mt-1">
-<div class="flex items-center gap-1 font-mono">
-<span class="material-symbols-outlined text-base text-primary">lan</span>
-<span>Port:</span>
-<a class="text-primary hover:underline hover:text-primary-fixed-dim transition-colors flex items-center gap-0.5" href="http://192.241.148.82:8000" rel="noopener noreferrer" target="_blank">
-                :8000
-                <span class="material-symbols-outlined text-xs">open_in_new</span>
-</a>
-<span class="text-on-secondary-container/40 ml-1">(192.241.148.82:8000)</span>
-</div>
-<span class="text-on-secondary-container/30">•</span>
-<div class="flex items-center gap-1">
-<span class="material-symbols-outlined text-base text-tertiary">timelapse</span>
-<span>Uptime:</span>
-<span class="text-on-surface font-mono font-medium">14d 06h 28m</span>
-</div>
-<span class="text-on-secondary-container/30">•</span>
-<div class="flex items-center gap-1 font-mono text-body-sm">
-<span class="material-symbols-outlined text-base text-on-surface-variant">folder_zip</span>
-<span class="text-on-surface-variant">/var/www/fastapi-backend-api</span>
-</div>
-</div>
-</div>
-<!-- Quick Action Controls Matrix -->
-<div class="flex flex-wrap items-center gap-2">
-<!-- Start (Disabled state) -->
-<button class="cursor-not-allowed opacity-40 px-3.5 py-2 rounded bg-surface-container-high text-on-secondary-container font-headline-sm text-headline-sm flex items-center gap-1.5 shadow-sm" disabled="" type="button">
-<span class="material-symbols-outlined text-base">play_arrow</span>
-<span>Start</span>
-</button>
-<!-- Stop Action -->
-<button class="group px-3.5 py-2 rounded bg-surface-container-low text-error hover:bg-error/15 font-headline-sm text-headline-sm flex items-center gap-1.5 shadow-sm transition-all" type="button">
-<span class="material-symbols-outlined text-base group-hover:scale-110 transition-transform">stop</span>
-<span>Stop</span>
-</button>
-<!-- Restart Action -->
-<button class="group px-3.5 py-2 rounded bg-surface-container-high text-amber-400 hover:bg-amber-400/10 font-headline-sm text-headline-sm flex items-center gap-1.5 shadow-sm transition-all hover:shadow-[0_0_15px_rgba(251,191,36,0.2)]" type="button">
-<span class="material-symbols-outlined text-base group-hover:rotate-180 transition-transform duration-500">sync</span>
-<span>Restart</span>
-</button>
-<!-- Pip Install Dependencies with spinner -->
-<button class="px-4 py-2 rounded bg-primary-container text-on-primary-container hover:bg-primary hover:text-on-primary font-headline-sm text-headline-sm font-semibold flex items-center gap-2 shadow-[0_0_16px_rgba(255,84,81,0.35)] transition-all" id="installDepsBtn" type="button">
-<span class="material-symbols-outlined text-base" id="installSpinner">download</span>
-<span id="installLabel">Install Dependencies</span>
-</button>
-</div>
-</div>
-</section>
-<!-- Navigation Tabs System -->
-<div class="w-full flex items-center justify-between overflow-x-auto pb-2 mb-space-md">
-<div class="flex items-center gap-1 bg-surface-container-lowest/90 p-1 rounded-lg backdrop-blur-md">
-<button class="tab-trigger flex items-center gap-2 px-4 py-2 rounded text-primary font-headline-sm text-headline-sm bg-surface-container-high shadow-[0_0_10px_rgba(255,84,81,0.15)] transition-all" id="tabBtn-terminal" onclick="switchMainTab('terminal')" type="button">
-<span class="material-symbols-outlined text-base text-primary">terminal</span>
-<span>Live Terminal & Logs</span>
-<span class="w-2 h-2 rounded-full bg-tertiary animate-pulse ml-1"></span>
-</button>
-<button class="tab-trigger flex items-center gap-2 px-4 py-2 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low font-headline-sm text-headline-sm transition-all" id="tabBtn-editor" onclick="switchMainTab('editor')" type="button">
-<span class="material-symbols-outlined text-base">code</span>
-<span>Code & File Editor</span>
-</button>
-<button class="tab-trigger flex items-center gap-2 px-4 py-2 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low font-headline-sm text-headline-sm transition-all" id="tabBtn-env" onclick="switchMainTab('env')" type="button">
-<span class="material-symbols-outlined text-base">tune</span>
-<span>Environment Variables</span>
-</button>
-<button class="tab-trigger flex items-center gap-2 px-4 py-2 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low font-headline-sm text-headline-sm transition-all" id="tabBtn-metrics" onclick="switchMainTab('metrics')" type="button">
-<span class="material-symbols-outlined text-base">analytics</span>
-<span>Resource Metrics</span>
-</button>
-</div>
-<div class="hidden md:flex items-center gap-3 text-label-sm font-label-sm text-on-secondary-container">
-<span>LOG LEVEL: <strong class="text-tertiary">DEBUG</strong></span>
-<span>BUFFER: <strong class="text-on-surface font-mono">1,248 L</strong></span>
-</div>
-</div>
-<!-- Main Dynamic Workspace: Split Dual-Pane View -->
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-md items-start">
-<!-- Primary Pane (Active Tab: Terminal & Logs) -->
-<section class="lg:col-span-8 flex flex-col w-full bg-surface-container-lowest rounded-xl shadow-2xl overflow-hidden">
-<!-- Terminal Top Controls Bar -->
-<div class="bg-surface-container-low px-space-md py-2.5 flex flex-wrap items-center justify-between gap-space-sm">
-<!-- Connection Stream Status -->
-<div class="flex items-center gap-2 min-w-0">
-<span class="w-2.5 h-2.5 rounded-full bg-tertiary shadow-[0_0_8px_#4edea3]"></span>
-<span class="font-code-sm text-code-sm text-on-surface-variant truncate max-w-xs md:max-w-md">
-              ws://192.241.148.82:4000/ws?channel=logs:fastapi-backend-api
-            </span>
-</div>
-<!-- Utility Actions -->
-<div class="flex items-center gap-2">
-<!-- Search Filter Input -->
-<div class="relative flex items-center">
-<span class="material-symbols-outlined absolute left-2 text-sm text-on-secondary-container pointer-events-none">search</span>
-<input class="w-36 md:w-48 bg-surface-container-lowest rounded pl-7 pr-2 py-1 font-code-sm text-code-sm text-on-surface placeholder:text-on-secondary-container/40 focus:outline-none focus:ring-1 focus:ring-primary shadow-inner" id="logSearch" placeholder="Filter stream..." type="text"/>
-</div>
-<!-- Auto-scroll Button -->
-<button class="flex items-center gap-1 px-2.5 py-1 rounded bg-surface-container-high text-tertiary font-label-sm text-label-sm shadow-sm hover:brightness-110" id="autoscrollToggle" type="button">
-<span class="material-symbols-outlined text-xs">vertical_align_bottom</span>
-<span>AUTO-SCROLL: ON</span>
-</button>
-<!-- Clear Screen -->
-<button class="p-1 rounded bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface transition-colors" onclick="clearTerminalLogs()" title="Clear terminal screen" type="button">
-<span class="material-symbols-outlined text-base">mop</span>
-</button>
-<!-- Download Logs -->
-<button class="p-1 rounded bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant hover:text-primary transition-colors" title="Export .log file" type="button">
-<span class="material-symbols-outlined text-base">download</span>
-</button>
-</div>
-</div>
-<!-- Terminal Output Viewport -->
-<div class="p-space-md font-code-sm text-code-sm bg-surface-container-lowest min-h-[460px] max-h-[560px] overflow-y-auto flex flex-col gap-1.5 selection:bg-primary-container selection:text-white" id="terminalViewport">
-<!-- System Spawn -->
-<div class="log-row flex items-start gap-2">
-<span class="text-cyan-400 font-bold shrink-0">[SYSTEM]</span>
-<span class="text-on-secondary-container/60 shrink-0 font-mono">[2025-05-14 14:02:10]</span>
-<span class="text-cyan-200">Worker process spawned with PID 18492 (Python 3.12.3)</span>
-</div>
-<!-- Uvicorn Initialized -->
-<div class="log-row flex items-start gap-2">
-<span class="text-tertiary font-bold shrink-0">[STDOUT]</span>
-<span class="text-on-secondary-container/60 shrink-0 font-mono">[2025-05-14 14:02:11]</span>
-<span class="text-on-surface">INFO: Started server process [<span class="text-primary font-mono">18492</span>]</span>
-</div>
-<div class="log-row flex items-start gap-2">
-<span class="text-tertiary font-bold shrink-0">[STDOUT]</span>
-<span class="text-on-secondary-container/60 shrink-0 font-mono">[2025-05-14 14:02:11]</span>
-<span class="text-on-surface">INFO: Waiting for application startup.</span>
-</div>
-<div class="log-row flex items-start gap-2">
-<span class="text-tertiary font-bold shrink-0">[STDOUT]</span>
-<span class="text-on-secondary-container/60 shrink-0 font-mono">[2025-05-14 14:02:11]</span>
-<span class="text-tertiary">INFO: Application startup complete.</span>
-</div>
-<div class="log-row flex items-start gap-2">
-<span class="text-tertiary font-bold shrink-0">[STDOUT]</span>
-<span class="text-on-secondary-container/60 shrink-0 font-mono">[2025-05-14 14:02:11]</span>
-<span class="text-on-surface font-semibold">INFO: Uvicorn running on <a class="text-primary hover:underline" href="http://0.0.0.0:8000">http://0.0.0.0:8000</a> (Press CTRL+C to quit)</span>
-</div>
-<!-- Health Ping Request -->
-<div class="log-row flex items-start gap-2">
-<span class="text-tertiary font-bold shrink-0">[STDOUT]</span>
-<span class="text-on-secondary-container/60 shrink-0 font-mono">[2025-05-14 14:05:44]</span>
-<span class="text-on-surface">INFO: 192.168.1.45:51280 - "<span class="text-tertiary font-bold">GET</span> /api/v1/health HTTP/1.1" <span class="text-tertiary font-bold">200 OK</span> - 1.2ms</span>
-</div>
-<!-- Auth Request -->
-<div class="log-row flex items-start gap-2">
-<span class="text-tertiary font-bold shrink-0">[STDOUT]</span>
-<span class="text-on-secondary-container/60 shrink-0 font-mono">[2025-05-14 14:06:02]</span>
-<span class="text-on-surface">INFO: 192.168.1.102:49821 - "<span class="text-amber-400 font-bold">POST</span> /api/v1/auth/verify HTTP/1.1" <span class="text-tertiary font-bold">200 OK</span> - 14.8ms</span>
-</div>
-<!-- Blazing Crimson STDERR Alert -->
-<div class="log-row flex items-start gap-2 bg-error-container/20 p-1 rounded">
-<span class="text-error font-bold shrink-0 shadow-[0_0_8px_rgba(239,68,68,0.5)]">[STDERR]</span>
-<span class="text-on-secondary-container/60 shrink-0 font-mono">[2025-05-14 14:07:19]</span>
-<span class="text-error font-semibold">WARNING: RateLimitMiddleware: client 45.33.18.9 reached threshold (95/100 req/min)</span>
-</div>
-<!-- Background Task Success -->
-<div class="log-row flex items-start gap-2">
-<span class="text-tertiary font-bold shrink-0">[STDOUT]</span>
-<span class="text-on-secondary-container/60 shrink-0 font-mono">[2025-05-14 14:08:00]</span>
-<span class="text-tertiary">INFO: Background task 'sync_telemetry' executed successfully in 42ms.</span>
-</div>
-<!-- Real-time Mock Stream Target -->
-<div id="liveFeedAnchor"></div>
-</div>
-<!-- Terminal Prompt Interactive Bar -->
-<div class="bg-surface-container-low px-space-md py-2 flex items-center gap-2">
-<span class="text-primary font-bold font-mono">$</span>
-<input class="w-full bg-transparent font-code-sm text-code-sm text-on-surface focus:outline-none placeholder:text-on-secondary-container/30" placeholder="Send console signal or IPC command (e.g. --reload, uvicorn.restart)..." type="text"/>
-<span class="font-label-sm text-label-sm text-on-secondary-container/50 font-mono hidden sm:inline">↵ RETURN</span>
-</div>
-</section>
-<!-- Secondary Pane: Telemetry Gauges + Environment Config Drawer -->
-<section class="lg:col-span-4 flex flex-col gap-space-md w-full">
-<!-- Live Micro Telemetry Panel (CPU / RAM Sparklines) -->
-<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-xl flex flex-col gap-space-sm">
-<div class="flex items-center justify-between">
-<div class="flex items-center gap-2">
-<span class="material-symbols-outlined text-primary text-lg">monitoring</span>
-<span class="font-headline-sm text-headline-sm text-on-surface">Telemetry Live</span>
-</div>
-<span class="font-label-sm text-label-sm text-tertiary bg-tertiary/10 px-2 py-0.5 rounded font-mono">1s TICK</span>
-</div>
-<div class="grid grid-cols-2 gap-space-sm">
-<!-- CPU Load Gauge Card -->
-<div class="bg-surface-container-low p-space-sm rounded-lg flex flex-col justify-between">
-<div class="flex items-center justify-between">
-<span class="font-label-sm text-label-sm text-on-secondary-container">CPU USAGE</span>
-<span class="font-code-md text-code-md font-bold text-primary">14.2%</span>
-</div>
-<!-- Micro CPU SVG Sparkline -->
-<div class="w-full h-12 mt-2">
-<svg class="w-full h-full stroke-primary fill-transparent overflow-visible" viewbox="0 0 120 40">
-<defs>
-<lineargradient id="cpuGrad" x1="0" x2="0" y1="0" y2="1">
-<stop offset="0%" stop-color="#ffb3ad" stop-opacity="0.3"></stop>
-<stop offset="100%" stop-color="#ffb3ad" stop-opacity="0.0"></stop>
-</lineargradient>
-</defs>
-<polygon fill="url(#cpuGrad)" points="0,35 15,30 30,22 45,28 60,18 75,25 90,14 105,19 120,12 120,40 0,40" stroke="none"></polygon>
-<polyline points="0,35 15,30 30,22 45,28 60,18 75,25 90,14 105,19 120,12" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></polyline>
-</svg>
-</div>
-<span class="font-label-sm text-label-sm text-on-secondary-container/60 font-mono mt-1">4 Cores Assigned</span>
-</div>
-<!-- Memory Consumption Card -->
-<div class="bg-surface-container-low p-space-sm rounded-lg flex flex-col justify-between">
-<div class="flex items-center justify-between">
-<span class="font-label-sm text-label-sm text-on-secondary-container">MEM USAGE</span>
-<span class="font-code-md text-code-md font-bold text-tertiary">142 MB</span>
-</div>
-<!-- Micro RAM SVG Sparkline -->
-<div class="w-full h-12 mt-2">
-<svg class="w-full h-full stroke-tertiary fill-transparent overflow-visible" viewbox="0 0 120 40">
-<defs>
-<lineargradient id="memGrad" x1="0" x2="0" y1="0" y2="1">
-<stop offset="0%" stop-color="#4edea3" stop-opacity="0.3"></stop>
-<stop offset="100%" stop-color="#4edea3" stop-opacity="0.0"></stop>
-</lineargradient>
-</defs>
-<polygon fill="url(#memGrad)" points="0,26 20,24 40,25 60,20 80,21 100,16 120,17 120,40 0,40" stroke="none"></polygon>
-<polyline points="0,26 20,24 40,25 60,20 80,21 100,16 120,17" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></polyline>
-</svg>
-</div>
-<span class="font-label-sm text-label-sm text-on-secondary-container/60 font-mono mt-1">Limit: 2048 MB</span>
-</div>
-</div>
-</div>
-<!-- Quick Side Drawer: Environment Variables Manager (Preview of Tab 3) -->
-<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-xl flex flex-col gap-space-sm">
-<div class="flex items-center justify-between">
-<div class="flex items-center gap-2">
-<span class="material-symbols-outlined text-amber-400 text-lg">tune</span>
-<span class="font-headline-sm text-headline-sm text-on-surface">Config & Env Vars</span>
-</div>
-<span class="font-label-sm text-label-sm text-on-surface-variant font-mono">.env.production</span>
-</div>
-<p class="font-body-sm text-body-sm text-on-secondary-container">
-            Keys injected straight into process environment during initialization.
-          </p>
-<!-- Variables List -->
-<div class="flex flex-col gap-2 mt-1">
-<!-- PORT -->
-<div class="bg-surface-container-low p-2 rounded flex items-center justify-between gap-2">
-<span class="font-code-sm text-code-sm text-primary font-bold">PORT</span>
-<input class="w-24 bg-surface-container-highest px-2 py-0.5 rounded font-code-sm text-code-sm text-right text-on-surface focus:outline-none focus:ring-1 focus:ring-primary font-mono" type="text" value="8000"/>
-</div>
-<!-- DATABASE_URL -->
-<div class="bg-surface-container-low p-2 rounded flex flex-col gap-1">
-<span class="font-code-sm text-code-sm text-primary font-bold">DATABASE_URL</span>
-<input class="w-full bg-surface-container-highest px-2 py-0.5 rounded font-code-sm text-code-sm text-on-surface truncate focus:outline-none focus:ring-1 focus:ring-primary font-mono" type="text" value="postgresql://app_usr:p4ss@10.0.0.4:5432/fastapi_db"/>
-</div>
-<!-- SECRET_KEY (Masked) -->
-<div class="bg-surface-container-low p-2 rounded flex items-center justify-between gap-2">
-<span class="font-code-sm text-code-sm text-primary font-bold">SECRET_KEY</span>
-<div class="relative flex items-center w-40">
-<input class="w-full bg-surface-container-highest px-2 py-0.5 rounded font-code-sm text-code-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-primary font-mono pr-7" id="secretKeyField" type="password" value="cr1m50n_99x_s3cr3t_jwt_t0k3n_v2"/>
-<button class="absolute right-1 text-on-secondary-container hover:text-on-surface p-0.5" onclick="toggleSecretVisibility()" type="button">
-<span class="material-symbols-outlined text-xs" id="secretIcon">visibility</span>
-</button>
-</div>
-</div>
-<!-- WORKERS -->
-<div class="bg-surface-container-low p-2 rounded flex items-center justify-between gap-2">
-<span class="font-code-sm text-code-sm text-primary font-bold">WORKERS</span>
-<input class="w-16 bg-surface-container-highest px-2 py-0.5 rounded font-code-sm text-code-sm text-right text-on-surface focus:outline-none focus:ring-1 focus:ring-primary font-mono" type="text" value="4"/>
-</div>
-</div>
-<!-- Apply & Hot-Restart Action Trigger -->
-<div class="pt-2 flex flex-col gap-1">
-<button class="w-full py-2 px-3 rounded bg-surface-container-high hover:bg-primary-container text-on-surface hover:text-on-primary-container transition-all font-headline-sm text-headline-sm font-semibold flex items-center justify-center gap-2 shadow-md" id="applyEnvBtn" type="button">
-<span class="material-symbols-outlined text-base">restart_alt</span>
-<span>Apply & Restart</span>
-</button>
-<span class="text-center font-label-sm text-label-sm text-on-secondary-container/50">Requires zero-downtime reload trigger</span>
-</div>
-</div>
-</section>
-</div>
-</div>
-</div>
-<script>
-  // Tab Switching Simulator
-  function switchMainTab(tabName) {
-    const tabs = ['terminal', 'editor', 'env', 'metrics'];
-    tabs.forEach(tab => {
-      const btn = document.getElementById(`tabBtn-${tab}`);
-      if (!btn) return;
-      if (tab === tabName) {
-        btn.className = "tab-trigger flex items-center gap-2 px-4 py-2 rounded text-primary font-headline-sm text-headline-sm bg-surface-container-high shadow-[0_0_10px_rgba(255,84,81,0.15)] transition-all";
-      } else {
-        btn.className = "tab-trigger flex items-center gap-2 px-4 py-2 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low font-headline-sm text-headline-sm transition-all";
-      }
-    });
-  }
+</head>
+<body>
 
-  // Clear Terminal Output
-  function clearTerminalLogs() {
-    const viewport = document.getElementById('terminalViewport');
-    if (!viewport) return;
-    viewport.innerHTML = `
-      <div class="log-row flex items-start gap-2">
-        <span class="text-cyan-400 font-bold shrink-0">[SYSTEM]</span>
-        <span class="text-on-secondary-container/60 shrink-0 font-mono">[${new Date().toISOString().replace('T', ' ').slice(0, 19)}]</span>
-        <span class="text-on-surface-variant italic">Console buffer cleared by operator. Stream active.</span>
+  <div class="app-layout">
+    <!-- Left Sidebar -->
+    <aside class="sidebar">
+      <div>
+        <div class="sidebar-brand">
+          <a href="/" class="brand-link">
+            <div class="brand-logo-icon">
+              <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+            </div>
+            <div>
+              <span class="brand-text">ECLIPSE PANEL</span>
+            </div>
+          </a>
+          <span class="brand-badge">8090</span>
+        </div>
+
+        <div class="sidebar-section-title">Control Matrix</div>
+        <nav class="sidebar-nav">
+          <a href="/" class="nav-link">
+            <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+            <span>Overview</span>
+          </a>
+          <a href="/app.html" class="nav-link active">
+            <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
+            <span>Applications</span>
+          </a>
+          <a href="/admin-stats.html" class="nav-link">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.49 2 2 6.49 2 12s4.49 10 10 10 10-4.49 10-10S17.51 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3-8c0 1.66-1.34 3-3 3s-3-1.34-3-3 1.34-3 3-3 3 1.34 3 3z"/></svg>
+            <span>VPS Telemetry</span>
+            <span class="nav-link-pill live">LIVE</span>
+          </a>
+          <a href="/admin.html" class="nav-link">
+            <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+            <span>Admin Center</span>
+          </a>
+        </nav>
       </div>
-      <div id="liveFeedAnchor"></div>
-    `;
-  }
 
-  // Secret Visibility Toggle
-  function toggleSecretVisibility() {
-    const input = document.getElementById('secretKeyField');
-    const icon = document.getElementById('secretIcon');
-    if (!input || !icon) return;
-    if (input.type === 'password') {
-      input.type = 'text';
-      icon.textContent = 'visibility_off';
-    } else {
-      input.type = 'password';
-      icon.textContent = 'visibility';
-    }
-  }
-
-  // Dependencies Install Button Feedback
-  const installBtn = document.getElementById('installDepsBtn');
-  const installSpinner = document.getElementById('installSpinner');
-  const installLabel = document.getElementById('installLabel');
-
-  if (installBtn) {
-    installBtn.addEventListener('click', () => {
-      installSpinner.classList.add('animate-spin');
-      installSpinner.textContent = 'autorenew';
-      installLabel.textContent = 'Running pip install...';
-      installBtn.disabled = true;
-
-      // Append terminal output log line
-      const viewport = document.getElementById('terminalViewport');
-      const anchor = document.getElementById('liveFeedAnchor');
-      if (viewport && anchor) {
-        const row = document.createElement('div');
-        row.className = 'log-row flex items-start gap-2 bg-surface-container-high/40 p-1 rounded';
-        row.innerHTML = `
-          <span class="text-amber-400 font-bold shrink-0">[PACKAGE]</span>
-          <span class="text-on-secondary-container/60 shrink-0 font-mono">[${new Date().toISOString().replace('T', ' ').slice(0, 19)}]</span>
-          <span class="text-on-surface font-mono">Executing: pip install -r /var/www/fastapi-backend-api/requirements.txt</span>
-        `;
-        viewport.insertBefore(row, anchor);
-        viewport.scrollTop = viewport.scrollHeight;
-      }
-
-      setTimeout(() => {
-        installSpinner.classList.remove('animate-spin');
-        installSpinner.textContent = 'check_circle';
-        installLabel.textContent = 'Requirements Satisfied';
-
-        if (viewport && anchor) {
-          const doneRow = document.createElement('div');
-          doneRow.className = 'log-row flex items-start gap-2';
-          doneRow.innerHTML = `
-            <span class="text-tertiary font-bold shrink-0">[STDOUT]</span>
-            <span class="text-on-secondary-container/60 shrink-0 font-mono">[${new Date().toISOString().replace('T', ' ').slice(0, 19)}]</span>
-            <span class="text-tertiary">All 42 packages up-to-date. Zero vulnerabilities discovered.</span>
-          `;
-          viewport.insertBefore(doneRow, anchor);
-          viewport.scrollTop = viewport.scrollHeight;
-        }
-
-        setTimeout(() => {
-          installSpinner.textContent = 'download';
-          installLabel.textContent = 'Install Dependencies';
-          installBtn.disabled = false;
-        }, 3000);
-      }, 2200);
-    });
-  }
-
-  // Auto-scroll toggle action
-  let isAutoscroll = true;
-  const autoscrollBtn = document.getElementById('autoscrollToggle');
-  if (autoscrollBtn) {
-    autoscrollBtn.addEventListener('click', () => {
-      isAutoscroll = !isAutoscroll;
-      autoscrollBtn.innerHTML = `
-        <span class="material-symbols-outlined text-xs">vertical_align_bottom</span>
-        <span>AUTO-SCROLL: ${isAutoscroll ? 'ON' : 'OFF'}</span>
-      `;
-      autoscrollBtn.className = isAutoscroll 
-        ? "flex items-center gap-1 px-2.5 py-1 rounded bg-surface-container-high text-tertiary font-label-sm text-label-sm shadow-sm hover:brightness-110"
-        : "flex items-center gap-1 px-2.5 py-1 rounded bg-surface-container-high text-on-secondary-container font-label-sm text-label-sm shadow-sm hover:brightness-110";
-    });
-  }
-
-  // Real-time logs filtering
-  const logSearch = document.getElementById('logSearch');
-  if (logSearch) {
-    logSearch.addEventListener('input', (e) => {
-      const term = e.target.value.toLowerCase();
-      const rows = document.querySelectorAll('.log-row');
-      rows.forEach(r => {
-        if (r.textContent.toLowerCase().includes(term)) {
-          r.style.display = 'flex';
-        } else {
-          r.style.display = 'none';
-        }
-      });
-    });
-  }
-</script></main></div>
-
-<!-- Framer Motion CDN & Real-Time Client Core -->
-<script src="https://cdn.jsdelivr.net/npm/framer-motion@11.11.11/dist/framer-motion.js"></script>
-<script>
-  const API_BASE = window.location.origin + '/api';
-  const WS_BASE = (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host + '/ws';
-  let token = localStorage.getItem('eclipse_token') || '';
-
-  function getHeaders() {
-    const h = { 'Content-Type': 'application/json' };
-    if (token) h['Authorization'] = 'Bearer ' + token;
-    return h;
-  }
-
-  function logout() {
-    localStorage.removeItem('eclipse_token');
-    window.location.href = '/login.html';
-  }
-
-  function requireAuth() {
-    if (!token && !window.location.pathname.endsWith('login.html')) {
-      window.location.href = '/login.html';
-    }
-  }
-
-  // Update navigation hrefs across pages
-  document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('a[data-path="overview"]').forEach(el => el.href = '/');
-    document.querySelectorAll('a[data-path="applications"]').forEach(el => el.href = '/app.html');
-    document.querySelectorAll('a[data-path="live-terminal"]').forEach(el => el.href = '/app.html');
-    document.querySelectorAll('a[data-path="file-manager"]').forEach(el => el.href = '/app.html');
-    document.querySelectorAll('a[data-path="admin-center"]').forEach(el => el.href = '/admin.html');
-    document.querySelectorAll('a[data-path="vps-stats"]').forEach(el => el.href = '/admin-stats.html');
-    document.querySelectorAll('button[title="Sign out"]').forEach(el => el.onclick = logout);
-
-    // Add Telemetry link to nav if missing
-    const nav = document.querySelector('nav');
-    if (nav && !nav.querySelector('a[href="/admin-stats.html"]')) {
-      const statsLink = document.createElement('a');
-      statsLink.href = '/admin-stats.html';
-      statsLink.className = 'group flex items-center justify-between px-space-sm py-2 rounded text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-all font-body-md text-body-md';
-      statsLink.innerHTML = '<div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-xl text-on-surface-variant group-hover:text-primary transition-colors">speed</span><span>VPS Telemetry</span></div><span class="font-label-sm text-label-sm px-1 py-0.2 bg-tertiary/20 text-tertiary rounded font-mono">LIVE</span>';
-      nav.appendChild(statsLink);
-    }
-  });
-</script>
-
-<script>
-  requireAuth();
-  const urlParams = new URLSearchParams(window.location.search);
-  const currentAppId = urlParams.get('id');
-
-  let activeWs = null;
-
-  async function loadAppDetails() {
-    if (!currentAppId) {
-      const listRes = await fetch(API_BASE + '/apps', { headers: getHeaders() });
-      if (listRes.ok) {
-        const listData = await listRes.json();
-        if (listData.apps && listData.apps.length > 0) {
-          window.location.search = '?id=' + listData.apps[0].id;
-          return;
-        }
-      }
-      return;
-    }
-
-    try {
-      const res = await fetch(API_BASE + '/apps/' + currentAppId, { headers: getHeaders() });
-      if (!res.ok) return;
-      const data = await res.json();
-      const app = data.app;
-
-      const titleEl = document.querySelector('h1');
-      if (titleEl) titleEl.innerText = app.name;
-
-      connectAppWebSocket(app.id);
-    } catch (e) {
-      console.error(e);
-    }
-  }
-
-  function connectAppWebSocket(appId) {
-    activeWs = new WebSocket(WS_BASE);
-    activeWs.onopen = () => {
-      if (token) activeWs.send(JSON.stringify({ type: 'auth', token }));
-      activeWs.send(JSON.stringify({ type: 'subscribe', channel: 'logs:' + appId }));
-    };
-    activeWs.onmessage = (evt) => {
-      try {
-        const msg = JSON.parse(evt.data);
-        if (msg.type === 'log') {
-          appendLogLine(msg.stream, msg.message);
-        }
-      } catch (e) {}
-    };
-  }
-
-  function appendLogLine(stream, message) {
-    const term = document.querySelector('pre') || document.querySelector('[class*="terminal"]');
-    if (term) {
-      const line = document.createElement('div');
-      line.className = stream === 'stderr' ? 'text-primary' : (stream === 'system' ? 'text-tertiary' : 'text-on-surface');
-      line.innerText = message;
-      term.appendChild(line);
-      term.scrollTop = term.scrollHeight;
-    }
-  }
-
-  document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('button').forEach(btn => {
-      const txt = btn.innerText.toLowerCase();
-      if (txt.includes('start')) {
-        btn.onclick = () => triggerAction('start');
-      } else if (txt.includes('stop')) {
-        btn.onclick = () => triggerAction('stop');
-      } else if (txt.includes('restart')) {
-        btn.onclick = () => triggerAction('restart');
-      } else if (txt.includes('install')) {
-        btn.onclick = () => triggerAction('install');
-      }
-    });
-
-    loadAppDetails();
-  });
-
-  async function triggerAction(action) {
-    if (!currentAppId) return;
-    try {
-      const res = await fetch(API_BASE + '/apps/' + currentAppId + '/action/' + action, {
-        method: 'POST',
-        headers: getHeaders()
-      });
-      const d = await res.json();
-      alert(d.message || action + ' initiated');
-    } catch (e) {
-      alert(e.message);
-    }
-  }
-</script>
-
-  <!-- Profile & Account Settings Modal (Framer Motion / CSS Animated) -->
-  <div id="profileModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-[#1b1b1f] border border-[#5b403e]/40 rounded-2xl w-full max-w-md p-6 relative shadow-2xl">
-      <button onclick="closeProfileModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
-        <span class="material-symbols-outlined text-xl">close</span>
-      </button>
-      <h3 class="text-lg font-bold text-white flex items-center gap-2 mb-1">
-        <span class="material-symbols-outlined text-red-400">manage_accounts</span>
-        Account & Profile Settings
-      </h3>
-      <p class="text-xs text-gray-400 mb-5 font-mono">Update your username, Gmail/email address, or master password.</p>
-
-      <!-- Profile Form -->
-      <form onsubmit="event.preventDefault(); saveProfileChanges();" class="space-y-3 pb-4 border-b border-[#292a2d]">
-        <div>
-          <label class="block text-xs font-semibold text-gray-300 uppercase font-mono mb-1">Username</label>
-          <input id="editUsername" type="text" required class="w-full bg-[#0d0e11] border border-[#343538] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-red-500 font-mono">
+      <!-- Bottom Host Metadata -->
+      <div class="sidebar-bottom">
+        <div class="host-badge-box">
+          <div style="display: flex; align-items: center; overflow: hidden;">
+            <span class="status-dot-green"></span>
+            <span id="sidebar-hostname" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #FFF;">Detecting...</span>
+          </div>
+          <span style="color: var(--primary); font-weight: 700;">:8090</span>
         </div>
-        <div>
-          <label class="block text-xs font-semibold text-gray-300 uppercase font-mono mb-1">Gmail / Email Address</label>
-          <input id="editEmail" type="email" required class="w-full bg-[#0d0e11] border border-[#343538] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-red-500 font-mono">
+
+        <div class="user-profile-bar" onclick="openProfileModal()" title="Click to edit profile, Gmail, or password">
+          <div class="user-avatar-sm" id="sidebar-user-avatar">A</div>
+          <div class="user-info-text">
+            <span class="user-name-label" id="sidebar-user-name">admin</span>
+            <span class="user-role-label" id="sidebar-user-role">SUPERADMIN</span>
+          </div>
+          <button class="btn-icon-logout" onclick="event.stopPropagation(); logout();" title="Sign out">
+            <svg viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+          </button>
         </div>
-        <button type="submit" class="w-full py-2 rounded-lg bg-red-600 text-white font-semibold text-xs tracking-wider uppercase transition-all hover:bg-red-500 shadow-md">Save Profile Changes</button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-wrapper">
+      <!-- Top Header -->
+      <header class="top-header">
+        <div class="header-left">
+          <div class="breadcrumbs">
+            <span>Applications</span>
+            <span>/</span>
+            <span class="current" id="header-app-name">Select Application</span>
+          </div>
+          <div class="badge-ws-status">
+            <span class="status-dot-green"></span>
+            <span id="app-status-badge">STANDBY</span>
+          </div>
+        </div>
+
+        <div class="header-right">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <select id="app-selector" class="form-control" style="width: 200px; padding: 6px 12px; cursor: pointer;" onchange="switchApp(this.value)">
+              <option value="">Choose Application...</option>
+            </select>
+          </div>
+          <button class="btn-primary" onclick="openCreateAppModal()">
+            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            <span>New App</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Page Body -->
+      <div class="page-container">
+        <!-- APP HERO & SUPERVISOR CONTROLS -->
+        <section class="content-section" style="padding: 20px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <h1 style="font-size: 20px; font-weight: 800; color: #FFF;" id="hero-app-name">No Application Selected</h1>
+                <span class="status-pill stopped" id="hero-status-pill">STOPPED</span>
+                <span class="metric-pill crimson" id="hero-runtime-pill">Node.js</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 16px; margin-top: 8px; font-family: var(--font-mono); font-size: 12px; color: var(--text-muted);">
+                <span>Port: <a id="hero-port-link" href="#" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 700;">:----</a></span>
+                <span>PID: <span id="hero-pid" style="color: #FFF;">--</span></span>
+                <span>Restarts: <span id="hero-restarts" style="color: #FFF;">0</span></span>
+              </div>
+            </div>
+
+            <!-- Lifecycle Buttons -->
+            <div style="display: flex; gap: 10px;">
+              <button class="btn-primary" id="btn-start" onclick="execAction('start')">
+                <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                <span>Start</span>
+              </button>
+              <button class="btn-secondary" id="btn-stop" onclick="execAction('stop')">
+                <svg viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
+                <span>Stop</span>
+              </button>
+              <button class="btn-secondary" id="btn-restart" onclick="execAction('restart')">
+                <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+                <span>Restart</span>
+              </button>
+              <button class="btn-secondary" style="color: var(--primary);" onclick="deleteCurrentApp()">
+                <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                <span>Delete</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- APP WORKSPACE TABS -->
+        <section class="content-section">
+          <div class="tab-nav">
+            <button class="tab-nav-btn active" id="tab-btn-console" onclick="switchConsoleTab('console')">
+              <svg style="width: 16px; height: 16px; fill: currentColor;" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-9 14H5v-2h6v2zm-2.83-5.17L4.34 9l1.41-1.41 3.54 3.54-3.54 3.54-1.41-1.41 2.83-2.84z"/></svg>
+              <span>Live Console & Logs</span>
+            </button>
+            <button class="tab-nav-btn" id="tab-btn-files" onclick="switchConsoleTab('files')">
+              <svg style="width: 16px; height: 16px; fill: currentColor;" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
+              <span>File Manager / Editor</span>
+            </button>
+            <button class="tab-nav-btn" id="tab-btn-config" onclick="switchConsoleTab('config')">
+              <svg style="width: 16px; height: 16px; fill: currentColor;" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+              <span>Environment & Settings</span>
+            </button>
+          </div>
+
+          <!-- TAB 1: LIVE CONSOLE -->
+          <div id="pane-console">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <div style="font-family: var(--font-mono); font-size: 12px; color: var(--text-muted);">
+                Streaming stdout/stderr directly from supervisor process
+              </div>
+              <button class="btn-secondary" style="padding: 4px 10px; font-size: 11px;" onclick="clearConsole()">Clear Output</button>
+            </div>
+            <div class="terminal-container" id="terminal-output">
+              <div class="terminal-line system">[Eclipse Supervisor] Ready to capture daemon process execution stream...</div>
+            </div>
+          </div>
+
+          <!-- TAB 2: FILE MANAGER -->
+          <div id="pane-files" style="display: none;">
+            <div style="display: grid; grid-template-columns: 240px 1fr; gap: 16px;">
+              <div style="background: var(--bg-sidebar); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 12px; max-height: 480px; overflow-y: auto;">
+                <div style="font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 10px;">Workspace Files</div>
+                <div id="file-tree-list">
+                  <div style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);">Loading files...</div>
+                </div>
+              </div>
+              <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <span id="active-filename" style="font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: #FFF;">No file open</span>
+                  <button class="btn-primary" style="padding: 4px 12px; font-size: 12px;" onclick="saveActiveFile()">Save File</button>
+                </div>
+                <textarea id="file-editor" class="form-control" style="height: 440px; font-family: var(--font-mono); font-size: 12px; line-height: 1.5; resize: vertical;" placeholder="// Open a file from the workspace tree to view and edit..."></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 3: CONFIGURATION -->
+          <div id="pane-config" style="display: none;">
+            <form onsubmit="event.preventDefault(); saveAppConfig();" style="max-width: 600px;">
+              <div class="form-group">
+                <label class="form-label" for="cfg-port">Port Assignment</label>
+                <input type="number" id="cfg-port" class="form-control" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="cfg-entry">Entry Point File</label>
+                <input type="text" id="cfg-entry" class="form-control" required placeholder="index.js or app.py">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="cfg-env">Environment Variables (.env format)</label>
+                <textarea id="cfg-env" class="form-control" style="height: 160px; font-family: var(--font-mono); font-size: 12px;" placeholder="PORT=3000&#10;NODE_ENV=production&#10;DATABASE_URL=..."></textarea>
+              </div>
+              <button type="submit" class="btn-primary" id="btn-save-cfg">Save App Configuration</button>
+            </form>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- MODAL: DEPLOY APP -->
+  <div class="modal-overlay" id="modal-create-app">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title"><span>Deploy Application</span></h3>
+        <button class="modal-close-btn" onclick="closeCreateAppModal()"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
+      </div>
+      <form onsubmit="event.preventDefault(); submitCreateApp();">
+        <div class="form-group">
+          <label class="form-label">Application Name</label>
+          <input type="text" id="new-app-name" class="form-control" required placeholder="my-service">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label class="form-label">Runtime Engine</label>
+            <select id="new-app-type" class="form-control">
+              <option value="nodejs">Node.js</option>
+              <option value="python">Python 3</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Port</label>
+            <input type="number" id="new-app-port" class="form-control" required value="3001">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeCreateAppModal()">Cancel</button>
+          <button type="submit" class="btn-primary">Create App</button>
+        </div>
       </form>
+    </div>
+  </div>
 
-      <!-- Password Change Form -->
-      <form onsubmit="event.preventDefault(); savePasswordChanges();" class="space-y-3 pt-4">
-        <h4 class="text-xs font-bold text-white uppercase tracking-wider font-mono">Change Master Password</h4>
-        <div>
-          <label class="block text-xs text-gray-400 font-mono mb-1">Current Password (optional for admin)</label>
-          <input id="editCurrentPass" type="password" placeholder="••••••••" class="w-full bg-[#0d0e11] border border-[#343538] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-red-500 font-mono">
+  <!-- MODAL: PROFILE -->
+  <div class="modal-overlay" id="modal-profile">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title"><span>Account & Profile Settings</span></h3>
+        <button class="modal-close-btn" onclick="closeProfileModal()"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
+      </div>
+      <form onsubmit="event.preventDefault(); submitProfile();">
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input type="text" id="self-user" class="form-control" required>
         </div>
-        <div>
-          <label class="block text-xs text-gray-400 font-mono mb-1">New Password</label>
-          <input id="editNewPass" type="password" required placeholder="••••••••" class="w-full bg-[#0d0e11] border border-[#343538] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-red-500 font-mono">
+        <div class="form-group">
+          <label class="form-label">Gmail / Email</label>
+          <input type="email" id="self-email" class="form-control" required>
         </div>
-        <button type="submit" class="w-full py-2 rounded-lg bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 text-white font-semibold text-xs tracking-wider uppercase transition-all">Update Password</button>
+        <div class="form-group">
+          <label class="form-label">New Password</label>
+          <input type="password" id="self-pass" class="form-control" placeholder="••••••••••••">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeProfileModal()">Cancel</button>
+          <button type="submit" class="btn-primary">Save Profile</button>
+        </div>
       </form>
     </div>
   </div>
 
   <script>
+    const API_BASE = window.location.origin + '/api';
+    let token = localStorage.getItem('eclipse_token') || '';
+    let currentUser = null;
+    let currentAppId = null;
+    let activeWs = null;
+    let activeFile = null;
+
+    if (!token) window.location.href = '/login.html';
+    else {
+      try { currentUser = JSON.parse(localStorage.getItem('eclipse_user') || '{}'); } catch (e) {}
+    }
+
+    function getHeaders() {
+      const h = { 'Content-Type': 'application/json' };
+      if (token) h['Authorization'] = 'Bearer ' + token;
+      return h;
+    }
+
+    function logout() {
+      localStorage.removeItem('eclipse_token');
+      localStorage.removeItem('eclipse_user');
+      window.location.href = '/login.html';
+    }
+
+    function openCreateAppModal() { document.getElementById('modal-create-app').classList.add('open'); }
+    function closeCreateAppModal() { document.getElementById('modal-create-app').classList.remove('open'); }
     function openProfileModal() {
-      fetch(API_BASE + '/auth/me', { headers: getHeaders() })
-        .then(r => r.json())
-        .then(d => {
-          if (d.user) {
-            document.getElementById('editUsername').value = d.user.username;
-            document.getElementById('editEmail').value = d.user.email;
-            document.getElementById('profileModal').classList.remove('hidden');
-          }
-        })
-        .catch(e => {
-          document.getElementById('profileModal').classList.remove('hidden');
+      if (currentUser) {
+        document.getElementById('self-user').value = currentUser.username || '';
+        document.getElementById('self-email').value = currentUser.email || '';
+      }
+      document.getElementById('modal-profile').classList.add('open');
+    }
+    function closeProfileModal() { document.getElementById('modal-profile').classList.remove('open'); }
+
+    function switchConsoleTab(tab) {
+      document.getElementById('pane-console').style.display = tab === 'console' ? 'block' : 'none';
+      document.getElementById('pane-files').style.display = tab === 'files' ? 'block' : 'none';
+      document.getElementById('pane-config').style.display = tab === 'config' ? 'block' : 'none';
+
+      document.getElementById('tab-btn-console').className = 'tab-nav-btn' + (tab === 'console' ? ' active' : '');
+      document.getElementById('tab-btn-files').className = 'tab-nav-btn' + (tab === 'files' ? ' active' : '');
+      document.getElementById('tab-btn-config').className = 'tab-nav-btn' + (tab === 'config' ? ' active' : '');
+
+      if (tab === 'files' && currentAppId) loadFiles(currentAppId);
+    }
+
+    async function loadAllApps() {
+      try {
+        const res = await fetch(API_BASE + '/apps', { headers: getHeaders() });
+        if (!res.ok) return;
+        const apps = await res.json();
+        const selector = document.getElementById('app-selector');
+        selector.innerHTML = '<option value="">Choose Application...</option>' + 
+          apps.map(a => `<option value="${a.id}">${a.name} (:${a.port})</option>`).join('');
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const queryId = urlParams.get('id');
+
+        if (queryId && apps.some(a => a.id == queryId)) {
+          selector.value = queryId;
+          switchApp(queryId);
+        } else if (apps.length > 0) {
+          selector.value = apps[0].id;
+          switchApp(apps[0].id);
+        }
+      } catch (e) { console.error(e); }
+    }
+
+    async function switchApp(appId) {
+      if (!appId) return;
+      currentAppId = appId;
+      history.replaceState(null, '', `?id=${appId}`);
+
+      try {
+        const res = await fetch(`${API_BASE}/apps/${appId}`, { headers: getHeaders() });
+        if (!res.ok) return;
+        const app = await res.json();
+        renderAppDetails(app);
+        connectAppWS(appId);
+        loadRecentLogs(appId);
+      } catch (e) { console.error(e); }
+    }
+
+    function renderAppDetails(app) {
+      document.getElementById('header-app-name').innerText = app.name;
+      document.getElementById('hero-app-name').innerText = app.name;
+      document.getElementById('hero-status-pill').innerText = (app.status || 'STOPPED').toUpperCase();
+      document.getElementById('hero-status-pill').className = 'status-pill ' + (app.status === 'running' ? 'running' : 'stopped');
+      document.getElementById('app-status-badge').innerText = (app.status || 'STOPPED').toUpperCase();
+      document.getElementById('hero-runtime-pill').innerText = app.type === 'python' ? 'Python 3' : 'Node.js';
+      document.getElementById('hero-port-link').innerText = ':' + app.port;
+      document.getElementById('hero-port-link').href = `http://${window.location.hostname}:${app.port}`;
+      document.getElementById('hero-pid').innerText = app.pid || '--';
+      document.getElementById('hero-restarts').innerText = app.restart_count || 0;
+
+      document.getElementById('cfg-port').value = app.port;
+      document.getElementById('cfg-entry').value = app.entry_point || 'index.js';
+      document.getElementById('cfg-env').value = app.env ? JSON.stringify(app.env, null, 2) : '';
+    }
+
+    async function execAction(action) {
+      if (!currentAppId) return;
+      try {
+        const res = await fetch(`${API_BASE}/apps/${currentAppId}/action/${action}`, {
+          method: 'POST',
+          headers: getHeaders()
         });
+        const d = await res.json();
+        if (!res.ok) alert(d.error || 'Action failed');
+        switchApp(currentAppId);
+      } catch (e) { alert(e.message); }
     }
 
-    function closeProfileModal() {
-      document.getElementById('profileModal').classList.add('hidden');
+    async function deleteCurrentApp() {
+      if (!currentAppId || !confirm('Permanently delete this application?')) return;
+      try {
+        await fetch(`${API_BASE}/apps/${currentAppId}`, { method: 'DELETE', headers: getHeaders() });
+        window.location.href = '/';
+      } catch (e) { alert(e.message); }
     }
 
-    async function saveProfileChanges() {
-      const username = document.getElementById('editUsername').value.trim();
-      const email = document.getElementById('editEmail').value.trim();
+    function connectAppWS(appId) {
+      if (activeWs) { activeWs.close(); activeWs = null; }
+      const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      activeWs = new WebSocket(`${proto}//${window.location.host}/ws?token=${token}`);
+
+      activeWs.onopen = () => {
+        activeWs.send(JSON.stringify({ type: 'subscribe', channel: `logs:${appId}` }));
+      };
+
+      activeWs.onmessage = (evt) => {
+        try {
+          const msg = JSON.parse(evt.data);
+          if (msg.type === 'log' && msg.appId == appId) {
+            appendLog(msg.stream, msg.message);
+          }
+        } catch (e) {}
+      };
+    }
+
+    async function loadRecentLogs(appId) {
+      try {
+        const res = await fetch(`${API_BASE}/apps/${appId}/logs`, { headers: getHeaders() });
+        if (res.ok) {
+          const data = await res.json();
+          const term = document.getElementById('terminal-output');
+          term.innerHTML = '';
+          (data.logs || []).forEach(l => appendLog(l.stream, l.message));
+        }
+      } catch (e) {}
+    }
+
+    function appendLog(stream, msg) {
+      const term = document.getElementById('terminal-output');
+      const div = document.createElement('div');
+      div.className = 'terminal-line ' + (stream || '');
+      div.innerText = msg;
+      term.appendChild(div);
+      term.scrollTop = term.scrollHeight;
+    }
+
+    function clearConsole() {
+      document.getElementById('terminal-output').innerHTML = '';
+    }
+
+    async function loadFiles(appId) {
+      try {
+        const res = await fetch(`${API_BASE}/files/list?appId=${appId}`, { headers: getHeaders() });
+        if (res.ok) {
+          const data = await res.json();
+          const list = document.getElementById('file-tree-list');
+          list.innerHTML = (data.files || []).map(f => `
+            <div class="file-tree-item" onclick="openFile('${escapeHtml(f.name)}')">
+              <span>📄</span>
+              <span>${escapeHtml(f.name)}</span>
+            </div>
+          `).join('');
+        }
+      } catch (e) {}
+    }
+
+    async function openFile(filename) {
+      if (!currentAppId) return;
+      activeFile = filename;
+      document.getElementById('active-filename').innerText = filename;
+      try {
+        const res = await fetch(`${API_BASE}/files/read?appId=${currentAppId}&path=${encodeURIComponent(filename)}`, { headers: getHeaders() });
+        if (res.ok) {
+          const data = await res.json();
+          document.getElementById('file-editor').value = data.content || '';
+        }
+      } catch (e) {}
+    }
+
+    async function saveActiveFile() {
+      if (!currentAppId || !activeFile) return alert('No file selected');
+      const content = document.getElementById('file-editor').value;
+      try {
+        const res = await fetch(`${API_BASE}/files/write`, {
+          method: 'POST',
+          headers: getHeaders(),
+          body: JSON.stringify({ appId: currentAppId, path: activeFile, content })
+        });
+        if (res.ok) alert('File saved successfully!');
+      } catch (e) { alert(e.message); }
+    }
+
+    async function saveAppConfig() {
+      if (!currentAppId) return;
+      const port = parseInt(document.getElementById('cfg-port').value, 10);
+      const entry = document.getElementById('cfg-entry').value.trim();
+      let envObj = {};
+      try {
+        const raw = document.getElementById('cfg-env').value.trim();
+        if (raw) envObj = JSON.parse(raw);
+      } catch (e) {
+        alert('Environment variables must be valid JSON object (or empty)');
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/apps/${currentAppId}`, {
+          method: 'PUT',
+          headers: getHeaders(),
+          body: JSON.stringify({ port, entry_point: entry, env: envObj })
+        });
+        if (res.ok) {
+          alert('Configuration updated!');
+          switchApp(currentAppId);
+        }
+      } catch (e) { alert(e.message); }
+    }
+
+    async function submitCreateApp() {
+      const name = document.getElementById('new-app-name').value.trim();
+      const type = document.getElementById('new-app-type').value;
+      const port = parseInt(document.getElementById('new-app-port').value, 10);
+      try {
+        const res = await fetch(API_BASE + '/apps', {
+          method: 'POST',
+          headers: getHeaders(),
+          body: JSON.stringify({ name, type, port })
+        });
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.error || 'Failed');
+        closeCreateAppModal();
+        loadAllApps();
+      } catch (e) { alert(e.message); }
+    }
+
+    async function submitProfile() {
+      const username = document.getElementById('self-user').value.trim();
+      const email = document.getElementById('self-email').value.trim();
+      const password = document.getElementById('self-pass').value;
       try {
         const res = await fetch(API_BASE + '/auth/profile', {
           method: 'PUT',
           headers: getHeaders(),
-          body: JSON.stringify({ username, email })
+          body: JSON.stringify({ username, email, password: password || undefined })
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error);
-        alert('Profile updated successfully!');
+        const d = await res.json();
+        if (d.user) {
+          currentUser = d.user;
+          localStorage.setItem('eclipse_user', JSON.stringify(d.user));
+          renderSelf();
+        }
+        alert('Profile saved!');
         closeProfileModal();
-        location.reload();
-      } catch (err) { alert(err.message); }
+      } catch (e) { alert(e.message); }
     }
 
-    async function savePasswordChanges() {
-      const currentPassword = document.getElementById('editCurrentPass').value;
-      const newPassword = document.getElementById('editNewPass').value;
-      try {
-        const res = await fetch(API_BASE + '/auth/password', {
-          method: 'PUT',
-          headers: getHeaders(),
-          body: JSON.stringify({ currentPassword, newPassword })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error);
-        alert('Password updated successfully!');
-        closeProfileModal();
-      } catch (err) { alert(err.message); }
+    function renderSelf() {
+      if (!currentUser) return;
+      document.getElementById('sidebar-user-name').innerText = currentUser.username || 'admin';
+      document.getElementById('sidebar-user-role').innerText = (currentUser.role || 'user').toUpperCase();
+      document.getElementById('sidebar-user-avatar').innerText = (currentUser.username || 'A').charAt(0).toUpperCase();
     }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderSelf();
+      loadAllApps();
+      fetch(API_BASE + '/system/metrics')
+        .then(r => r.json())
+        .then(d => { if (d.hostname) document.getElementById('sidebar-hostname').innerText = d.hostname; })
+        .catch(() => {});
+    });
   </script>
-</body></html>
+</body>
+</html>
