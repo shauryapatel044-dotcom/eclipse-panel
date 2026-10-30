@@ -266,11 +266,11 @@
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>Application / Server</th>
+                  <th>Server Name</th>
                   <th>Runtime</th>
-                  <th>Specs (RAM / CPU)</th>
+                  <th>Allocated Specs</th>
                   <th>Status</th>
-                  <th>Port</th>
+                  <th>Whole IP Address</th>
                   <th>Restarts</th>
                   <th>Actions</th>
                 </tr>
@@ -345,11 +345,6 @@
             <label class="form-label" for="app-port">Dedicated Port</label>
             <input type="number" id="app-port" class="form-control" placeholder="3000" required value="3000" min="1024" max="65535">
           </div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="app-domain">Server Domain / DNS (Optional)</label>
-          <input type="text" id="app-domain" class="form-control" placeholder="srv1.yourdomain.com">
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
@@ -634,9 +629,10 @@
       try {
         const res = await fetch(API_BASE + '/apps', { headers: getHeaders() });
         if (!res.ok) return;
-        const apps = await res.json();
-        renderAppsTable(apps);
-        document.getElementById('nav-app-count').innerText = apps.length;
+        const data = await res.json();
+        const appsList = Array.isArray(data) ? data : (data && data.apps ? data.apps : []);
+        renderAppsTable(appsList);
+        document.getElementById('nav-app-count').innerText = appsList.length;
       } catch (err) {
         console.error('Fetch apps error:', err);
       }
@@ -731,8 +727,24 @@
       }
     }
 
-    function renderAppsTable(apps) {
+    function copyAddressToClipboard(text) {
+      if (!text) return;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          if (window.EclipseAnimations && window.EclipseAnimations.showToast) {
+            window.EclipseAnimations.showToast('Copied address: ' + text, 'success');
+          } else {
+            alert('Copied address: ' + text);
+          }
+        }).catch(() => prompt('Copy server address:', text));
+      } else {
+        prompt('Copy server address:', text);
+      }
+    }
+
+    function renderAppsTable(data) {
       const tbody = document.getElementById('apps-tbody');
+      const apps = Array.isArray(data) ? data : (data && data.apps ? data.apps : []);
       if (!apps || apps.length === 0) {
         tbody.innerHTML = `
           <tr>
@@ -756,8 +768,15 @@
         const isCrashed = app.status === 'crashed';
         const pillClass = isRunning ? 'running' : (isCrashed ? 'crashed' : 'stopped');
         const runtimeIcon = app.type === 'python' ? '🐍 Python' : '🟢 Node.js';
-        const ramStr = (app.memory_limit || 1024) + 'MB';
+        const ramStr = (app.memory_limit || 1024) + ' MB';
         const cpuStr = (app.cpu_limit || 100) + '%';
+        const diskStr = (app.disk_limit || 5120) + ' MB';
+
+        // Whole IP address calculation
+        const hostIp = (app.primary_ip && app.primary_ip !== '0.0.0.0')
+          ? app.primary_ip
+          : (window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname);
+        const fullAddress = `${hostIp}:${app.port || '3000'}`;
 
         return `
           <tr>
@@ -770,7 +789,10 @@
             </td>
             <td>
               <div style="font-family: var(--font-mono); font-size: 11px;">
-                <span style="color: var(--emerald);">${ramStr}</span> · <span style="color: var(--amber);">${cpuStr}</span>
+                <span style="color: var(--emerald); font-weight: 600;">${ramStr}</span> · <span style="color: var(--amber); font-weight: 600;">${cpuStr}</span>
+              </div>
+              <div style="font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); margin-top: 2px;">
+                <span>${diskStr} Disk</span>
               </div>
             </td>
             <td>
@@ -780,14 +802,20 @@
               </span>
             </td>
             <td>
-              <a href="http://${window.location.hostname}:${app.port}" target="_blank" style="color: var(--primary); font-family: var(--font-mono); text-decoration: none; font-weight: 600;">:${app.port || 'Auto'}</a>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <a href="http://${fullAddress}" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 6px; padding: 4px 8px; color: #FFF; font-family: var(--font-mono); font-size: 11px; text-decoration: none; font-weight: 700;">
+                  <span style="width: 6px; height: 6px; border-radius: 50%; background: ${isRunning ? 'var(--emerald)' : 'var(--text-muted)'};"></span>
+                  ${fullAddress}
+                </a>
+                <button type="button" class="btn-secondary" style="padding: 4px 7px; font-size: 11px; cursor: pointer;" onclick="copyAddressToClipboard('${fullAddress}')" title="Copy Full IP Address">📋</button>
+              </div>
             </td>
             <td style="font-family: var(--font-mono); font-size: 12px;">
               ${app.restart_count || 0}
             </td>
             <td>
               <div style="display: flex; gap: 6px;">
-                <button class="btn-secondary framer-spring" style="padding: 4px 8px; font-size: 11px;" onclick='openSpecsModal(${JSON.stringify(app)})'>Edit Specs</button>
+                <button class="btn-secondary framer-spring" style="padding: 4px 8px; font-size: 11px;" onclick='openSpecsModal(${JSON.stringify(app)})'>Specs</button>
                 ${isRunning 
                   ? `<button class="btn-secondary framer-spring" style="padding: 4px 8px; font-size: 11px;" onclick="triggerAppAction('${app.id}', 'stop')">Stop</button>`
                   : `<button class="btn-primary framer-spring" style="padding: 4px 8px; font-size: 11px;" onclick="triggerAppAction('${app.id}', 'start')">Start</button>`
@@ -812,7 +840,6 @@
       const cpu_limit = parseInt(document.getElementById('app-cpu').value, 10) || 100;
       const disk_limit = parseInt(document.getElementById('app-disk').value, 10) || 5120;
       const primary_ip = document.getElementById('app-ip').value.trim() || '0.0.0.0';
-      const domain = document.getElementById('app-domain').value.trim();
       const btn = document.getElementById('btn-create-submit');
 
       btn.disabled = true;
@@ -832,8 +859,7 @@
             memory_limit,
             cpu_limit,
             disk_limit,
-            primary_ip,
-            domain
+            primary_ip
           })
         });
         const d = await res.json();

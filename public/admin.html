@@ -250,11 +250,11 @@
                 <thead>
                   <tr>
                     <th>Server Name</th>
-                    <th>Owner</th>
-                    <th>Runtime</th>
                     <th>Allocated Specs</th>
+                    <th>Whole IP Address</th>
+                    <th>Runtime</th>
+                    <th>Owner</th>
                     <th>Status</th>
-                    <th>Port</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -429,11 +429,6 @@
             <label class="form-label">Dedicated Port</label>
             <input type="number" id="admin-new-port" class="form-control" required value="3000" min="1024" max="65535">
           </div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Domain / DNS Mapping (Optional)</label>
-          <input type="text" id="admin-new-domain" class="form-control" placeholder="srv1.yourdomain.com">
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
@@ -743,37 +738,66 @@
       }
     }
 
+    function copyAddressToClipboard(text) {
+      if (!text) return;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          notify('Copied address: ' + text, 'success');
+        }).catch(() => prompt('Copy server address:', text));
+      } else {
+        prompt('Copy server address:', text);
+      }
+    }
+
     function renderServersTable(servers) {
       const tbody = document.getElementById('servers-tbody');
-      if (!servers || servers.length === 0) {
+      const list = Array.isArray(servers) ? servers : (servers && servers.apps ? servers.apps : []);
+      if (!list || list.length === 0) {
         tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 24px; color: var(--text-muted);">No server instances running. Click "Deploy Server" above to launch one.</td></tr>`;
         return;
       }
 
-      tbody.innerHTML = servers.map(app => {
+      tbody.innerHTML = list.map(app => {
         const isRunning = app.status === 'running';
         const pillClass = isRunning ? 'running' : 'stopped';
         const runtimeStr = app.type === 'python' ? '🐍 Python' : '🟢 Node.js';
         const ramStr = (app.memory_limit || 1024) + ' MB';
         const cpuStr = (app.cpu_limit || 100) + '%';
+        const diskStr = (app.disk_limit || 5120) + ' MB';
         const ownerName = app.owner_username || 'admin';
+
+        // Whole IP address calculation
+        const hostIp = (app.primary_ip && app.primary_ip !== '0.0.0.0') ? app.primary_ip : (window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname);
+        const fullAddress = `${hostIp}:${app.port || '3000'}`;
 
         return `
           <tr>
             <td>
               <div style="font-weight: 700; color: #FFF;">${escapeHtml(app.name)}</div>
-              <div style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);">ID: ${app.id}</div>
-            </td>
-            <td>
-              <span style="font-family: var(--font-mono); font-size: 12px; color: var(--text-main);">@${escapeHtml(ownerName)}</span>
-            </td>
-            <td>
-              <span style="font-family: var(--font-mono); font-size: 12px;">${runtimeStr}</span>
+              <div style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);">${escapeHtml(app.entrypoint || 'index.js')} · ID: ${app.id}</div>
             </td>
             <td>
               <div style="font-family: var(--font-mono); font-size: 11px;">
-                <span style="color: var(--emerald);">RAM: ${ramStr}</span> · <span style="color: var(--amber);">CPU: ${cpuStr}</span>
+                <span style="color: var(--emerald); font-weight: 600;">${ramStr} RAM</span> · <span style="color: var(--amber); font-weight: 600;">${cpuStr} CPU</span>
               </div>
+              <div style="font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); margin-top: 2px;">
+                <span>${diskStr} Disk</span>
+              </div>
+            </td>
+            <td>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <a href="http://${fullAddress}" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 6px; padding: 4px 8px; color: #FFF; font-family: var(--font-mono); font-size: 11px; text-decoration: none; font-weight: 700;">
+                  <span style="width: 6px; height: 6px; border-radius: 50%; background: ${isRunning ? 'var(--emerald)' : 'var(--text-muted)'};"></span>
+                  ${fullAddress}
+                </a>
+                <button type="button" class="btn-secondary" style="padding: 4px 7px; font-size: 11px; cursor: pointer;" onclick="copyAddressToClipboard('${fullAddress}')" title="Copy Full IP Address">📋</button>
+              </div>
+            </td>
+            <td>
+              <span style="font-family: var(--font-mono); font-size: 12px;">${runtimeStr} ${app.runtime_version ? 'v' + app.runtime_version : ''}</span>
+            </td>
+            <td>
+              <span style="font-family: var(--font-mono); font-size: 12px; color: var(--text-main);">@${escapeHtml(ownerName)}</span>
             </td>
             <td>
               <span class="status-pill ${pillClass}">
@@ -782,11 +806,8 @@
               </span>
             </td>
             <td>
-              <a href="http://${window.location.hostname}:${app.port}" target="_blank" style="color: var(--primary); font-family: var(--font-mono); text-decoration: none; font-weight: 600;">:${app.port || 'Auto'}</a>
-            </td>
-            <td>
               <div style="display: flex; gap: 6px;">
-                <button class="btn-secondary framer-spring" style="padding: 4px 8px; font-size: 11px;" onclick='openSpecsModal(${JSON.stringify(app)})'>Edit Specs</button>
+                <button class="btn-secondary framer-spring" style="padding: 4px 8px; font-size: 11px;" onclick='openSpecsModal(${JSON.stringify(app)})'>Specs</button>
                 ${isRunning 
                   ? `<button class="btn-secondary framer-spring" style="padding: 4px 8px; font-size: 11px;" onclick="triggerServerAction('${app.id}', 'stop')">Stop</button>`
                   : `<button class="btn-primary framer-spring" style="padding: 4px 8px; font-size: 11px;" onclick="triggerServerAction('${app.id}', 'start')">Start</button>`
@@ -872,7 +893,6 @@
       const runtime_version = document.getElementById('admin-new-version').value;
       const primary_ip = document.getElementById('admin-new-ip').value.trim() || '0.0.0.0';
       const port = parseInt(document.getElementById('admin-new-port').value, 10);
-      const domain = document.getElementById('admin-new-domain').value.trim();
       const memory_limit = parseInt(document.getElementById('admin-new-ram').value, 10) || 1024;
       const cpu_limit = parseInt(document.getElementById('admin-new-cpu').value, 10) || 100;
       const disk_limit = parseInt(document.getElementById('admin-new-disk').value, 10) || 5120;
@@ -896,8 +916,7 @@
             memory_limit,
             cpu_limit,
             disk_limit,
-            primary_ip,
-            domain
+            primary_ip
           })
         });
         const d = await res.json();

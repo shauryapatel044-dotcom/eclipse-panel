@@ -132,7 +132,8 @@ export class AppController {
       const cpLimit = cpu_limit ? parseInt(cpu_limit, 10) : 100;
       const diskLimit = disk_limit ? parseInt(disk_limit, 10) : 5120;
       const serverIp = primary_ip ? primary_ip.trim() : '0.0.0.0';
-      const serverDomain = domain ? domain.trim() : '';
+      const baseDomain = process.env.BASE_DOMAIN || '';
+      const serverDomain = domain ? domain.trim() : (baseDomain ? `${name.toLowerCase().replace(/[^a-z0-9-]/g, '')}.${baseDomain}` : '');
       const rVersion = runtime_version ? runtime_version.trim() : (normalizedType === 'nodejs' ? '20' : '3.11');
 
       const defaultNodeStartup = `if [[ -d .git ]] && [[ 0 == "1" ]]; then git pull; fi; if [[ ! -z "\${NODE_PACKAGES}" ]]; then npm install \${NODE_PACKAGES}; fi; if [[ ! -z "\${UNNODE_PACKAGES}" ]]; then npm uninstall \${UNNODE_PACKAGES}; fi; if [ -f package.json ]; then npm install; fi; if [[ "\${MAIN_FILE##*.}" == "js" ]]; then node "\${MAIN_FILE}" \${NODE_ARGS}; else ts-node --esm "\${MAIN_FILE}" \${NODE_ARGS}; fi`;

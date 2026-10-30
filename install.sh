@@ -328,20 +328,57 @@ echo -e "  1. Point your ${YELLOW}Panel DNS${NC} (e.g. A record: ${CYAN}panel.yo
 echo -e "  2. Point your ${YELLOW}Servers DNS${NC} (e.g. A record: ${CYAN}*.servers.yourdomain.com${NC} or ${CYAN}srv1.yourdomain.com${NC} -> ${CYAN}${PUBLIC_IP}${NC})"
 echo -e "${PURPLE}================================================================${NC}"
 
-# Optional interactive DNS prompt if running interactively
-USER_PANEL_DOMAIN=""
-USER_SERVERS_DOMAIN=""
+# One-Time Domain Setup & Automated Live DNS Verification
+USER_BASE_DOMAIN=""
 if [ -t 0 ]; then
-    read -r -p "Enter Panel Domain [optional, press Enter to use IP]: " USER_PANEL_DOMAIN
-    read -r -p "Enter Servers Wildcard Domain [optional, press Enter to use IP]: " USER_SERVERS_DOMAIN
+    echo -e "  Enter your domain for hosted servers (e.g. ${YELLOW}yourdomain.com${NC})"
+    echo -e "  All future servers will automatically receive subdomains (e.g. srv.yourdomain.com)"
+    read -r -p "Enter Domain [optional, press Enter to use VPS IP]: " USER_BASE_DOMAIN
     
-    if [ ! -z "$USER_PANEL_DOMAIN" ]; then
-        echo "PANEL_DOMAIN=${USER_PANEL_DOMAIN}" >> "${INSTALL_DIR}/.env"
-        sed -i "s/server_name _;/server_name ${USER_PANEL_DOMAIN} _;/g" "$NGINX_CONF" 2>/dev/null || true
+    if [ ! -z "$USER_BASE_DOMAIN" ]; then
+        print_step "Verifying DNS propagation for ${USER_BASE_DOMAIN}..."
+        RESOLVED_IP=$(dig +short "$USER_BASE_DOMAIN" 2>/dev/null | grep -E '^[0-9.]+
+
+echo ""
+echo -e "${GREEN}================================================================${NC}"
+echo -e "${BOLD_RED}  🌑 ECLIPSE PANEL & MARIADB SUCCESSFULLY INSTALLED! 🌑${NC}"
+echo -e "${GREEN}================================================================${NC}"
+echo -e "  ● Web Dashboard (Port 8090) : ${CYAN}http://${PUBLIC_IP}:8090${NC}"
+if [ ! -z "$USER_BASE_DOMAIN" ]; then
+  echo -e "  ● Base Servers Domain       : ${CYAN}http://${USER_BASE_DOMAIN}${NC}"
+fi
+echo -e "  ● Web Dashboard (Port 80)   : ${CYAN}http://${PUBLIC_IP}${NC}"
+echo -e "  ● Real-Time VPS Telemetry   : ${CYAN}http://${PUBLIC_IP}:8090/admin-stats.html${NC}"
+echo -e "  ● Backend REST API          : ${CYAN}http://${PUBLIC_IP}:8090/api${NC}"
+echo -e "  ● Live WebSocket Stream     : ${CYAN}ws://${PUBLIC_IP}:8090/ws${NC}"
+echo -e "  ● PM2 24/7 Service Status   : ${CYAN}pm2 status | pm2 logs eclipse-panel${NC}"
+echo -e "  ● MariaDB Service Status    : ${CYAN}systemctl status mariadb${NC}"
+echo -e "${GREEN}================================================================${NC}"
+echo -e "${BOLD_RED}  🗄️  MARIADB DATABASE CREDENTIALS (FOR YOUR APPS):${NC}"
+echo -e "  ● Database Name : ${YELLOW}eclipse_panel${NC}"
+echo -e "  ● Database User : ${YELLOW}eclipse_user${NC}"
+echo -e "  ● Database Pass : ${YELLOW}${DB_PASS}${NC}"
+echo -e "  ● Database Host : ${YELLOW}127.0.0.1:3306${NC}"
+echo -e "  ● Connection URI: ${CYAN}mysql://eclipse_user:${DB_PASS}@127.0.0.1:3306/eclipse_panel${NC}"
+echo -e "${GREEN}================================================================${NC}
+" | tail -n1)
+        if [ -z "$RESOLVED_IP" ]; then
+            RESOLVED_IP=$(getent ahosts "$USER_BASE_DOMAIN" 2>/dev/null | awk '{print $1}' | head -n1)
+        fi
+
+        if [ "$RESOLVED_IP" == "$PUBLIC_IP" ]; then
+            print_success "DNS Verified! ${USER_BASE_DOMAIN} points directly to this VPS (${PUBLIC_IP})."
+        elif [ ! -z "$RESOLVED_IP" ]; then
+            print_warning "DNS Check: ${USER_BASE_DOMAIN} resolved to '${RESOLVED_IP}' (Expected: ${PUBLIC_IP})."
+            print_warning "DNS propagation may take a few minutes. All servers will still bind automatically."
+        else
+            print_warning "Could not resolve ${USER_BASE_DOMAIN} yet. Make sure your 'A' record points to ${PUBLIC_IP}."
+        fi
+
+        echo "BASE_DOMAIN=${USER_BASE_DOMAIN}" >> "${INSTALL_DIR}/.env"
+        sed -i "s/server_name _;/server_name ${USER_BASE_DOMAIN} *.${USER_BASE_DOMAIN} _;/g" "$NGINX_CONF" 2>/dev/null || true
         systemctl reload nginx 2>/dev/null || true
-    fi
-    if [ ! -z "$USER_SERVERS_DOMAIN" ]; then
-        echo "SERVERS_DOMAIN=${USER_SERVERS_DOMAIN}" >> "${INSTALL_DIR}/.env"
+        pm2 restart eclipse-panel 2>/dev/null || true
     fi
     echo "VPS_PUBLIC_IP=${PUBLIC_IP}" >> "${INSTALL_DIR}/.env"
 fi

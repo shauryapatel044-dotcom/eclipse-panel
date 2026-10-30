@@ -727,7 +727,7 @@
         const res = await fetch(API_BASE + '/apps', { headers: getHeaders() });
         if (!res.ok) return;
         const data = await res.json();
-        const apps = data.apps || [];
+        const apps = Array.isArray(data) ? data : (data.apps || []);
         const selector = document.getElementById('app-selector');
         
         if (apps.length === 0) {
@@ -775,9 +775,13 @@
         heroStatus.innerText = isRunning ? 'ONLINE' : (app.status || 'STOPPED').toUpperCase();
         heroStatus.className = 'status-pill ' + (isRunning ? 'running' : 'stopped');
 
-        // Specs
-        document.getElementById('hero-port-link').innerText = ':' + (app.port || '----');
-        document.getElementById('hero-port-link').href = `http://${window.location.hostname}:${app.port}`;
+        // Whole IP Calculation
+        const hostIp = (app.primary_ip && app.primary_ip !== '0.0.0.0') ? app.primary_ip : (window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname);
+        const fullAddress = `${hostIp}:${app.port || '3000'}`;
+
+        document.getElementById('hero-ip-badge').innerText = `IP: ${fullAddress}`;
+        document.getElementById('hero-port-link').innerText = fullAddress;
+        document.getElementById('hero-port-link').href = `http://${fullAddress}`;
         document.getElementById('hero-ram-spec').innerText = (app.memory_limit || 1024) + ' MB';
         document.getElementById('hero-cpu-spec').innerText = (app.cpu_limit || 100) + '%';
         document.getElementById('hero-disk-spec').innerText = (app.disk_limit || 5120) + ' MB';
