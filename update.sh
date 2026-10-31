@@ -134,33 +134,110 @@ fi
 
 echo -e "${GREEN}[✔] Node modules and execution binaries ready.${NC}"
 
-# 4. Restart Background Daemon (Kill old bot & free port 8090 first)
-echo -e "\n${BOLD_CYAN}[4/5] Updating proxy configurations & restarting ${SERVICE_NAME} daemon...${NC}"
+# 4. Reconfigure Reverse Proxy & Restart Background Daemon
+echo -e "\n${BOLD_CYAN}[4/5] Self-healing proxy configurations & restarting ${SERVICE_NAME} daemon...${NC}"
 pkill -9 -f "src/index.js" 2>/dev/null || true
 fuser -k -9 8090/tcp 2>/dev/null || true
 
-# Lift upload limits in Nginx
-if [ -f "/etc/nginx/sites-available/eclipse-panel" ]; then
-    sed -i 's/client_max_body_size .*/client_max_body_size 0;/g' /etc/nginx/sites-available/eclipse-panel 2>/dev/null || true
-    nginx -t 2>/dev/null && systemctl reload nginx 2>/dev/null || true
+# 4A. Self-signed SSL Certificate for Cloudflare Full SSL Support
+mkdir -p /etc/ssl/certs /etc/ssl/private
+if [ ! -f /etc/ssl/certs/eclipse-panel.crt ] || [ ! -f /etc/ssl/private/eclipse-panel.key ]; then
+    openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
+        -keyout /etc/ssl/private/eclipse-panel.key \
+        -out /etc/ssl/certs/eclipse-panel.crt \
+        -subj "/C=US/ST=Cloud/L=Eclipse/O=EclipsePanel/CN=*" 2>/dev/null || true
 fi
 
-# Check if systemd service is installed
-if [ -f "/etc/systemd/system/${SERVICE_NAME}.service" ]; then
-    pm2 delete "$SERVICE_NAME" 2>/dev/null || true
-    pm2 save 2>/dev/null || true
-    systemctl daemon-reload
-    systemctl restart "$SERVICE_NAME"
-    echo -e "${GREEN}[✔] Daemon restarted via systemd.${NC}"
-elif command -v pm2 >/dev/null 2>&1; then
-    pm2 restart "$SERVICE_NAME" 2>/dev/null || pm2 start src/index.js --name "$SERVICE_NAME" --time 2>/dev/null || true
-    pm2 save 2>/dev/null || true
-    echo -e "${GREEN}[✔] Daemon restarted via PM2.${NC}"
-else
-    pkill -f "src/index.js" 2>/dev/null || true
-    nohup node src/index.js >/var/log/eclipse-panel.log 2>&1 &
-    echo -e "${GREEN}[✔] Daemon restarted in background.${NC}"
+# 4B. Generate Complete Nginx Reverse Proxy (Port 80 & 443 -> Port 8090)
+mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled /etc/nginx/conf.d
+NGINX_CONF="/etc/nginx/sites-available/eclipse-panel"
+
+cat <<'EOF' > "$NGINX_CONF"
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    listen 443 ssl default_server;
+    listen [::]:443 ssl default_server;
+
+    ssl_certificate /etc/ssl/certs/eclipse-panel.crt;
+    ssl_certificate_key /etc/ssl/private/eclipse-panel.key;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    server_name _;
+
+    # Unlimited upload size up to container storage quota
+    client_max_body_size 0;
+
+    # Static Assets & API Reverse Proxy
+    location / {
+        proxy_pass http://127.0.0.1:8090;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_buffering off;
+    }
+
+    # WebSocket Real-Time Stream
+    location /ws {
+        proxy_pass http://127.0.0.1:8090/ws;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_read_timeout 86400s;
+        proxy_send_timeout 86400s;
+    }
+}
+EOF
+
+# Disable conflicting default server blocks
+if [ -f /etc/nginx/nginx.conf ]; then
+    sed -i 's/listen       80 default_server;/listen       80;/g' /etc/nginx/nginx.conf 2>/dev/null || true
+    sed -i 's/listen       \[::\]:80 default_server;/listen       [::]:80;/g' /etc/nginx/nginx.conf 2>/dev/null || true
 fi
+rm -f /etc/nginx/sites-enabled/default 2>/dev/null || true
+rm -f /etc/nginx/sites-available/default 2>/dev/null || true
+rm -f /etc/nginx/conf.d/default.conf 2>/dev/null || true
+rm -f /etc/nginx/conf.d/eclipse-panel.conf 2>/dev/null || true
+
+if [ -d /etc/nginx/sites-enabled ]; then
+    ln -sf "$NGINX_CONF" /etc/nginx/sites-enabled/eclipse-panel
+else
+    cp -f "$NGINX_CONF" /etc/nginx/conf.d/eclipse-panel.conf
+fi
+nginx -t 2>/dev/null && systemctl restart nginx 2>/dev/null || true
+
+# 4C. Rebuild and Enable Systemd Service Unit
+NODE_BIN_PATH=$(command -v node || echo "/usr/bin/node")
+
+cat <<EOF > "/etc/systemd/system/${SERVICE_NAME}.service"
+[Unit]
+Description=Eclipse Panel - Cloud Container Infrastructure Daemon
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=${INSTALL_DIR}
+ExecStart=${NODE_BIN_PATH} src/index.js
+Restart=always
+RestartSec=3
+Environment=NODE_ENV=production
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+command -v pm2 >/dev/null 2>&1 && pm2 delete "$SERVICE_NAME" 2>/dev/null || true
+systemctl daemon-reload
+systemctl enable "${SERVICE_NAME}" 2>/dev/null || true
+systemctl restart "${SERVICE_NAME}"
+echo -e "${GREEN}[✔] Daemon service reloaded and active via systemd.${NC}"
 
 # 5. Verify Health
 echo -e "\n${BOLD_CYAN}[5/5] Verifying daemon health...${NC}"
@@ -177,7 +254,8 @@ done
 if [ "$HEALTHY" = true ]; then
     echo -e "${BOLD_GREEN}[✔] Daemon is live and responding on port 8090!${NC}"
 else
-    echo -e "${YELLOW}[!] Daemon is still booting. You can inspect logs with: 'journalctl -u ${SERVICE_NAME} -n 20' or 'pm2 logs ${SERVICE_NAME}'${NC}"
+    echo -e "${BOLD_RED}[✘] Daemon did not respond in 5s. Inspecting recent journal logs:${NC}"
+    journalctl -u "${SERVICE_NAME}" -n 25 --no-pager 2>/dev/null || true
 fi
 
 echo ""

@@ -607,21 +607,33 @@ if command -v pm2 >/dev/null 2>&1; then
     pm2 save 2>/dev/null || true
 fi
 
-# 13. Configure Nginx Reverse Proxy (Port 80 -> Port 8090)
-print_step "Configuring Nginx reverse proxy & WebSocket pipeline..."
+# 13. Configure Nginx Reverse Proxy (Port 80 & 443 -> Port 8090)
+print_step "Configuring Nginx reverse proxy & SSL pipeline..."
 NGINX_CONF="/etc/nginx/sites-available/eclipse-panel"
 mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled /etc/nginx/conf.d
 
-SERVER_NAMES="_"
-if [ -n "$BASE_DOMAIN" ]; then
-    SERVER_NAMES="_ *.${BASE_DOMAIN} ${BASE_DOMAIN}"
+# Generate self-signed certificate for Cloudflare Full SSL and HTTPS termination
+mkdir -p /etc/ssl/certs /etc/ssl/private
+if [ ! -f /etc/ssl/certs/eclipse-panel.crt ] || [ ! -f /etc/ssl/private/eclipse-panel.key ]; then
+    openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
+        -keyout /etc/ssl/private/eclipse-panel.key \
+        -out /etc/ssl/certs/eclipse-panel.crt \
+        -subj "/C=US/ST=Cloud/L=Eclipse/O=EclipsePanel/CN=*" 2>/dev/null || true
 fi
 
 cat <<EOF > "$NGINX_CONF"
 server {
     listen 80 default_server;
     listen [::]:80 default_server;
-    server_name ${SERVER_NAMES};
+    listen 443 ssl default_server;
+    listen [::]:443 ssl default_server;
+
+    ssl_certificate /etc/ssl/certs/eclipse-panel.crt;
+    ssl_certificate_key /etc/ssl/private/eclipse-panel.key;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    server_name _;
 
     # Allow file uploads up to container disk quota (0 = unlimited in Nginx)
     client_max_body_size 0;
