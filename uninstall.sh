@@ -5,8 +5,6 @@
 #  Made By Vexezor · Cloud Container Infrastructure
 # ==============================================================================
 
-set -e
-
 CYAN='\033[0;36m'
 BOLD_CYAN='\033[1;36m'
 GREEN='\033[0;32m'
@@ -53,60 +51,51 @@ if [ "$FORCE" = false ]; then
 fi
 
 # Switch working directory out of /opt/eclipse-panel into /root immediately
-cd /root || cd /tmp || cd /
+cd /root 2>/dev/null || cd /tmp 2>/dev/null || cd /
 
-# 1. Kill background processes and stop PM2
-echo -e "\n${BOLD_RED}[1/7] Stopping and terminating all running daemons, bots, and containers...${NC}"
+# 1. Kill background processes and stop services
+echo -e "\n${BOLD_RED}[1/6] Stopping and disabling system services...${NC}"
 systemctl stop eclipse-panel 2>/dev/null || true
 systemctl stop eclipse-node 2>/dev/null || true
 systemctl disable eclipse-panel 2>/dev/null || true
 systemctl disable eclipse-node 2>/dev/null || true
+rm -f /etc/systemd/system/eclipse-panel.service 2>/dev/null || true
+rm -f /etc/systemd/system/eclipse-node.service 2>/dev/null || true
+systemctl daemon-reload 2>/dev/null || true
 
+# 2. Terminate PM2 tasks if running
 if command -v pm2 >/dev/null 2>&1; then
-    pm2 kill 2>/dev/null || true
-    pm2 delete all 2>/dev/null || true
+    pm2 delete eclipse-panel 2>/dev/null || true
+    pm2 delete eclipse-node 2>/dev/null || true
+    pm2 save 2>/dev/null || true
 fi
 
-# Terminate all Node.js processes running in background (kills Discord bot WebSocket instantly)
-pkill -9 -f "src/index.js" 2>/dev/null || true
-pkill -9 -f "eclipse-panel" 2>/dev/null || true
-pkill -9 -f "eclipse-node" 2>/dev/null || true
-killall -9 node 2>/dev/null || pkill -9 -f "node" 2>/dev/null || true
+# 3. Terminate running eclipse node/bot processes safely without touching other apps or SSH
+echo -e "\n${BOLD_RED}[2/6] Terminating panel background processes...${NC}"
+pkill -9 -f "eclipse-panel/src/index.js" 2>/dev/null || true
+pkill -9 -f "/opt/eclipse-panel" 2>/dev/null || true
+pkill -9 -f "/opt/eclipse-node" 2>/dev/null || true
+pkill -9 -f "node src/index.js" 2>/dev/null || true
 
-# Kill any processes still binding on ports 8090, 80, and user app ports 3000-4000
+# Release panel port 8090 safely
 if command -v fuser >/dev/null 2>&1; then
     fuser -k -9 8090/tcp 2>/dev/null || true
-    fuser -k -9 80/tcp 2>/dev/null || true
-    for port in $(seq 3000 3110); do
-        fuser -k -9 ${port}/tcp 2>/dev/null || true
-    done
 fi
 
-# 2. Remove systemd services
-echo -e "\n${BOLD_RED}[2/7] Removing systemd unit files...${NC}"
-systemctl stop eclipse-panel 2>/dev/null || true
-systemctl disable eclipse-panel 2>/dev/null || true
-rm -f /etc/systemd/system/eclipse-panel.service
+echo -e "${GREEN}[✔] Services and background processes terminated.${NC}"
 
-systemctl stop eclipse-node 2>/dev/null || true
-systemctl disable eclipse-node 2>/dev/null || true
-rm -f /etc/systemd/system/eclipse-node.service
-
-systemctl daemon-reload
-echo -e "${GREEN}[✔] Systemd services stopped and removed.${NC}"
-
-# 3. Clean Nginx configurations
-echo -e "\n${BOLD_RED}[3/7] Reverting Nginx reverse proxy configurations...${NC}"
-rm -f /etc/nginx/sites-available/eclipse-panel
-rm -f /etc/nginx/sites-enabled/eclipse-panel
-rm -f /etc/nginx/conf.d/eclipse-panel.conf
+# 4. Clean Nginx configurations
+echo -e "\n${BOLD_RED}[3/6] Reverting Nginx reverse proxy configurations...${NC}"
+rm -f /etc/nginx/sites-available/eclipse-panel 2>/dev/null || true
+rm -f /etc/nginx/sites-enabled/eclipse-panel 2>/dev/null || true
+rm -f /etc/nginx/conf.d/eclipse-panel.conf 2>/dev/null || true
 if command -v nginx >/dev/null 2>&1; then
-    nginx -t 2>/dev/null && systemctl restart nginx 2>/dev/null || true
+    nginx -t 2>/dev/null && systemctl reload nginx 2>/dev/null || true
 fi
 echo -e "${GREEN}[✔] Nginx reverse proxy removed.${NC}"
 
-# 4. Clean MariaDB Database
-echo -e "\n${BOLD_RED}[4/7] Dropping MariaDB 'eclipse_panel' database and credentials...${NC}"
+# 5. Clean MariaDB Database
+echo -e "\n${BOLD_RED}[4/6] Dropping MariaDB 'eclipse_panel' database and credentials...${NC}"
 MYSQL_CMD="mysql"
 if ! command -v mysql >/dev/null 2>&1; then
     MYSQL_CMD="mariadb"
@@ -123,8 +112,8 @@ EOF
 fi
 rm -f /root/.my.cnf 2>/dev/null || true
 
-# 5. Revert firewall ports
-echo -e "\n${BOLD_RED}[5/7] Reverting firewall rules...${NC}"
+# 6. Revert firewall ports
+echo -e "\n${BOLD_RED}[5/6] Reverting firewall rules...${NC}"
 if command -v ufw >/dev/null 2>&1; then
     ufw delete allow 8090/tcp 2>/dev/null || true
 elif command -v firewall-cmd >/dev/null 2>&1; then
@@ -133,40 +122,18 @@ elif command -v firewall-cmd >/dev/null 2>&1; then
 fi
 echo -e "${GREEN}[✔] Port 8090 closed.${NC}"
 
-# 6. Delete directory files
-echo -e "\n${BOLD_RED}[6/7] Removing installation directories (/opt/eclipse-panel, /opt/eclipse-node)...${NC}"
-
-# Release any open file locks from active processes inside /opt/eclipse-panel or /opt/eclipse-node
-if command -v fuser >/dev/null 2>&1; then
-    fuser -k -9 -m /opt/eclipse-panel 2>/dev/null || true
-    fuser -k -9 -m /opt/eclipse-node 2>/dev/null || true
-fi
-
-# Switch working directory out of /opt/eclipse-panel to /root before deleting
-cd /root || cd /tmp || cd /
-
-# Wipe all files and folder trees completely
-rm -rf /opt/eclipse-panel
-rm -rf /opt/eclipse-node
-
-# Ensure directory is totally removed
-if [ -d "/opt/eclipse-panel" ]; then
-    find /opt/eclipse-panel -delete 2>/dev/null || rm -rf /opt/eclipse-panel 2>/dev/null || true
-fi
-if [ -d "/opt/eclipse-node" ]; then
-    find /opt/eclipse-node -delete 2>/dev/null || rm -rf /opt/eclipse-node 2>/dev/null || true
-fi
+# 7. Delete directory files
+echo -e "\n${BOLD_RED}[6/6] Removing installation directories (/opt/eclipse-panel, /opt/eclipse-node)...${NC}"
+cd /root 2>/dev/null || cd /tmp 2>/dev/null || cd /
+rm -rf /opt/eclipse-panel 2>/dev/null || true
+rm -rf /opt/eclipse-node 2>/dev/null || true
 
 echo -e "${GREEN}[✔] File systems wiped successfully.${NC}"
-
-# 7. Clean caches
-echo -e "\n${BOLD_RED}[7/7] Cleaning temporary caches...${NC}"
-npm cache clean --force 2>/dev/null || true
 
 echo ""
 echo -e "${BOLD_GREEN}================================================================${NC}"
 echo -e "${BOLD_CYAN}  🌑 ECLIPSE INFRASTRUCTURE COMPLETELY UNINSTALLED! 🌑${NC}"
 echo -e "${BOLD_GREEN}================================================================${NC}"
-echo -e "  Your server is now clean and ready for a fresh installation."
+echo -e "  Your server is now completely clean and ready for fresh install."
 echo -e "${BOLD_GREEN}================================================================${NC}"
 echo ""
