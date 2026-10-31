@@ -135,9 +135,15 @@ fi
 echo -e "${GREEN}[✔] Node modules and execution binaries ready.${NC}"
 
 # 4. Restart Background Daemon (Kill old bot & free port 8090 first)
-echo -e "\n${BOLD_CYAN}[4/5] Restarting ${SERVICE_NAME} daemon...${NC}"
+echo -e "\n${BOLD_CYAN}[4/5] Updating proxy configurations & restarting ${SERVICE_NAME} daemon...${NC}"
 pkill -9 -f "src/index.js" 2>/dev/null || true
 fuser -k -9 8090/tcp 2>/dev/null || true
+
+# Lift upload limits in Nginx
+if [ -f "/etc/nginx/sites-available/eclipse-panel" ]; then
+    sed -i 's/client_max_body_size .*/client_max_body_size 0;/g' /etc/nginx/sites-available/eclipse-panel 2>/dev/null || true
+    nginx -t 2>/dev/null && systemctl reload nginx 2>/dev/null || true
+fi
 
 # Check if systemd service is installed
 if [ -f "/etc/systemd/system/${SERVICE_NAME}.service" ]; then

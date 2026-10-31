@@ -373,14 +373,14 @@ if [[ "$OS" =~ ^(ubuntu|debian)$ ]]; then
     export DEBIAN_FRONTEND=noninteractive
     apt-get update -y
     apt-get install -y curl wget git build-essential ca-certificates gnupg ufw lsof nginx certbot python3-certbot-nginx \
-                       mariadb-server mariadb-client libmariadb-dev libmariadb-dev-compat dnsutils
+                       mariadb-server mariadb-client libmariadb-dev libmariadb-dev-compat dnsutils unzip tar gzip bzip2 xz-utils p7zip-full
 elif [[ "$OS" =~ ^(centos|rhel|almalinux|rocky|fedora)$ ]]; then
     dnf -y install epel-release || yum -y install epel-release || true
     dnf -y update || yum -y update
     dnf -y install curl wget git gcc-c++ make ca-certificates gnupg2 tar firewalld lsof nginx certbot python3-certbot-nginx \
-                   mariadb-server mariadb mariadb-devel bind-utils || \
+                   mariadb-server mariadb mariadb-devel bind-utils unzip bzip2 xz p7zip || \
     yum -y install curl wget git gcc-c++ make ca-certificates gnupg2 tar firewalld lsof nginx certbot \
-                   mariadb-server mariadb mariadb-devel bind-utils
+                   mariadb-server mariadb mariadb-devel bind-utils unzip bzip2 xz p7zip
 fi
 print_success "Base system utilities and Nginx installed."
 
@@ -623,7 +623,8 @@ server {
     listen [::]:80 default_server;
     server_name ${SERVER_NAMES};
 
-    client_max_body_size 500M;
+    # Allow file uploads up to container disk quota (0 = unlimited in Nginx)
+    client_max_body_size 0;
 
     # Static Assets & Backend API on Port 8090
     location / {

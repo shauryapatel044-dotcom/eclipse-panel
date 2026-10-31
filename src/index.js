@@ -31,8 +31,8 @@ app.use(cors({
   origin: config.corsOrigin,
   credentials: true,
 }));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '50gb' }));
+app.use(express.urlencoded({ extended: true, limit: '50gb' }));
 
 // Health & Status
 app.get('/api/health', (req, res) => {

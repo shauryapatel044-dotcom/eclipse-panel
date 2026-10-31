@@ -881,7 +881,7 @@
 
               <!-- Full Width Files Table -->
               <div style="background: #141224; border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; overflow: hidden;">
-                <div style="display: grid; grid-template-columns: 44px 1fr 140px 180px 110px; align-items: center; padding: 12px 18px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); font-size: 11px; font-weight: 700; color: #7E8497; text-transform: uppercase; letter-spacing: 0.05em; font-family: var(--font-mono);">
+                <div style="display: grid; grid-template-columns: 44px 1fr 140px 180px 60px; align-items: center; padding: 12px 18px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); font-size: 11px; font-weight: 700; color: #7E8497; text-transform: uppercase; letter-spacing: 0.05em; font-family: var(--font-mono);">
                   <span></span>
                   <span>Name</span>
                   <span>Size</span>
@@ -2439,7 +2439,7 @@
           parentParts.pop();
           const parentPath = parentParts.join('/');
           rowsHtml += `
-            <div style="display: grid; grid-template-columns: 44px 1fr 140px 180px 110px; align-items: center; padding: 10px 18px; border-bottom: 1px solid rgba(255,255,255,0.03); background: rgba(255,255,255,0.01); cursor: pointer; transition: background 0.15s;" onmouseover="this.style.background='rgba(122,152,255,0.06)'" onmouseout="this.style.background='rgba(255,255,255,0.01)'" onclick="navigateDir('${escapeHtml(parentPath)}')">
+            <div style="display: grid; grid-template-columns: 44px 1fr 140px 180px 60px; align-items: center; padding: 10px 18px; border-bottom: 1px solid rgba(255,255,255,0.03); background: rgba(255,255,255,0.01); cursor: pointer; transition: background 0.15s;" onmouseover="this.style.background='rgba(122,152,255,0.06)'" onmouseout="this.style.background='rgba(255,255,255,0.01)'" onclick="navigateDir('${escapeHtml(parentPath)}')">
               <span></span>
               <div style="display: flex; align-items: center; gap: 10px; font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: #06B6D4;">
                 <i class="bi bi-arrow-90deg-up" style="font-size: 15px;"></i>
@@ -2474,7 +2474,7 @@
             : `openFile('${escapeHtml(itemPath)}')`;
 
           rowsHtml += `
-            <div style="display: grid; grid-template-columns: 44px 1fr 140px 180px 110px; align-items: center; padding: 10px 18px; border-bottom: 1px solid rgba(255,255,255,0.03); transition: background 0.15s; font-family: var(--font-mono);" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
+            <div style="display: grid; grid-template-columns: 44px 1fr 140px 180px 60px; align-items: center; padding: 10px 18px; border-bottom: 1px solid rgba(255,255,255,0.03); transition: background 0.15s; font-family: var(--font-mono);" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'" oncontextmenu="toggleFileContextMenu(event, '${escapeHtml(itemPath)}', ${isDir})">
               <div style="display: flex; align-items: center;">
                 <input type="checkbox" class="file-row-checkbox" data-path="${escapeHtml(itemPath)}" onchange="toggleSelectFile('${escapeHtml(itemPath)}', this.checked)">
               </div>
@@ -2486,17 +2486,9 @@
               </div>
               <span style="color: #94A3B8; font-size: 12px;">${sizeText}</span>
               <span style="color: #64748B; font-size: 12px;">${modText}</span>
-              <div style="display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
-                ${!isDir ? `
-                  <a href="${API_BASE}/files/${currentAppId}/download?file=${encodeURIComponent(itemPath)}" target="_blank" class="quick-cmd-btn" title="Download File" style="padding: 4px 8px; font-size: 11px; text-decoration: none;">
-                    <i class="bi bi-download"></i>
-                  </a>
-                ` : ''}
-                <button type="button" class="quick-cmd-btn" onclick="renameFilePrompt('${escapeHtml(itemPath)}')" title="Rename" style="padding: 4px 8px; font-size: 11px;">
-                  <i class="bi bi-pencil"></i>
-                </button>
-                <button type="button" class="quick-cmd-btn" onclick="deleteFilePrompt('${escapeHtml(itemPath)}')" title="Delete" style="padding: 4px 8px; font-size: 11px; color: #F87171;">
-                  <i class="bi bi-trash3"></i>
+              <div style="display: flex; align-items: center; justify-content: flex-end;">
+                <button type="button" class="file-three-dots-btn" onclick="toggleFileContextMenu(event, '${escapeHtml(itemPath)}', ${isDir})" title="File actions">
+                  <i class="bi bi-three-dots"></i>
                 </button>
               </div>
             </div>
@@ -2675,6 +2667,9 @@
         const targetPath = currentSubpath ? `${currentSubpath}/${file.name}` : file.name;
         const reader = new FileReader();
         const isBinary = !file.name.match(/\.(js|ts|py|txt|json|env|md|html|css|yaml|yml|sh|bash|xml|properties|ini)$/i);
+        const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
+
+        notify(`Uploading "${file.name}" (${sizeMb} MB)...`, 'info');
 
         await new Promise((resolve) => {
           reader.onload = async function() {
@@ -2691,13 +2686,13 @@
                 body: JSON.stringify({ path: targetPath, content, isBase64 })
               });
               if (res.ok) {
-                notify(`Uploaded "${file.name}"`, 'success');
+                notify(`Uploaded "${file.name}" (${sizeMb} MB) successfully!`, 'success');
               } else {
-                const d = await res.json();
-                notify(`Failed uploading "${file.name}": ${d.error || 'Error'}`, 'error');
+                const d = await res.json().catch(() => ({}));
+                notify(`Failed uploading "${file.name}": ${d.error || res.statusText || 'Error'}`, 'error');
               }
             } catch (err) {
-              notify(err.message, 'error');
+              notify(`Upload failed: ${err.message}`, 'error');
             }
             resolve();
           };
@@ -3852,8 +3847,21 @@
       if (!menu) return;
 
       activeCtxItem = { filePath, isDir };
-      const ext = filePath.split('.').pop().toLowerCase();
-      const isArchive = ['zip', 'tar', 'gz', 'jar', 'tgz'].includes(ext);
+      const lower = filePath.toLowerCase();
+      const isArchive = lower.endsWith('.zip') || 
+                        lower.endsWith('.tar') || 
+                        lower.endsWith('.tar.gz') || 
+                        lower.endsWith('.tgz') || 
+                        lower.endsWith('.tar.bz2') || 
+                        lower.endsWith('.tbz2') || 
+                        lower.endsWith('.bz2') || 
+                        lower.endsWith('.gz') || 
+                        lower.endsWith('.tar.xz') || 
+                        lower.endsWith('.txz') || 
+                        lower.endsWith('.xz') || 
+                        lower.endsWith('.jar') || 
+                        lower.endsWith('.rar') || 
+                        lower.endsWith('.7z');
 
       menu.innerHTML = `
         <button type="button" onclick="openRenameModal('${escapeHtml(filePath)}')">
@@ -4048,11 +4056,23 @@
     async function unarchiveFile(filePath) {
       const menu = document.getElementById('file-context-menu');
       if (menu) menu.style.display = 'none';
-      notify('Extracting archive...', 'info');
-      setTimeout(() => {
-        notify('Archive extracted successfully', 'success');
-        loadFiles(currentAppId, currentSubpath);
-      }, 800);
+      notify(`Extracting "${filePath}" archive...`, 'info');
+      try {
+        const res = await fetch(`${API_BASE}/files/${currentAppId}/unarchive`, {
+          method: 'POST',
+          headers: getHeaders(),
+          body: JSON.stringify({ path: filePath })
+        });
+        const d = await res.json().catch(() => ({}));
+        if (res.ok) {
+          notify(`Archive extracted successfully!`, 'success');
+          loadFiles(currentAppId, currentSubpath);
+        } else {
+          notify(d.error || 'Failed to extract archive', 'error');
+        }
+      } catch (err) {
+        notify('Extraction failed: ' + err.message, 'error');
+      }
     }
 
   </script>

@@ -186,6 +186,36 @@ export class FileController {
         fs.mkdirSync(parentDir, { recursive: true });
       }
 
+      // Check server disk quota limit (Allow uploading up to the server container disk quota)
+      const diskLimitMB = app.disk_limit || 5120;
+      const diskLimitBytes = diskLimitMB * 1024 * 1024;
+      const incomingBytes = isBase64 ? Buffer.byteLength(content, 'base64') : Buffer.byteLength(content, 'utf8');
+
+      function getFolderSize(dir) {
+        let size = 0;
+        try {
+          const files = fs.readdirSync(dir);
+          for (const file of files) {
+            const p = path.join(dir, file);
+            try {
+              const stat = fs.statSync(p);
+              if (stat.isDirectory()) size += getFolderSize(p);
+              else size += stat.size;
+            } catch (e) {}
+          }
+        } catch (e) {}
+        return size;
+      }
+
+      const currentUsage = getFolderSize(appDir);
+      if (currentUsage + incomingBytes > diskLimitBytes) {
+        const usedMB = (currentUsage / (1024 * 1024)).toFixed(1);
+        const incomingMB = (incomingBytes / (1024 * 1024)).toFixed(1);
+        return res.status(400).json({
+          error: `Disk quota exceeded: Container limit is ${diskLimitMB}MB. Current usage is ${usedMB}MB and this file is ${incomingMB}MB.`
+        });
+      }
+
       if (isBase64) {
         const buffer = Buffer.from(content, 'base64');
         fs.writeFileSync(fullPath, buffer);
@@ -196,6 +226,63 @@ export class FileController {
       return res.json({ message: `Uploaded "${filePath}" successfully` });
     } catch (err) {
       return res.status(500).json({ error: err.message });
+    }
+  }
+
+  static async unarchiveFile(req, res) {
+    try {
+      const { id } = req.params;
+      const filePath = req.body.path || req.body.filePath;
+      if (!filePath) return res.status(400).json({ error: 'Parameter "path" is required' });
+
+      const stmt = db.prepare('SELECT * FROM apps WHERE id = ?');
+      const app = stmt.get(id);
+      if (!app) return res.status(404).json({ error: 'App not found' });
+
+      if (!checkAppAccess(id, req.user, 'files')) {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
+
+      const appDir = supervisor.getAppDir(id);
+      const fullPath = path.join(appDir, filePath);
+      if (!isSafePath(appDir, fullPath) || !fs.existsSync(fullPath)) {
+        return res.status(404).json({ error: 'Archive file not found' });
+      }
+
+      const targetDir = path.dirname(fullPath);
+      const lower = fullPath.toLowerCase();
+
+      const { execSync } = await import('child_process');
+      const isWin = process.platform === 'win32';
+      const pyBin = process.env.PYTHON_BIN || (isWin ? 'python' : 'python3');
+
+      if (lower.endsWith('.zip') || lower.endsWith('.jar')) {
+        try {
+          execSync(`"${pyBin}" -m zipfile -e "${fullPath}" "${targetDir}"`, { timeout: 180000 });
+        } catch (e) {
+          if (!isWin) {
+            execSync(`unzip -o "${fullPath}" -d "${targetDir}"`, { timeout: 180000 });
+          } else {
+            throw e;
+          }
+        }
+      } else if (lower.endsWith('.tar.gz') || lower.endsWith('.tgz') || lower.endsWith('.tar') || lower.endsWith('.gz')) {
+        execSync(`tar -xf "${fullPath}" -C "${targetDir}"`, { timeout: 180000 });
+      } else if (lower.endsWith('.tar.bz2') || lower.endsWith('.tbz2') || lower.endsWith('.bz2')) {
+        execSync(`tar -xf "${fullPath}" -C "${targetDir}"`, { timeout: 180000 });
+      } else if (lower.endsWith('.tar.xz') || lower.endsWith('.txz') || lower.endsWith('.xz')) {
+        execSync(`tar -xf "${fullPath}" -C "${targetDir}"`, { timeout: 180000 });
+      } else if (lower.endsWith('.rar')) {
+        execSync(`unrar x -o+ "${fullPath}" "${targetDir}"`, { timeout: 180000 });
+      } else if (lower.endsWith('.7z')) {
+        execSync(`7z x -y "${fullPath}" -o"${targetDir}"`, { timeout: 180000 });
+      } else {
+        return res.status(400).json({ error: 'Unsupported archive format. Supported formats: .zip, .tar, .tar.gz, .tgz, .bz2, .xz, .jar, .rar, .7z' });
+      }
+
+      return res.json({ message: `Archive "${filePath}" extracted successfully` });
+    } catch (err) {
+      return res.status(500).json({ error: 'Failed to extract archive: ' + err.message });
     }
   }
 
