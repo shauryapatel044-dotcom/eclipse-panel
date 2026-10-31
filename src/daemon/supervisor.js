@@ -1,12 +1,45 @@
 import path from 'path';
 import fs from 'fs';
-import { spawn } from 'child_process';
+import { spawn, exec, execSync } from 'child_process';
 import { config } from '../config.js';
 import { db } from '../database/index.js';
 import { logStreamer } from './logStreamer.js';
 import { NodeRunner } from './nodeRunner.js';
 import { PythonRunner } from './pythonRunner.js';
 import { estimateProcessMetrics } from './metrics.js';
+
+function killProcessTree(pid, signal = 'SIGTERM') {
+  if (!pid) return;
+  const isWin = process.platform === 'win32';
+  if (isWin) {
+    try { execSync(`taskkill /pid ${pid} /T /F 2>nul`); } catch (e) {}
+  } else {
+    try {
+      execSync(`pkill -${signal.replace('SIG', '')} -P ${pid} 2>/dev/null || true`);
+      process.kill(pid, signal);
+    } catch (e) {}
+  }
+}
+
+function freeAppPort(port) {
+  if (!port) return;
+  const isWin = process.platform === 'win32';
+  if (isWin) {
+    try {
+      const out = execSync(`netstat -ano | findstr :${port}`).toString();
+      const lines = out.split('\n');
+      for (const line of lines) {
+        const parts = line.trim().split(/\s+/);
+        const pid = parts[parts.length - 1];
+        if (pid && pid !== '0') execSync(`taskkill /pid ${pid} /F 2>nul`);
+      }
+    } catch (e) {}
+  } else {
+    try {
+      execSync(`fuser -k -9 ${port}/tcp 2>/dev/null || true`);
+    } catch (e) {}
+  }
+}
 
 class Supervisor {
   constructor() {
@@ -127,6 +160,11 @@ class Supervisor {
     this.updateAppStatus(appId, 'starting');
     this.crashCounters.delete(appId);
 
+    // Ensure port is completely freed before spawning
+    if (app.port) {
+      freeAppPort(app.port);
+    }
+
     let child = null;
     try {
       if (app.startup_cmd && app.startup_cmd.trim()) {
@@ -221,15 +259,17 @@ class Supervisor {
 
   async stopApp(appId) {
     const record = this.managedProcesses.get(appId);
+    let appRecord = null;
+    try { appRecord = db.prepare('SELECT port FROM apps WHERE id = ?').get(appId); } catch (e) {}
+
     if (!record || !record.child) {
+      if (appRecord && appRecord.port) freeAppPort(appRecord.port);
       this.updateAppStatus(appId, 'stopped');
       return { success: true, message: 'Application was not running' };
     }
 
     record.manualStop = true;
     const { child } = record;
-    const isWin = process.platform === 'win32';
-
     logStreamer.append(appId, 'system', '[Supervisor] Stopping process gracefully...');
 
     return new Promise((resolve) => {
@@ -239,73 +279,43 @@ class Supervisor {
         if (resolved) return;
         resolved = true;
         this.managedProcesses.delete(appId);
+        if (appRecord && appRecord.port) freeAppPort(appRecord.port);
         this.updateAppStatus(appId, 'stopped');
         this.crashCounters.delete(appId);
         resolve({ success: true, message: 'Application stopped' });
       };
 
-      const forceKillTimer = setTimeout(async () => {
+      const forceKillTimer = setTimeout(() => {
         if (!resolved && child.pid) {
           logStreamer.append(appId, 'system', '[Supervisor] Process did not terminate in time. Force killing...');
-          if (isWin) {
-            try {
-              const { execSync } = await import('child_process');
-              execSync(`taskkill /pid ${child.pid} /T /F`);
-            } catch (e) {}
-          } else {
-            try { process.kill(child.pid, 'SIGKILL'); } catch (e) {}
-          }
+          killProcessTree(child.pid, 'SIGKILL');
+          if (appRecord && appRecord.port) freeAppPort(appRecord.port);
         }
         finish();
-      }, 3000);
+      }, 2000);
 
       child.once('close', () => {
         clearTimeout(forceKillTimer);
         finish();
       });
 
-      if (isWin) {
-        try {
-          import('child_process').then(({ exec }) => {
-            exec(`taskkill /pid ${child.pid} /T /F`, () => {
-              clearTimeout(forceKillTimer);
-              finish();
-            });
-          });
-        } catch (e) {
-          finish();
-        }
-      } else {
-        try {
-          child.kill('SIGTERM');
-        } catch (e) {
-          finish();
-        }
-      }
+      killProcessTree(child.pid, 'SIGTERM');
     });
   }
 
   async killApp(appId) {
     const record = this.managedProcesses.get(appId);
-    if (!record || !record.child) {
-      this.updateAppStatus(appId, 'stopped');
-      return { success: true, message: 'Application was not running' };
+    let appRecord = null;
+    try { appRecord = db.prepare('SELECT port FROM apps WHERE id = ?').get(appId); } catch (e) {}
+
+    if (record && record.child && record.child.pid) {
+      record.manualStop = true;
+      logStreamer.append(appId, 'system', '[Supervisor] Force-killing process immediately (SIGKILL)...');
+      killProcessTree(record.child.pid, 'SIGKILL');
     }
 
-    record.manualStop = true;
-    const { child } = record;
-    logStreamer.append(appId, 'system', '[Supervisor] Force-killing process immediately (SIGKILL / taskkill)...');
-
-    const isWin = process.platform === 'win32';
-    if (isWin && child.pid) {
-      try {
-        const { execSync } = await import('child_process');
-        execSync(`taskkill /pid ${child.pid} /T /F`);
-      } catch (e) {}
-    } else if (child.pid) {
-      try {
-        process.kill(child.pid, 'SIGKILL');
-      } catch (e) {}
+    if (appRecord && appRecord.port) {
+      freeAppPort(appRecord.port);
     }
 
     this.managedProcesses.delete(appId);
@@ -317,7 +327,12 @@ class Supervisor {
   async restartApp(appId) {
     logStreamer.append(appId, 'system', '[Supervisor] Restarting application...');
     await this.stopApp(appId);
-    await new Promise((resolve) => setTimeout(resolve, 600));
+    let appRecord = null;
+    try { appRecord = db.prepare('SELECT port FROM apps WHERE id = ?').get(appId); } catch (e) {}
+    if (appRecord && appRecord.port) {
+      freeAppPort(appRecord.port);
+    }
+    await new Promise((resolve) => setTimeout(resolve, 800));
     return await this.startApp(appId);
   }
 
