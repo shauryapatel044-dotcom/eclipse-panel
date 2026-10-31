@@ -48,6 +48,9 @@ if [ "$FORCE" = false ]; then
     fi
 fi
 
+# Switch working directory out of /opt/eclipse-panel into /root immediately
+cd /root || cd /tmp || cd /
+
 # 1. Kill background processes and stop PM2
 echo -e "\n${BOLD_RED}[1/7] Stopping and terminating all running daemons and containers...${NC}"
 if command -v pm2 >/dev/null 2>&1; then
@@ -117,9 +120,29 @@ echo -e "${GREEN}[✔] Port 8090 closed.${NC}"
 
 # 6. Delete directory files
 echo -e "\n${BOLD_RED}[6/7] Removing installation directories (/opt/eclipse-panel, /opt/eclipse-node)...${NC}"
+
+# Release any open file locks from active processes inside /opt/eclipse-panel or /opt/eclipse-node
+if command -v fuser >/dev/null 2>&1; then
+    fuser -k -9 -m /opt/eclipse-panel 2>/dev/null || true
+    fuser -k -9 -m /opt/eclipse-node 2>/dev/null || true
+fi
+
+# Switch working directory out of /opt/eclipse-panel to /root before deleting
+cd /root || cd /tmp || cd /
+
+# Wipe all files and folder trees completely
 rm -rf /opt/eclipse-panel
 rm -rf /opt/eclipse-node
-echo -e "${GREEN}[✔] File systems wiped.${NC}"
+
+# Ensure directory is totally removed
+if [ -d "/opt/eclipse-panel" ]; then
+    find /opt/eclipse-panel -delete 2>/dev/null || rm -rf /opt/eclipse-panel 2>/dev/null || true
+fi
+if [ -d "/opt/eclipse-node" ]; then
+    find /opt/eclipse-node -delete 2>/dev/null || rm -rf /opt/eclipse-node 2>/dev/null || true
+fi
+
+echo -e "${GREEN}[✔] File systems wiped successfully.${NC}"
 
 # 7. Clean caches
 echo -e "\n${BOLD_RED}[7/7] Cleaning temporary caches...${NC}"
