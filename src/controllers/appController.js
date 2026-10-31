@@ -36,6 +36,7 @@ export class AppController {
       }
 
       // Augment each app with live runtime metrics
+      const baseDomain = config.baseDomain || process.env.BASE_DOMAIN || '';
       const enriched = apps.map((app) => {
         const isRunning = supervisor.isRunning(app.id);
         const metrics = supervisor.getMetrics(app.id);
@@ -44,8 +45,18 @@ export class AppController {
           parsedEnv = JSON.parse(app.env_vars || '{}');
         } catch (e) {}
 
+        let domain = app.domain;
+        if ((!domain || domain.trim() === '') && baseDomain) {
+          const slug = app.name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || app.id;
+          domain = `${slug}.${baseDomain}`;
+          try {
+            db.prepare('UPDATE apps SET domain = ? WHERE id = ?').run(domain, app.id);
+          } catch (e) {}
+        }
+
         return {
           ...app,
+          domain,
           status: isRunning ? 'running' : (app.status === 'running' ? 'stopped' : app.status),
           metrics,
           env_vars: parsedEnv,
@@ -71,6 +82,15 @@ export class AppController {
 
       if (!app) {
         return res.status(404).json({ error: 'Application not found' });
+      }
+
+      const baseDomain = config.baseDomain || process.env.BASE_DOMAIN || '';
+      if ((!app.domain || app.domain.trim() === '') && baseDomain) {
+        const slug = app.name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || app.id;
+        app.domain = `${slug}.${baseDomain}`;
+        try {
+          db.prepare('UPDATE apps SET domain = ? WHERE id = ?').run(app.domain, app.id);
+        } catch (e) {}
       }
 
       // Check ownership or collaborator access

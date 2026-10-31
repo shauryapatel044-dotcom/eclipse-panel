@@ -1315,7 +1315,9 @@
           const cpuStr = (app.cpu_limit || 100) + '%';
           const diskStr = (app.disk_limit || 5120) + ' MB';
 
-          const hostIp = (app.primary_ip && app.primary_ip !== '0.0.0.0')
+          const hostIp = (app.domain && app.domain.trim() !== '')
+            ? app.domain.trim()
+            : (app.primary_ip && app.primary_ip !== '0.0.0.0')
             ? app.primary_ip
             : (window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname);
           const fullAddress = `${hostIp}:${app.port || '3100'}`;

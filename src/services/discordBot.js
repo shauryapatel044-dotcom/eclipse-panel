@@ -31,6 +31,14 @@ class DiscordBotService {
     this.initialized = false;
   }
 
+  getBaseDomain() {
+    try {
+      const row = db.prepare("SELECT value FROM panel_settings WHERE key = 'base_domain'").get();
+      if (row && row.value && row.value.trim().length > 0) return row.value.trim();
+    } catch (e) {}
+    return config.baseDomain || process.env.BASE_DOMAIN || '';
+  }
+
   // Load configuration from database panel_settings
   loadSettings() {
     try {
@@ -343,11 +351,18 @@ class DiscordBotService {
       });
     }
 
+    const baseDomain = this.getBaseDomain();
     const hostIp = config.vpsPublicIp || '20.219.198.128';
     const lines = apps.map(app => {
       const isRunning = app.status === 'running' || app.status === 'online';
       const statusEmoji = isRunning ? '🟢' : (app.status === 'starting' ? '🔄' : '⏹️');
-      const addr = app.domain ? `${app.domain}:${app.port}` : `${hostIp}:${app.port}`;
+      let addr = `${hostIp}:${app.port}`;
+      if (app.domain && app.domain.trim().length > 0) {
+        addr = `${app.domain}:${app.port}`;
+      } else if (baseDomain) {
+        const slug = app.name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || app.id;
+        addr = `${slug}.${baseDomain}:${app.port}`;
+      }
       return `${statusEmoji} **${app.name}** (\`${app.id}\`) — \`${addr}\` | ${app.type === 'python' ? '🐍 Python' : '⚡ Node.js'} | ${app.memory_limit}MB RAM`;
     });
 
@@ -461,10 +476,14 @@ class DiscordBotService {
       fs.writeFileSync(path.join(appDir, 'package.json'), JSON.stringify({ name: appId, version: '1.0.0', type: 'module', main: defaultEntry }, null, 2));
     }
 
+    const baseDomain = this.getBaseDomain();
+    const slug = name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || appId;
+    const serverDomain = baseDomain ? `${slug}.${baseDomain}` : '';
+
     db.prepare(`
-      INSERT INTO apps (id, name, type, user_id, entrypoint, port, memory_limit, cpu_limit, disk_limit, status, node_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 5120, 'stopped', 'node_local')
-    `).run(appId, name, type, owner.id, defaultEntry, port, ram, cpu);
+      INSERT INTO apps (id, name, type, user_id, entrypoint, port, memory_limit, cpu_limit, disk_limit, domain, status, node_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 5120, ?, 'stopped', 'node_local')
+    `).run(appId, name, type, owner.id, defaultEntry, port, ram, cpu, serverDomain);
 
     const newApp = db.prepare('SELECT * FROM apps WHERE id = ?').get(appId);
     let desc = `✅ **Server Created Successfully!**\nAllocated to: **${owner.email}** (@${owner.username})\n\nUse the buttons below to power on your container:`;
@@ -610,8 +629,19 @@ class DiscordBotService {
       color = 0xEF4444; // Red
     }
 
+    const baseDomain = this.getBaseDomain();
     const hostIp = (app.primary_ip && app.primary_ip !== '0.0.0.0') ? app.primary_ip : (config.vpsPublicIp || '20.219.198.128');
-    const serverAddress = app.domain ? `${app.domain}:${app.port}` : `${hostIp}:${app.port}`;
+    let serverAddress = `${hostIp}:${app.port}`;
+    if (app.domain && app.domain.trim().length > 0) {
+      serverAddress = `${app.domain}:${app.port}`;
+    } else if (baseDomain) {
+      const slug = app.name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || app.id;
+      const sub = `${slug}.${baseDomain}`;
+      serverAddress = `${sub}:${app.port}`;
+      try {
+        db.prepare('UPDATE apps SET domain = ? WHERE id = ?').run(sub, app.id);
+      } catch (e) {}
+    }
     const runtimeLabel = app.type === 'python' ? '🐍 Python 3' : '⚡ Node.js';
 
     const owner = db.prepare('SELECT username, email FROM users WHERE id = ?').get(app.user_id);

@@ -159,6 +159,9 @@ export function initDatabase() {
 
   // Seed default LocalNode if not existing
   try {
+    if (config.baseDomain) {
+      db.prepare("INSERT INTO panel_settings (key, value) VALUES ('base_domain', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").run(config.baseDomain);
+    }
     const checkNode = db.prepare('SELECT id FROM nodes WHERE id = ?');
     const localNode = checkNode.get('node_local');
 
