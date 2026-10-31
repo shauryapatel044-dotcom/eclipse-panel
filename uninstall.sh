@@ -34,14 +34,18 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 FORCE=false
-if [ "$1" == "--force" ] || [ "$1" == "-f" ] || [ "$1" == "-y" ]; then
+if [ "$1" == "--force" ] || [ "$1" == "-f" ] || [ "$1" == "-y" ] || [ "$FORCE" == "1" ] || [ "$FORCE" == "true" ]; then
     FORCE=true
 fi
 
 if [ "$FORCE" = false ]; then
     echo -e "${YELLOW}WARNING: This will completely wipe Eclipse Panel, Eclipse Node,${NC}"
     echo -e "${YELLOW}all hosted applications, user databases, PM2 tasks, and configs.${NC}"
-    read -p "Are you sure you want to proceed with full uninstallation? (y/N): " CONFIRM
+    if [ -e /dev/tty ]; then
+        read -p "Are you sure you want to proceed with full uninstallation? (y/N): " CONFIRM </dev/tty
+    else
+        read -p "Are you sure you want to proceed with full uninstallation? (y/N): " CONFIRM
+    fi
     if [[ ! "$CONFIRM" =~ ^[yY]$ ]]; then
         echo -e "${CYAN}Uninstall cancelled.${NC}"
         exit 0
