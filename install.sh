@@ -100,8 +100,8 @@ echo -e "  ${WHITE}[2] Eclipse Node${NC}   - Remote Daemon Runner for Distribute
 echo -e "${CYAN}================================================================${NC}"
 
 DEPLOY_MODE="panel"
-if [ -t 0 ]; then
-    read -r -p "Select option [1 for Panel, 2 for Node] (Default: 1): " INPUT_DEPLOY_MODE
+if [ -e /dev/tty ]; then
+    read -r -p "Select option [1 for Panel, 2 for Node] (Default: 1): " INPUT_DEPLOY_MODE </dev/tty
     if [ "$INPUT_DEPLOY_MODE" == "2" ] || [ "$INPUT_DEPLOY_MODE" == "node" ]; then
         DEPLOY_MODE="node"
     fi
@@ -120,8 +120,8 @@ if [ "$DEPLOY_MODE" == "node" ]; then
     echo -e "${CYAN}================================================================${NC}"
 
     NODE_SUBDOMAIN=""
-    if [ -t 0 ]; then
-        read -r -p "Enter Server Subdomain for this Node [Optional, press Enter to use VPS IP]: " INPUT_NODE_DOMAIN
+    if [ -e /dev/tty ]; then
+        read -r -p "Enter Server Subdomain for this Node [Optional, press Enter to use VPS IP]: " INPUT_NODE_DOMAIN </dev/tty
         NODE_SUBDOMAIN=$(echo "$INPUT_NODE_DOMAIN" | sed -e 's|^https\?://||' -e 's|/.*$||' -e 's|:.*$||' | tr -d '[:space:]')
     fi
 
@@ -135,8 +135,8 @@ if [ "$DEPLOY_MODE" == "node" ]; then
     echo -e "${CYAN}================================================================${NC}"
 
     CLUSTER_SECRET=""
-    if [ -t 0 ]; then
-        read -r -p "Enter Cluster Secret Token [Press Enter to auto-generate]: " INPUT_SECRET
+    if [ -e /dev/tty ]; then
+        read -r -p "Enter Cluster Secret Token [Press Enter to auto-generate]: " INPUT_SECRET </dev/tty
         if [ -n "$INPUT_SECRET" ]; then
             CLUSTER_SECRET=$(echo "$INPUT_SECRET" | tr -d '[:space:]')
         fi
@@ -302,8 +302,8 @@ echo -e "  • Simply point a Wildcard DNS A-record (${CYAN}*.yourdomain.com${NC
 echo -e "${CYAN}================================================================${NC}"
 
 BASE_DOMAIN=""
-if [ -t 0 ]; then
-    read -r -p "Enter Base Domain for hosted servers [Optional, press Enter to use VPS IP]: " INPUT_BASE_DOMAIN
+if [ -e /dev/tty ]; then
+    read -r -p "Enter Base Domain for hosted servers [Optional, press Enter to use VPS IP]: " INPUT_BASE_DOMAIN </dev/tty
     BASE_DOMAIN=$(echo "$INPUT_BASE_DOMAIN" | sed -e 's|^https\?://||' -e 's|/.*$||' -e 's|:.*$||' | tr -d '[:space:]')
 
     if [ -n "$BASE_DOMAIN" ]; then
@@ -333,13 +333,17 @@ echo -e "${CYAN}================================================================
 echo -e "${BOLD_CYAN}  👤 SUPERADMINISTRATOR ACCOUNT SETUP 👤${NC}"
 echo -e "${CYAN}================================================================${NC}"
 ADMIN_USER="admin"
+ADMIN_EMAIL="admin@vexezor.bond"
 ADMIN_PASS=""
 
-if [ -t 0 ]; then
-    read -r -p "Enter Administrator Username (Default: admin): " INPUT_USER
+if [ -e /dev/tty ]; then
+    read -r -p "Enter Administrator Username (Default: admin): " INPUT_USER </dev/tty
     if [ -n "$INPUT_USER" ]; then ADMIN_USER=$(echo "$INPUT_USER" | tr -d '[:space:]'); fi
 
-    read -r -s -p "Enter Administrator Password (Default: auto-generate): " INPUT_PASS
+    read -r -p "Enter Administrator Email (Default: admin@vexezor.bond): " INPUT_EMAIL </dev/tty
+    if [ -n "$INPUT_EMAIL" ]; then ADMIN_EMAIL=$(echo "$INPUT_EMAIL" | tr -d '[:space:]'); fi
+
+    read -r -s -p "Enter Administrator Password (Default: auto-generate): " INPUT_PASS </dev/tty
     echo ""
     if [ -n "$INPUT_PASS" ]; then
         ADMIN_PASS="$INPUT_PASS"
@@ -525,7 +529,7 @@ print_success "Dependencies installed."
 # 11. Provision Administrator Account
 print_step "Provisioning Administrator account (${ADMIN_USER})..."
 NODE_EXEC=$(command -v node || which node)
-$NODE_EXEC scripts/create-admin.js --username "$ADMIN_USER" --email "${ADMIN_USER}@eclipse.local" --password "$ADMIN_PASS" || true
+$NODE_EXEC scripts/create-admin.js --username "$ADMIN_USER" --email "${ADMIN_EMAIL}" --password "$ADMIN_PASS" || true
 print_success "SuperAdmin credentials initialized."
 
 # 12. Setup Systemd Background Service
