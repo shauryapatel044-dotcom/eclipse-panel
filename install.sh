@@ -421,6 +421,12 @@ server {
 }
 EOF
 
+# Disable conflicting default server blocks on RHEL/CentOS
+if [ -f /etc/nginx/nginx.conf ]; then
+    sed -i 's/listen       80 default_server;/listen       80;/g' /etc/nginx/nginx.conf 2>/dev/null || true
+    sed -i 's/listen       \[::\]:80 default_server;/listen       [::]:80;/g' /etc/nginx/nginx.conf 2>/dev/null || true
+fi
+
 rm -f /etc/nginx/sites-enabled/default
 rm -f /etc/nginx/conf.d/default.conf 2>/dev/null || true
 ln -sf "$NGINX_CONF" /etc/nginx/sites-enabled/eclipse-panel 2>/dev/null || true
