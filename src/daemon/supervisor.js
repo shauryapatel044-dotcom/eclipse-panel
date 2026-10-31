@@ -91,26 +91,70 @@ class Supervisor {
     let rawCmd = (app.startup_cmd || '').trim();
     let pyBin = config.pythonBin || 'python';
 
-    // Smart Normalization: Translate Pterodactyl container-only paths to host
-    let normalizedCmd = rawCmd
-      .replace(/\/home\/container\//g, './')
-      .replace(/\/home\/container\b/g, '.')
-      .replace(/\/usr\/local\/bin\/python\b/g, pyBin)
-      .replace(/\/usr\/bin\/python3?\b/g, pyBin)
-      .replace(/\/usr\/local\/bin\/node\b/g, 'node')
-      .replace(/\/usr\/bin\/node\b/g, 'node')
-      .replace(/\/usr\/local\/bin\/npm\b/g, 'npm')
-      .replace(/\/usr\/bin\/npm\b/g, 'npm')
-      .replace(/\/usr\/local\/bin\/ts-node\b/g, 'ts-node');
+    // On Linux: Ensure Pterodactyl container path /home/container resolves to appDir
+    if (!isWin) {
+      try {
+        if (!fs.existsSync('/home')) fs.mkdirSync('/home', { recursive: true });
+        try { fs.unlinkSync('/home/container'); } catch (e) {}
+        fs.symlinkSync(appDir, '/home/container');
+      } catch (e) {
+        // Fallback if symlink fails: substitute /home/container with actual appDir
+        rawCmd = rawCmd.replace(/\/home\/container\b/g, appDir);
+      }
 
-    // If normalizedCmd is empty or looks like broken bash script on Windows, use clean fallback
-    if (isWin && (normalizedCmd.includes('if [[') || normalizedCmd.includes('fi;'))) {
-      if (app.type === 'nodejs') normalizedCmd = `node ${mainFile}`;
-      else if (app.type === 'python') normalizedCmd = `${pyBin} ${mainFile}`;
-      else if (app.type === 'java') normalizedCmd = `java -jar ${mainFile}`;
-      else if (app.type === 'bun') normalizedCmd = `bun run ${mainFile}`;
-      else if (app.type === 'go') normalizedCmd = `go run ${mainFile}`;
-      else normalizedCmd = `./${mainFile}`;
+      // Check if /usr/local/bin binaries exist; if not, try to auto-symlink or map to PATH
+      try {
+        if (!fs.existsSync('/usr/local/bin/node')) {
+          const nodePath = process.execPath;
+          if (nodePath && fs.existsSync(nodePath)) {
+            try { fs.symlinkSync(nodePath, '/usr/local/bin/node'); } catch (e) {}
+          }
+        }
+        if (!fs.existsSync('/usr/local/bin/python') && fs.existsSync('/usr/bin/python3')) {
+          try { fs.symlinkSync('/usr/bin/python3', '/usr/local/bin/python'); } catch (e) {}
+        }
+      } catch (e) {}
+    } else {
+      // Windows: map /home/container to relative path
+      rawCmd = rawCmd.replace(/\/home\/container\b/g, '.');
+    }
+
+    // Smart Normalization: Translate paths and ensure binaries resolve
+    let normalizedCmd = rawCmd;
+    if (isWin) {
+      normalizedCmd = normalizedCmd
+        .replace(/\/home\/container\//g, '.\\')
+        .replace(/\/usr\/local\/bin\/python\b/g, pyBin)
+        .replace(/\/usr\/bin\/python3?\b/g, pyBin)
+        .replace(/\/usr\/local\/bin\/node\b/g, 'node')
+        .replace(/\/usr\/bin\/node\b/g, 'node')
+        .replace(/\/usr\/local\/bin\/npm\b/g, 'npm')
+        .replace(/\/usr\/bin\/npm\b/g, 'npm')
+        .replace(/\/usr\/local\/bin\/ts-node\b/g, 'ts-node');
+
+      // Windows clean fallback if bash syntax is detected
+      if (normalizedCmd.includes('if [[') || normalizedCmd.includes('fi;')) {
+        if (app.type === 'nodejs') normalizedCmd = `node ${mainFile}`;
+        else if (app.type === 'python') normalizedCmd = `${pyBin} ${mainFile}`;
+        else if (app.type === 'java') normalizedCmd = `java -jar ${mainFile}`;
+        else if (app.type === 'bun') normalizedCmd = `bun run ${mainFile}`;
+        else if (app.type === 'go') normalizedCmd = `go run ${mainFile}`;
+        else normalizedCmd = `./${mainFile}`;
+      }
+    } else {
+      // On Linux: If /usr/local/bin binaries don't exist, fallback to PATH binaries
+      if (!fs.existsSync('/usr/local/bin/node')) {
+        normalizedCmd = normalizedCmd.replace(/\/usr\/local\/bin\/node\b/g, 'node');
+      }
+      if (!fs.existsSync('/usr/local/bin/npm')) {
+        normalizedCmd = normalizedCmd.replace(/\/usr\/local\/bin\/npm\b/g, 'npm');
+      }
+      if (!fs.existsSync('/usr/local/bin/python')) {
+        normalizedCmd = normalizedCmd.replace(/\/usr\/local\/bin\/python\b/g, pyBin);
+      }
+      if (!fs.existsSync('/usr/local/bin/ts-node')) {
+        normalizedCmd = normalizedCmd.replace(/\/usr\/local\/bin\/ts-node\b/g, 'npx ts-node');
+      }
     }
 
     if (normalizedCmd) {
@@ -118,7 +162,7 @@ class Supervisor {
       return spawn(normalizedCmd, {
         cwd: appDir,
         env,
-        shell: true,
+        shell: isWin ? true : '/bin/bash',
         detached: process.platform !== 'win32',
         stdio: ['pipe', 'pipe', 'pipe'],
       });

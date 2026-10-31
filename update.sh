@@ -93,11 +93,27 @@ echo -e "\n${BOLD_CYAN}[3/5] Updating production dependencies (including Discord
 npm install --omit=dev --no-audit
 echo -e "${GREEN}[✔] Node modules up to date.${NC}"
 
-# Ensure global PM2 path
+# Ensure global PM2 path and Pterodactyl-compatible binary symlinks
 if ! command -v pm2 >/dev/null 2>&1; then
     npm install -g pm2 || true
     PM2_PATH=$(npm root -g 2>/dev/null)/pm2/bin/pm2
     [ -f "$PM2_PATH" ] && ln -sf "$PM2_PATH" /usr/local/bin/pm2 2>/dev/null || true
+fi
+
+# Ensure /usr/local/bin symlinks for startup commands compatibility
+mkdir -p /usr/local/bin
+[ -n "$(command -v node 2>/dev/null)" ] && ln -sf "$(command -v node)" /usr/local/bin/node 2>/dev/null || true
+[ -n "$(command -v npm 2>/dev/null)" ] && ln -sf "$(command -v npm)" /usr/local/bin/npm 2>/dev/null || true
+[ -n "$(command -v npx 2>/dev/null)" ] && ln -sf "$(command -v npx)" /usr/local/bin/npx 2>/dev/null || true
+[ -n "$(command -v python3 2>/dev/null)" ] && ln -sf "$(command -v python3)" /usr/local/bin/python 2>/dev/null || true
+[ -n "$(command -v python3 2>/dev/null)" ] && ln -sf "$(command -v python3)" /usr/local/bin/python3 2>/dev/null || true
+[ -n "$(command -v pip3 2>/dev/null)" ] && ln -sf "$(command -v pip3)" /usr/local/bin/pip 2>/dev/null || true
+[ -n "$(command -v pip3 2>/dev/null)" ] && ln -sf "$(command -v pip3)" /usr/local/bin/pip3 2>/dev/null || true
+
+# Ensure ts-node is available globally for TypeScript startup commands
+if ! command -v ts-node >/dev/null 2>&1; then
+    npm install -g ts-node typescript 2>/dev/null || true
+    [ -n "$(command -v ts-node 2>/dev/null)" ] && ln -sf "$(command -v ts-node)" /usr/local/bin/ts-node 2>/dev/null || true
 fi
 
 # 4. Restart Background Daemon

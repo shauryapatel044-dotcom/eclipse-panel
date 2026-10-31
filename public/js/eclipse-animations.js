@@ -313,6 +313,80 @@
     }
   }
 
+  // 8. CINEMATIC INTRO SCREEN (Eclipse Panel · Made by Vexezor)
+  function showIntroScreen(customOptions = {}) {
+    const isEditor = customOptions.isEditor || window.location.pathname.includes('app.html');
+    const title = customOptions.title || (isEditor ? 'ECLIPSE CODE STUDIO' : 'ECLIPSE PANEL');
+    const subtitle = customOptions.subtitle || 'High-Performance Cloud Infrastructure';
+    const author = customOptions.author || 'Made by Vexezor';
+    const statusMsg = customOptions.status || (isEditor ? 'Loading container workspace & developer tools...' : 'Initializing cloud cluster & telemetry...');
+    const duration = customOptions.duration || 1200; // ms to show before auto-fade
+
+    // Remove any existing intro screen
+    const existing = document.getElementById('eclipse-intro-screen');
+    if (existing) existing.remove();
+
+    const screen = document.createElement('div');
+    screen.id = 'eclipse-intro-screen';
+    screen.innerHTML = `
+      <div class="intro-glow-orb"></div>
+      <div class="intro-content-box">
+        <div class="intro-logo-container">
+          <div class="intro-logo-ring"></div>
+          <img src="/assets/logo.png" onerror="this.src='/assets/logo.jpg'" alt="Eclipse Logo" class="intro-logo-img">
+        </div>
+        <h1 class="intro-title">${title}</h1>
+        <div class="intro-subtitle">
+          <span>${subtitle}</span>
+          <span class="intro-author-pill">${author}</span>
+        </div>
+        <div class="intro-loader-track">
+          <div class="intro-loader-bar"></div>
+        </div>
+        <div class="intro-status-text">${statusMsg}</div>
+      </div>
+      <div class="intro-skip-hint">Click anywhere to skip</div>
+    `;
+
+    document.body.appendChild(screen);
+
+    let dismissed = false;
+    const dismiss = () => {
+      if (dismissed) return;
+      dismissed = true;
+      screen.classList.add('fade-out');
+      setTimeout(() => {
+        if (screen.parentNode) screen.remove();
+        // Trigger button slowly appearing animation right as intro finishes
+        applyButtonSlowAppear(document);
+      }, 600);
+    };
+
+    // Auto-dismiss after duration
+    setTimeout(dismiss, duration);
+
+    // Skip on click or keypress
+    screen.addEventListener('click', dismiss);
+    const keyHandler = (e) => {
+      dismiss();
+      document.removeEventListener('keydown', keyHandler);
+    };
+    document.addEventListener('keydown', keyHandler);
+  }
+
+  // 9. SLOW APPEARING BUTTONS ANIMATION
+  function applyButtonSlowAppear(scope = document) {
+    if (!scope) scope = document;
+    const buttons = scope.querySelectorAll('button, .btn, .btn-primary, .btn-secondary, .btn-danger, .tab-nav-btn, .sidebarButton, .designer-nav-tab, .mock-btn, .action-btn, .control-btn');
+    buttons.forEach((btn, idx) => {
+      btn.classList.remove('slow-appear-btn');
+      void btn.offsetWidth; // Trigger DOM reflow to restart animation
+      const delay = Math.min(idx * 0.035, 0.65);
+      btn.style.animation = `eclipseButtonSlowAppear 0.65s cubic-bezier(0.16, 1, 0.3, 1) ${delay}s both`;
+      btn.classList.add('slow-appear-btn');
+    });
+  }
+
   // Expose to window
   window.EclipseAnimations = {
     animateCounter,
@@ -321,7 +395,9 @@
     initCyberCanvas,
     showToast,
     initOscilloscope,
-    initBackgroundVideo
+    initBackgroundVideo,
+    showIntroScreen,
+    applyButtonSlowAppear
   };
 
   // Auto-init on DOMContentLoaded
@@ -330,5 +406,19 @@
     initCyberCanvas();
     init3DTilt();
     initMagneticButtons();
+
+    // Launch Intro Screen and slowly appearing buttons
+    showIntroScreen();
+    applyButtonSlowAppear();
+
+    // Hook tab switches to re-trigger button appearing animation
+    document.addEventListener('click', (e) => {
+      const tabTarget = e.target.closest('.tab-nav-btn, .designer-nav-tab, [onclick*="switch"], [onclick*="tab"]');
+      if (tabTarget) {
+        setTimeout(() => {
+          applyButtonSlowAppear(document);
+        }, 100);
+      }
+    });
   });
 })();

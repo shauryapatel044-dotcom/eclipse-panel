@@ -176,8 +176,8 @@ export class AppController {
       const serverDomain = domain ? domain.trim() : (baseDomain ? `${name.toLowerCase().replace(/[^a-z0-9-]/g, '')}.${baseDomain}` : '');
       const rVersion = runtime_version ? runtime_version.trim() : (normalizedType === 'nodejs' ? '20' : '3.11');
 
-      const defaultNodeStartup = `if [[ -d .git ]] && [[ 0 == "1" ]]; then git pull; fi; if [[ ! -z "\${NODE_PACKAGES}" ]]; then npm install \${NODE_PACKAGES}; fi; if [[ ! -z "\${UNNODE_PACKAGES}" ]]; then npm uninstall \${UNNODE_PACKAGES}; fi; if [ -f package.json ]; then npm install; fi; if [[ "\${MAIN_FILE##*.}" == "js" ]]; then node "\${MAIN_FILE}" \${NODE_ARGS}; else ts-node --esm "\${MAIN_FILE}" \${NODE_ARGS}; fi`;
-      const defaultPythonStartup = `if [[ -d .git ]] && [[ "0" == "1" ]]; then git pull; fi; if [[ ! -z "" ]]; then pip install -U --prefix .local ; fi; if [[ -f "\${REQUIREMENTS_FILE}" ]]; then pip install -U --prefix .local -r "\${REQUIREMENTS_FILE}"; fi; python "\${MAIN_FILE}"`;
+      const defaultNodeStartup = `if [[ -d .git ]] && [[ 0 == "1" ]]; then git pull; fi; if [[ ! -z "\${NODE_PACKAGES}" ]]; then /usr/local/bin/npm install \${NODE_PACKAGES}; fi; if [[ ! -z "\${UNNODE_PACKAGES}" ]]; then /usr/local/bin/npm uninstall \${UNNODE_PACKAGES}; fi; if [ -f /home/container/package.json ]; then /usr/local/bin/npm install; fi; if [[ "\${MAIN_FILE##*.}" == "js" ]]; then /usr/local/bin/node "/home/container/\${MAIN_FILE}" \${NODE_ARGS}; else /usr/local/bin/ts-node --esm "/home/container/\${MAIN_FILE}" \${NODE_ARGS}; fi`;
+      const defaultPythonStartup = `if [[ -d .git ]] && [[ "0" == "1" ]]; then git pull; fi; if [[ ! -z "" ]]; then pip install -U --prefix .local ; fi; if [[ -f /home/container/\${REQUIREMENTS_FILE} ]]; then pip install -U --prefix .local -r \${REQUIREMENTS_FILE}; fi; /usr/local/bin/python /home/container/main.py`;
 
       const startCmd = startup_cmd || (normalizedType === 'nodejs' ? defaultNodeStartup : defaultPythonStartup);
       const reqFile = requirements_file || 'requirements.txt';
@@ -323,8 +323,8 @@ export class AppController {
         return res.status(403).json({ error: 'Forbidden: Insufficient permissions to perform server actions' });
       }
 
-      const defaultNodeStartup = `if [[ -d .git ]] && [[ 0 == "1" ]]; then git pull; fi; if [[ ! -z "\${NODE_PACKAGES}" ]]; then npm install \${NODE_PACKAGES}; fi; if [[ ! -z "\${UNNODE_PACKAGES}" ]]; then npm uninstall \${UNNODE_PACKAGES}; fi; if [ -f package.json ]; then npm install; fi; if [[ "\${MAIN_FILE##*.}" == "js" ]]; then node "\${MAIN_FILE}" \${NODE_ARGS}; else ts-node --esm "\${MAIN_FILE}" \${NODE_ARGS}; fi`;
-      const defaultPythonStartup = `if [[ -d .git ]] && [[ "0" == "1" ]]; then git pull; fi; if [[ ! -z "" ]]; then pip install -U --prefix .local ; fi; if [[ -f "\${REQUIREMENTS_FILE}" ]]; then pip install -U --prefix .local -r "\${REQUIREMENTS_FILE}"; fi; python "\${MAIN_FILE}"`;
+      const defaultNodeStartup = `if [[ -d .git ]] && [[ 0 == "1" ]]; then git pull; fi; if [[ ! -z "\${NODE_PACKAGES}" ]]; then /usr/local/bin/npm install \${NODE_PACKAGES}; fi; if [[ ! -z "\${UNNODE_PACKAGES}" ]]; then /usr/local/bin/npm uninstall \${UNNODE_PACKAGES}; fi; if [ -f /home/container/package.json ]; then /usr/local/bin/npm install; fi; if [[ "\${MAIN_FILE##*.}" == "js" ]]; then /usr/local/bin/node "/home/container/\${MAIN_FILE}" \${NODE_ARGS}; else /usr/local/bin/ts-node --esm "/home/container/\${MAIN_FILE}" \${NODE_ARGS}; fi`;
+      const defaultPythonStartup = `if [[ -d .git ]] && [[ "0" == "1" ]]; then git pull; fi; if [[ ! -z "" ]]; then pip install -U --prefix .local ; fi; if [[ -f /home/container/\${REQUIREMENTS_FILE} ]]; then pip install -U --prefix .local -r \${REQUIREMENTS_FILE}; fi; /usr/local/bin/python /home/container/main.py`;
 
       return res.json({
         startup: {

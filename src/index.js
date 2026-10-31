@@ -9,6 +9,7 @@ import { supervisor } from './daemon/supervisor.js';
 import { setupWebSocket } from './websocket/wsServer.js';
 import { getSystemStats } from './daemon/metrics.js';
 import { discordBotService } from './services/discordBot.js';
+import { AdminController } from './controllers/adminController.js';
 
 // Route handlers
 import authRoutes from './routes/auth.js';
@@ -49,6 +50,9 @@ app.get('/api/system/metrics', (req, res) => {
   res.json(getSystemStats());
 });
 
+// Public Theme Config
+app.get('/api/theme', AdminController.getTheme);
+
 // Mount API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/apps', appRoutes);
@@ -63,6 +67,7 @@ app.get('/app', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'app.html')));
 app.get('/account', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'account.html')));
 app.get('/stats', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'admin-stats.html')));
 app.get('/admin-stats', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'admin-stats.html')));
+app.get('/designer', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'designer.html')));
 
 // Static frontend serving
 app.use(express.static(PUBLIC_DIR));

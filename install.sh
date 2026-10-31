@@ -568,6 +568,22 @@ if ! command -v pm2 >/dev/null 2>&1; then
         ln -sf "$PM2_PATH" /usr/local/bin/pm2 2>/dev/null || true
     fi
 fi
+
+# Ensure /usr/local/bin symlinks for startup commands compatibility
+mkdir -p /usr/local/bin
+[ -n "$(command -v node 2>/dev/null)" ] && ln -sf "$(command -v node)" /usr/local/bin/node 2>/dev/null || true
+[ -n "$(command -v npm 2>/dev/null)" ] && ln -sf "$(command -v npm)" /usr/local/bin/npm 2>/dev/null || true
+[ -n "$(command -v npx 2>/dev/null)" ] && ln -sf "$(command -v npx)" /usr/local/bin/npx 2>/dev/null || true
+[ -n "$(command -v python3 2>/dev/null)" ] && ln -sf "$(command -v python3)" /usr/local/bin/python 2>/dev/null || true
+[ -n "$(command -v python3 2>/dev/null)" ] && ln -sf "$(command -v python3)" /usr/local/bin/python3 2>/dev/null || true
+[ -n "$(command -v pip3 2>/dev/null)" ] && ln -sf "$(command -v pip3)" /usr/local/bin/pip 2>/dev/null || true
+[ -n "$(command -v pip3 2>/dev/null)" ] && ln -sf "$(command -v pip3)" /usr/local/bin/pip3 2>/dev/null || true
+
+# Ensure ts-node is available globally for TypeScript startup commands
+if ! command -v ts-node >/dev/null 2>&1; then
+    npm install -g ts-node typescript 2>/dev/null || true
+    [ -n "$(command -v ts-node 2>/dev/null)" ] && ln -sf "$(command -v ts-node)" /usr/local/bin/ts-node 2>/dev/null || true
+fi
 pm2 delete eclipse-panel 2>/dev/null || true
 pm2 start src/index.js --name "eclipse-panel" --time || node src/index.js &
 pm2 save 2>/dev/null || true
