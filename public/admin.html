@@ -508,34 +508,96 @@
               <!-- Command Reference & Instructions -->
               <div style="display: flex; flex-direction: column; gap: 16px;">
                 <div class="feature-card">
-                  <div class="feature-card-title">
-                    <span style="color: #10B981;">⚡</span> Interactive Slash Commands
+                  <div class="feature-card-title" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div><span style="color: #10B981;">⚡</span> Interactive Slash Commands (14 Commands)</div>
+                    <span style="font-size: 10px; background: rgba(239, 68, 68, 0.15); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.3); padding: 2px 7px; border-radius: 6px; font-weight: 700; text-transform: uppercase;">Admin Only</span>
                   </div>
-                  <div style="display: flex; flex-direction: column; gap: 10px; font-size: 12px;">
+                  <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12px; max-height: 460px; overflow-y: auto; padding-right: 6px;">
+                    
+                    <!-- 1. /server -->
                     <div style="background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
                       <code style="color: #06B6D4; font-weight: 700;">/server &lt;id or name&gt;</code>
-                      <div style="color: #94A3B8; margin-top: 2px;">Shows server card with interactive buttons: <strong>[▶️ Start] [⏹️ Stop] [🔄 Restart] [⚡ Kill]</strong></div>
+                      <div style="color: #94A3B8; margin-top: 2px;">Interactive server dashboard with 2 rows of real-time buttons: <strong>[▶️ Start] [⏹️ Stop] [🔄 Restart] [⚡ Force Kill] [📊 Refresh] [📜 Logs] [ℹ️ Specs] [🗑️ Delete]</strong></div>
                     </div>
 
+                    <!-- 2. /servers -->
                     <div style="background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
                       <code style="color: #06B6D4; font-weight: 700;">/servers</code>
-                      <div style="color: #94A3B8; margin-top: 2px;">Lists all active servers, ports, and memory stats.</div>
+                      <div style="color: #94A3B8; margin-top: 2px;">Lists all hosted server instances, status badges, TCP ports, wildcard subdomains (<code>*.servers.vexezor.bond</code>), and RAM limits.</div>
                     </div>
 
+                    <!-- 3. /createserver -->
                     <div style="background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
-                      <code style="color: #06B6D4; font-weight: 700;">/createserver</code>
-                      <div style="color: #94A3B8; margin-top: 2px;">Deploys a Node.js or Python server container directly from Discord!</div>
+                      <code style="color: #06B6D4; font-weight: 700;">/createserver &lt;name&gt; &lt;type&gt; [owner] [ram] [cpu] [port]</code>
+                      <div style="color: #94A3B8; margin-top: 2px;">Deploys a clean server container (zero default files). Passing an owner Gmail automatically assigns the server and generates panel login credentials.</div>
                     </div>
 
+                    <!-- 4. /deleteserver -->
                     <div style="background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
-                      <code style="color: #06B6D4; font-weight: 700;">/createuser</code>
-                      <div style="color: #94A3B8; margin-top: 2px;">Creates a new panel user account with specified roles.</div>
+                      <code style="color: #06B6D4; font-weight: 700;">/deleteserver &lt;identifier&gt;</code>
+                      <div style="color: #94A3B8; margin-top: 2px;">Permanently deletes a container, releases its allocated port, and frees disk space with safety confirmation dialog.</div>
                     </div>
 
+                    <!-- 5. /startserver -->
+                    <div style="background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                      <code style="color: #06B6D4; font-weight: 700;">/startserver &lt;identifier&gt;</code>
+                      <div style="color: #94A3B8; margin-top: 2px;">Powers on a stopped or offline server container.</div>
+                    </div>
+
+                    <!-- 6. /stopserver -->
+                    <div style="background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                      <code style="color: #06B6D4; font-weight: 700;">/stopserver &lt;identifier&gt;</code>
+                      <div style="color: #94A3B8; margin-top: 2px;">Gracefully terminates a running container.</div>
+                    </div>
+
+                    <!-- 7. /restartserver -->
+                    <div style="background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                      <code style="color: #06B6D4; font-weight: 700;">/restartserver &lt;identifier&gt;</code>
+                      <div style="color: #94A3B8; margin-top: 2px;">Restarts the container daemon process and reloads environment.</div>
+                    </div>
+
+                    <!-- 8. /cmd -->
+                    <div style="background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                      <code style="color: #06B6D4; font-weight: 700;">/cmd &lt;identifier&gt; &lt;command&gt;</code>
+                      <div style="color: #94A3B8; margin-top: 2px;">Executes shell / terminal commands directly inside the container workspace and returns output.</div>
+                    </div>
+
+                    <!-- 9. /logs -->
+                    <div style="background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                      <code style="color: #06B6D4; font-weight: 700;">/logs &lt;identifier&gt; [lines]</code>
+                      <div style="color: #94A3B8; margin-top: 2px;">Fetches live stdout and stderr console output (default: 25 lines).</div>
+                    </div>
+
+                    <!-- 10. /serverinfo -->
+                    <div style="background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                      <code style="color: #06B6D4; font-weight: 700;">/serverinfo &lt;identifier&gt;</code>
+                      <div style="color: #94A3B8; margin-top: 2px;">Inspects detailed telemetry: actual disk usage (MB), files count, TCP port, subdomain, and owner account.</div>
+                    </div>
+
+                    <!-- 11. /createuser -->
+                    <div style="background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                      <code style="color: #06B6D4; font-weight: 700;">/createuser &lt;username&gt; &lt;email&gt; &lt;password&gt; [role]</code>
+                      <div style="color: #94A3B8; margin-top: 2px;">Creates a new panel user or administrator account.</div>
+                    </div>
+
+                    <!-- 12. /users -->
+                    <div style="background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                      <code style="color: #06B6D4; font-weight: 700;">/users</code>
+                      <div style="color: #94A3B8; margin-top: 2px;">Lists all registered panel operators, roles, emails, and active server counts.</div>
+                    </div>
+
+                    <!-- 13. /panel -->
                     <div style="background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
                       <code style="color: #06B6D4; font-weight: 700;">/panel</code>
-                      <div style="color: #94A3B8; margin-top: 2px;">Displays live VPS CPU, RAM, uptime, and cluster telemetry.</div>
+                      <div style="color: #94A3B8; margin-top: 2px;">Displays live VPS host telemetry: CPU load %, RAM used/free, disk capacity, and uptime.</div>
                     </div>
+
+                    <!-- 14. /help -->
+                    <div style="background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                      <code style="color: #06B6D4; font-weight: 700;">/help</code>
+                      <div style="color: #94A3B8; margin-top: 2px;">Displays the full interactive command manual and permissions guide directly in Discord.</div>
+                    </div>
+
                   </div>
                 </div>
 
@@ -545,9 +607,9 @@
                   </div>
                   <ol style="font-size: 11.5px; color: #94A3B8; margin: 0; padding-left: 18px; line-height: 1.7;">
                     <li>Open <a href="https://discord.com/developers/applications" target="_blank" style="color: #5865F2; text-decoration: underline;">Discord Developer Portal</a> and click <strong>New Application</strong>.</li>
-                    <li>Go to the <strong>Bot</strong> tab $\rightarrow$ click <strong>Reset Token</strong> $\rightarrow$ Copy the token and paste it here.</li>
+                    <li>Go to the <strong>Bot</strong> tab → click <strong>Reset Token</strong> → Copy the token and paste it here.</li>
                     <li>Under Privileged Gateway Intents, turn on <strong>Message Content Intent</strong>.</li>
-                    <li>Go to <strong>OAuth2 $\rightarrow$ URL Generator</strong>, check <code>bot</code> and <code>applications.commands</code>, then select Administrator permissions and open the generated invite link.</li>
+                    <li>Go to <strong>OAuth2 → URL Generator</strong>, check <code>bot</code> and <code>applications.commands</code>, then select Administrator permissions and open the generated invite link.</li>
                   </ol>
                 </div>
               </div>
