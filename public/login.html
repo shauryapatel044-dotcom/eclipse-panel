@@ -574,6 +574,14 @@
         btn.disabled = false;
       }
     }
+
+    // Auto-detect expired session or post-reinstall token invalidation
+    window.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('expired')) {
+        showAlert('Your session has expired or the panel was reinstalled. Please log in with your administrator credentials.', 'error');
+      }
+    });
   </script>
 </body>
 </html>

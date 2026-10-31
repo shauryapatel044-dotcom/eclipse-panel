@@ -4,6 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import { execSync } from 'child_process';
 import { db } from '../database/index.js';
+import { config } from '../config.js';
 import { supervisor } from '../daemon/supervisor.js';
 import { logStreamer } from '../daemon/logStreamer.js';
 import { getHostIp } from '../daemon/metrics.js';

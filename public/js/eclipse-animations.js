@@ -387,6 +387,31 @@
     });
   }
 
+  // 10. AUTOMATIC AUTH & SESSION INTERCEPTOR
+  // Prevents "Invalid or expired token" deadlocks after reinstallation or JWT expiration
+  if (typeof window !== 'undefined' && window.fetch) {
+    const originalFetch = window.fetch;
+    window.fetch = async function (...args) {
+      const response = await originalFetch.apply(this, args);
+      if (response && response.status === 401) {
+        const url = typeof args[0] === 'string' ? args[0] : (args[0] && args[0].url ? args[0].url : '');
+        // Exclude standard login and registration credential rejection
+        if (url.includes('/api/') && !url.includes('/api/auth/login') && !url.includes('/api/auth/register')) {
+          const isLoginPage = window.location.pathname.endsWith('login.html');
+          if (!isLoginPage) {
+            localStorage.removeItem('eclipse_token');
+            localStorage.removeItem('eclipse_user');
+            showToast('Session expired or invalidated. Redirecting to login...', 'error');
+            setTimeout(() => {
+              window.location.href = '/login.html?expired=1';
+            }, 800);
+          }
+        }
+      }
+      return response;
+    };
+  }
+
   // Expose to window
   window.EclipseAnimations = {
     animateCounter,
@@ -420,5 +445,20 @@
         }, 100);
       }
     });
+
+    // Session validation: Proactively check if stored token is valid with current daemon
+    const isLoginPage = window.location.pathname.endsWith('login.html');
+    const existingToken = localStorage.getItem('eclipse_token');
+    if (!isLoginPage && existingToken) {
+      fetch((window.location.origin || '') + '/api/auth/me', {
+        headers: { 'Authorization': 'Bearer ' + existingToken }
+      }).then(res => {
+        if (res.status === 401) {
+          localStorage.removeItem('eclipse_token');
+          localStorage.removeItem('eclipse_user');
+          window.location.href = '/login.html?expired=1';
+        }
+      }).catch(() => {});
+    }
   });
 })();

@@ -944,6 +944,12 @@
     async function fetchApps() {
       try {
         const res = await fetch(API_BASE + '/apps', { headers: getHeaders() });
+        if (res.status === 401) {
+          localStorage.removeItem('eclipse_token');
+          localStorage.removeItem('eclipse_user');
+          window.location.href = '/login.html?expired=1';
+          return;
+        }
         if (!res.ok) return;
         const data = await res.json();
         const appsList = Array.isArray(data) ? data : (data && data.apps ? data.apps : []);
@@ -1460,6 +1466,17 @@
             domain
           })
         });
+
+        if (res.status === 401) {
+          localStorage.removeItem('eclipse_token');
+          localStorage.removeItem('eclipse_user');
+          if (window.EclipseAnimations && window.EclipseAnimations.showToast) {
+            window.EclipseAnimations.showToast('Session expired or invalidated. Redirecting to login...', 'error');
+          }
+          setTimeout(() => { window.location.href = '/login.html?expired=1'; }, 1000);
+          throw new Error('Session expired. Redirecting to login...');
+        }
+
         const d = await res.json();
         if (!res.ok) throw new Error(d.error || 'Failed to create server');
 
