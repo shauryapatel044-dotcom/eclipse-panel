@@ -205,6 +205,7 @@ print_success "Base system utilities and Nginx installed."
 print_step "Setting up MariaDB database service..."
 systemctl enable mariadb 2>/dev/null || systemctl enable mysql 2>/dev/null || true
 systemctl restart mariadb 2>/dev/null || systemctl restart mysql 2>/dev/null || true
+sleep 2
 
 # Generate secure random root and user database password
 DB_PASS=$(openssl rand -hex 16 2>/dev/null || tr -dc 'a-zA-Z0-9' </dev/urandom | head -c 24)
@@ -223,7 +224,7 @@ if ! command -v mysql >/dev/null 2>&1; then
     MYSQL_CMD="mariadb"
 fi
 
-$MYSQL_CMD <<EOF
+$MYSQL_CMD <<EOF 2>/dev/null || true
 CREATE DATABASE IF NOT EXISTS eclipse_panel CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE USER IF NOT EXISTS 'eclipse_user'@'localhost' IDENTIFIED BY '${DB_PASS}';
 ALTER USER 'eclipse_user'@'localhost' IDENTIFIED BY '${DB_PASS}';
@@ -287,12 +288,16 @@ mkdir -p "$INSTALL_DIR/storage/data"
 mkdir -p "$INSTALL_DIR/public"
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-if [ -f "$SCRIPT_DIR/package.json" ]; then
-    print_step "Copying panel source files..."
-    cp -r "$SCRIPT_DIR/"* "$INSTALL_DIR/"
+if [ "$SCRIPT_DIR" != "$INSTALL_DIR" ]; then
+    if [ -f "$SCRIPT_DIR/package.json" ]; then
+        print_step "Copying panel source files into ${INSTALL_DIR}..."
+        cp -r "$SCRIPT_DIR/"* "$INSTALL_DIR/"
+    else
+        print_step "Cloning latest Eclipse Panel from repository..."
+        git clone https://github.com/shauryapatel044-dotcom/eclipse-panel.git "$INSTALL_DIR" 2>/dev/null || true
+    fi
 else
-    print_step "Cloning latest Eclipse Panel from repository..."
-    git clone https://github.com/shauryapatel044-dotcom/eclipse-panel.git "$INSTALL_DIR" 2>/dev/null || true
+    print_success "Working directly within ${INSTALL_DIR}."
 fi
 
 cd "$INSTALL_DIR"
@@ -374,13 +379,18 @@ systemctl enable eclipse-panel
 systemctl restart eclipse-panel
 print_success "Systemd service 'eclipse-panel' active & enabled on boot."
 
-# Also setup PM2 for process monitoring
+# Setup PM2 for 24/7 Zero-Downtime Daemon
+print_step "Configuring 24/7 background process execution via PM2..."
 if ! command -v pm2 >/dev/null 2>&1; then
-    npm install -g pm2
+    npm install -g pm2 || true
+    PM2_PATH=$(npm root -g 2>/dev/null)/pm2/bin/pm2
+    if [ -f "$PM2_PATH" ]; then
+        ln -sf "$PM2_PATH" /usr/local/bin/pm2 2>/dev/null || true
+    fi
 fi
 pm2 delete eclipse-panel 2>/dev/null || true
-pm2 start src/index.js --name "eclipse-panel" --time
-pm2 save
+pm2 start src/index.js --name "eclipse-panel" --time || node src/index.js &
+pm2 save 2>/dev/null || true
 pm2 startup systemd -u root --hp /root 2>/dev/null || pm2 startup 2>/dev/null || true
 print_success "PM2 process manager configured."
 
