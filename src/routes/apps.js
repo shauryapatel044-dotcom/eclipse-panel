@@ -28,6 +28,9 @@ router.get('/:id/startup', AppController.getStartup);
 router.put('/:id/startup', AppController.updateStartup);
 router.get('/:id/logs', AppController.getLogs);
 router.get('/:id/stats', AppController.getStats);
+router.get('/:id/activity', AppController.getActivity);
+router.post('/:id/domain', AppController.setDomain);
+router.post('/:id/domain/verify', AppController.verifyDomain);
 
 // Git CI/CD Webhook Token Generation
 router.post('/:id/webhook/generate-token', WebhookController.generateToken);

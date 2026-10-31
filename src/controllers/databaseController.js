@@ -1,14 +1,20 @@
 import crypto from 'crypto';
 import { db } from '../database/index.js';
 import { supervisor } from '../daemon/supervisor.js';
+import { getHostIp } from '../daemon/metrics.js';
 
 export class DatabaseController {
   // List all databases assigned to this app
   static async listDatabases(req, res) {
     try {
       const { id } = req.params;
-      const stmt = db.prepare('SELECT id, app_id, db_name, db_user, host, port, created_at FROM app_databases WHERE app_id = ? ORDER BY created_at DESC');
-      const databases = stmt.all(id);
+      const stmt = db.prepare('SELECT id, app_id, db_name, db_user, db_password, host, port, created_at FROM app_databases WHERE app_id = ? ORDER BY created_at DESC');
+      const rawDatabases = stmt.all(id);
+      const hostIp = getHostIp();
+      const databases = rawDatabases.map(d => ({
+        ...d,
+        host: (d.host && d.host !== '127.0.0.1') ? d.host : hostIp
+      }));
 
       return res.json({ databases });
     } catch (err) {
@@ -35,11 +41,12 @@ export class DatabaseController {
       const dbId = `db_${crypto.randomBytes(4).toString('hex')}`;
 
       // Insert record in app_databases
+      const hostIp = getHostIp();
       const insertStmt = db.prepare(`
         INSERT INTO app_databases (id, app_id, db_name, db_user, db_password, host, port)
-        VALUES (?, ?, ?, ?, ?, '127.0.0.1', 3306)
+        VALUES (?, ?, ?, ?, ?, ?, 3306)
       `);
-      insertStmt.run(dbId, id, dbName, dbUser, dbPass);
+      insertStmt.run(dbId, id, dbName, dbUser, dbPass, hostIp);
 
       // Attempt to provision on host MariaDB if mysql client is available
       try {
@@ -53,12 +60,12 @@ export class DatabaseController {
       // Auto-inject into app's env_vars
       let envVars = {};
       try { envVars = JSON.parse(app.env_vars || '{}'); } catch (e) {}
-      envVars.DB_HOST = '127.0.0.1';
+      envVars.DB_HOST = hostIp;
       envVars.DB_PORT = '3306';
       envVars.DB_NAME = dbName;
       envVars.DB_USER = dbUser;
       envVars.DB_PASS = dbPass;
-      envVars.DATABASE_URL = `mysql://${dbUser}:${dbPass}@127.0.0.1:3306/${dbName}`;
+      envVars.DATABASE_URL = `mysql://${dbUser}:${dbPass}@${hostIp}:3306/${dbName}`;
 
       db.prepare('UPDATE apps SET env_vars = ? WHERE id = ?').run(JSON.stringify(envVars), id);
 
@@ -69,9 +76,9 @@ export class DatabaseController {
           db_name: dbName,
           db_user: dbUser,
           db_password: dbPass,
-          host: '127.0.0.1',
+          host: hostIp,
           port: 3306,
-          connection_url: `mysql://${dbUser}:${dbPass}@127.0.0.1:3306/${dbName}`
+          connection_url: `mysql://${dbUser}:${dbPass}@${hostIp}:3306/${dbName}`
         }
       });
     } catch (err) {

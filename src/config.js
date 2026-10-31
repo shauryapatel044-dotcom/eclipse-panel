@@ -21,6 +21,9 @@ const isWindows = os.platform() === 'win32';
 
 export const config = {
   port: parseInt(process.env.PORT || '8090', 10),
+  panelDomain: process.env.PANEL_DOMAIN || process.env.BASE_DOMAIN || '',
+  baseDomain: process.env.BASE_DOMAIN || '',
+  vpsPublicIp: process.env.VPS_PUBLIC_IP || '',
   jwtSecret: process.env.JWT_SECRET || 'eclipse-secret-key-change-in-production-vps-98213812',
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
   rootDir: ROOT_DIR,

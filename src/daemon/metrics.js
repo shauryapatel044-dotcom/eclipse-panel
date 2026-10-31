@@ -1,8 +1,75 @@
 import os from 'os';
 import fs from 'fs';
+import { config } from '../config.js';
 
 // Store previous CPU times sample for tick-delta computation
 let prevCpus = os.cpus();
+
+// Real VPS / Host Public IP Cache
+let detectedPublicIp = null;
+let lastPublicIpLookup = 0;
+
+export async function refreshPublicIp() {
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 2500);
+    const res = await fetch('https://api.ipify.org?format=json', { signal: controller.signal });
+    clearTimeout(timer);
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.ip) {
+        detectedPublicIp = data.ip;
+        lastPublicIpLookup = Date.now();
+        return detectedPublicIp;
+      }
+    }
+  } catch (e) {}
+
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 2000);
+    const res = await fetch('https://icanhazip.com', { signal: controller.signal });
+    clearTimeout(timer);
+    if (res.ok) {
+      const text = (await res.text()).trim();
+      if (text && text.length >= 7 && text.length <= 45) {
+        detectedPublicIp = text;
+        lastPublicIpLookup = Date.now();
+        return detectedPublicIp;
+      }
+    }
+  } catch (e) {}
+
+  return null;
+}
+
+// Background async probe on start
+refreshPublicIp();
+
+export function getHostIp() {
+  if (config.vpsPublicIp && config.vpsPublicIp.trim() !== '') return config.vpsPublicIp.trim();
+  if (detectedPublicIp) return detectedPublicIp;
+
+  try {
+    const ifaces = os.networkInterfaces();
+    let lanCandidate = null;
+    for (const name of Object.keys(ifaces)) {
+      for (const net of ifaces[name]) {
+        if (net.family === 'IPv4' && !net.internal) {
+          const isPrivate = /^(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/.test(net.address);
+          if (!isPrivate) {
+            detectedPublicIp = net.address;
+            return net.address;
+          }
+          if (!lanCandidate && !net.address.startsWith('169.254')) lanCandidate = net.address;
+        }
+      }
+    }
+    if (lanCandidate) return lanCandidate;
+  } catch (e) {}
+
+  return '127.0.0.1';
+}
 
 export function getCpuCoreMetrics() {
   const currentCpus = os.cpus();
@@ -88,6 +155,9 @@ export function getSystemStats() {
   const diskMetrics = getDiskUsage();
 
   return {
+    ip: getHostIp(),
+    domain: config.panelDomain || '',
+    baseDomain: config.baseDomain || '',
     platform: os.platform(),
     release: os.release(),
     arch: os.arch(),

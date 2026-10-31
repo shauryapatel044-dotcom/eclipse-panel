@@ -12,6 +12,8 @@ class Supervisor {
   constructor() {
     // Map of appId -> { childProcess, startTime, restartCount, manualStop: boolean }
     this.managedProcesses = new Map();
+    // Map of appId -> { rapidCrashCount: number, firstCrashTime: number }
+    this.crashCounters = new Map();
   }
 
   getAppDir(appId) {
@@ -30,6 +32,16 @@ class Supervisor {
     const nodeArgs = app.node_args || '';
     const reqFile = app.requirements_file || 'requirements.txt';
 
+    // Ensure the entrypoint file exists in appDir if missing
+    const entryPath = path.join(appDir, mainFile);
+    if (!fs.existsSync(entryPath)) {
+      if (app.type === 'python') {
+        fs.writeFileSync(entryPath, `# Starter Python Application - Eclipse Panel\nimport os, sys\nfrom http.server import HTTPServer, BaseHTTPRequestHandler\n\nPORT = int(os.environ.get('PORT', 3000))\n\nclass SimpleHandler(BaseHTTPRequestHandler):\n    def do_GET(self):\n        self.send_response(200)\n        self.send_header('Content-type', 'application/json')\n        self.end_headers()\n        self.wfile.write(b'{"status":"online","server":"Eclipse Panel Python"}\\n')\n    def log_message(self, format, *args):\n        sys.stdout.write(f"[%s] %s\\n" % (self.log_date_time_string(), format%args))\n        sys.stdout.flush()\n\nprint(f"[Python] Server listening on port {PORT}...")\nsys.stdout.flush()\nserver = HTTPServer(('0.0.0.0', PORT), SimpleHandler)\nserver.serve_forever()\n`);
+      } else {
+        fs.writeFileSync(entryPath, `// Starter Node.js Application - Eclipse Panel\nimport http from 'http';\n\nconst PORT = process.env.PORT || 3000;\nconst server = http.createServer((req, res) => {\n  res.writeHead(200, { 'Content-Type': 'application/json' });\n  res.end(JSON.stringify({ status: 'online', server: 'Eclipse Panel Node.js' }) + '\\n');\n});\n\nserver.listen(PORT, '0.0.0.0', () => {\n  console.log(\`[Node.js] Server listening on port \\\${PORT}...\`);\n});\n`);
+      }
+    }
+
     const env = {
       ...process.env,
       ...customEnv,
@@ -47,25 +59,37 @@ class Supervisor {
       env.NODE_OPTIONS = (env.NODE_OPTIONS || '') + ` --max-old-space-size=${parseInt(app.memory_limit, 10)}`;
     }
 
-    let cmdStr = app.startup_cmd || '';
-    
-    // Check if on Linux or /bin/bash is available
-    if (!isWin && fs.existsSync('/bin/bash')) {
-      logStreamer.append(app.id, 'system', `[Supervisor] Spawning bash startup script...`);
-      return spawn('/bin/bash', ['-c', cmdStr], {
-        cwd: appDir,
-        env,
-        stdio: ['pipe', 'pipe', 'pipe'],
-      });
+    let rawCmd = (app.startup_cmd || '').trim();
+    let pyBin = config.pythonBin || 'python';
+
+    // Smart Normalization: Translate Pterodactyl container-only paths to host
+    let normalizedCmd = rawCmd
+      .replace(/\/home\/container\//g, './')
+      .replace(/\/home\/container\b/g, '.')
+      .replace(/\/usr\/local\/bin\/python\b/g, pyBin)
+      .replace(/\/usr\/bin\/python3?\b/g, pyBin)
+      .replace(/\/usr\/local\/bin\/node\b/g, 'node')
+      .replace(/\/usr\/bin\/node\b/g, 'node')
+      .replace(/\/usr\/local\/bin\/npm\b/g, 'npm')
+      .replace(/\/usr\/bin\/npm\b/g, 'npm')
+      .replace(/\/usr\/local\/bin\/ts-node\b/g, 'ts-node');
+
+    // If normalizedCmd is empty or looks like broken bash script on Windows, use clean fallback
+    if (isWin && (normalizedCmd.includes('if [[') || normalizedCmd.includes('fi;'))) {
+      if (app.type === 'nodejs') normalizedCmd = `node ${mainFile}`;
+      else if (app.type === 'python') normalizedCmd = `${pyBin} ${mainFile}`;
+      else if (app.type === 'java') normalizedCmd = `java -jar ${mainFile}`;
+      else if (app.type === 'bun') normalizedCmd = `bun run ${mainFile}`;
+      else if (app.type === 'go') normalizedCmd = `go run ${mainFile}`;
+      else normalizedCmd = `./${mainFile}`;
     }
 
-    // Windows with Git Bash check
-    const gitBash = 'C:\\Program Files\\Git\\bin\\bash.exe';
-    if (isWin && fs.existsSync(gitBash)) {
-      logStreamer.append(app.id, 'system', `[Supervisor] Spawning bash startup script via Git Bash...`);
-      return spawn(gitBash, ['-c', cmdStr], {
+    if (normalizedCmd) {
+      logStreamer.append(app.id, 'system', `[Supervisor] Spawning startup command: ${normalizedCmd}`);
+      return spawn(normalizedCmd, {
         cwd: appDir,
         env,
+        shell: true,
         stdio: ['pipe', 'pipe', 'pipe'],
       });
     }
@@ -101,6 +125,7 @@ class Supervisor {
 
     // Update status in DB
     this.updateAppStatus(appId, 'starting');
+    this.crashCounters.delete(appId);
 
     let child = null;
     try {
@@ -140,17 +165,41 @@ class Supervisor {
     child.on('close', (code, signal) => {
       const record = this.managedProcesses.get(appId);
       const isManual = record ? record.manualStop : false;
+      const uptimeMs = record ? (Date.now() - record.startTime) : 0;
       this.managedProcesses.delete(appId);
 
       logStreamer.append(appId, 'system', `[Process Closed] Exit code: ${code}, Signal: ${signal || 'none'}`);
 
       if (isManual) {
         this.updateAppStatus(appId, 'stopped');
+        this.crashCounters.delete(appId);
       } else {
         // Unexpected crash
         this.updateAppStatus(appId, 'error');
+
+        // Crash guard: detect rapid crash loops (exiting under 3.5 seconds)
+        let crashInfo = this.crashCounters.get(appId) || { count: 0, firstCrashTime: Date.now() };
+        if (uptimeMs < 3500) {
+          crashInfo.count += 1;
+          this.crashCounters.set(appId, crashInfo);
+        } else {
+          // Process ran normally for a while, reset rapid crash counter
+          this.crashCounters.delete(appId);
+        }
+
+        if (crashInfo.count >= 4) {
+          logStreamer.append(
+            appId, 
+            'system', 
+            `[Supervisor Crash Guard] Detected ${crashInfo.count} consecutive rapid crashes. Auto-restart loop halted to prevent resource exhaustion. Please check your command, dependencies, or code, then click Start manually.`
+          );
+          this.updateAppStatus(appId, 'crashed');
+          this.crashCounters.delete(appId);
+          return;
+        }
+
         if (app.auto_restart) {
-          logStreamer.append(appId, 'system', '[Supervisor] Unexpected termination. Auto-restart in 3 seconds...');
+          logStreamer.append(appId, 'system', `[Supervisor] Unexpected termination. Auto-restart in 3 seconds (${crashInfo.count}/4)...`);
           setTimeout(() => {
             if (!this.managedProcesses.has(appId)) {
               this.startApp(appId).catch((e) => {
@@ -179,41 +228,96 @@ class Supervisor {
 
     record.manualStop = true;
     const { child } = record;
+    const isWin = process.platform === 'win32';
 
-    logStreamer.append(appId, 'system', '[Supervisor] Stopping process gracefully (SIGTERM)...');
+    logStreamer.append(appId, 'system', '[Supervisor] Stopping process gracefully...');
 
     return new Promise((resolve) => {
-      let killed = false;
-      const killTimer = setTimeout(() => {
-        if (!killed && child.pid) {
-          logStreamer.append(appId, 'system', '[Supervisor] Forcefully terminating (SIGKILL)...');
-          try {
-            process.kill(child.pid, 'SIGKILL');
-          } catch (e) {}
+      let resolved = false;
+
+      const finish = () => {
+        if (resolved) return;
+        resolved = true;
+        this.managedProcesses.delete(appId);
+        this.updateAppStatus(appId, 'stopped');
+        this.crashCounters.delete(appId);
+        resolve({ success: true, message: 'Application stopped' });
+      };
+
+      const forceKillTimer = setTimeout(async () => {
+        if (!resolved && child.pid) {
+          logStreamer.append(appId, 'system', '[Supervisor] Process did not terminate in time. Force killing...');
+          if (isWin) {
+            try {
+              const { execSync } = await import('child_process');
+              execSync(`taskkill /pid ${child.pid} /T /F`);
+            } catch (e) {}
+          } else {
+            try { process.kill(child.pid, 'SIGKILL'); } catch (e) {}
+          }
         }
+        finish();
       }, 3000);
 
       child.once('close', () => {
-        killed = true;
-        clearTimeout(killTimer);
-        this.managedProcesses.delete(appId);
-        this.updateAppStatus(appId, 'stopped');
-        resolve({ success: true, message: 'Application stopped' });
+        clearTimeout(forceKillTimer);
+        finish();
       });
 
-      try {
-        child.kill('SIGTERM');
-      } catch (e) {
-        this.managedProcesses.delete(appId);
-        this.updateAppStatus(appId, 'stopped');
-        resolve({ success: true, message: 'Application process killed' });
+      if (isWin) {
+        try {
+          import('child_process').then(({ exec }) => {
+            exec(`taskkill /pid ${child.pid} /T /F`, () => {
+              clearTimeout(forceKillTimer);
+              finish();
+            });
+          });
+        } catch (e) {
+          finish();
+        }
+      } else {
+        try {
+          child.kill('SIGTERM');
+        } catch (e) {
+          finish();
+        }
       }
     });
+  }
+
+  async killApp(appId) {
+    const record = this.managedProcesses.get(appId);
+    if (!record || !record.child) {
+      this.updateAppStatus(appId, 'stopped');
+      return { success: true, message: 'Application was not running' };
+    }
+
+    record.manualStop = true;
+    const { child } = record;
+    logStreamer.append(appId, 'system', '[Supervisor] Force-killing process immediately (SIGKILL / taskkill)...');
+
+    const isWin = process.platform === 'win32';
+    if (isWin && child.pid) {
+      try {
+        const { execSync } = await import('child_process');
+        execSync(`taskkill /pid ${child.pid} /T /F`);
+      } catch (e) {}
+    } else if (child.pid) {
+      try {
+        process.kill(child.pid, 'SIGKILL');
+      } catch (e) {}
+    }
+
+    this.managedProcesses.delete(appId);
+    this.updateAppStatus(appId, 'stopped');
+    this.crashCounters.delete(appId);
+    return { success: true, message: 'Application process killed immediately' };
   }
 
   async restartApp(appId) {
     logStreamer.append(appId, 'system', '[Supervisor] Restarting application...');
     await this.stopApp(appId);
+    await new Promise((resolve) => setTimeout(resolve, 600));
     return await this.startApp(appId);
   }
 
@@ -223,10 +327,19 @@ class Supervisor {
     if (!app) throw new Error('Application not found');
 
     const appDir = this.getAppDir(appId);
-    if (app.type === 'nodejs') {
-      return await NodeRunner.installDependencies(appId, appDir);
-    } else if (app.type === 'python') {
-      return await PythonRunner.installDependencies(appId, appDir);
+    this.updateAppStatus(appId, 'installing');
+    try {
+      let res;
+      if (app.type === 'nodejs') {
+        res = await NodeRunner.installDependencies(appId, appDir);
+      } else if (app.type === 'python') {
+        res = await PythonRunner.installDependencies(appId, appDir);
+      }
+      this.updateAppStatus(appId, 'stopped');
+      return res;
+    } catch (err) {
+      this.updateAppStatus(appId, 'error');
+      throw err;
     }
   }
 

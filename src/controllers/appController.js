@@ -1,9 +1,11 @@
+import dns from 'dns';
 import crypto from 'crypto';
 import path from 'path';
 import fs from 'fs';
 import { db } from '../database/index.js';
 import { supervisor } from '../daemon/supervisor.js';
 import { logStreamer } from '../daemon/logStreamer.js';
+import { getHostIp } from '../daemon/metrics.js';
 
 export class AppController {
   static async getApps(req, res) {
@@ -78,9 +80,11 @@ export class AppController {
         parsedEnv = JSON.parse(app.env_vars || '{}');
       } catch (e) {}
 
+      const effectiveIp = (app.primary_ip && app.primary_ip !== '0.0.0.0' && app.primary_ip !== '127.0.0.1') ? app.primary_ip : getHostIp();
       return res.json({
         app: {
           ...app,
+          primary_ip: effectiveIp,
           status: isRunning ? 'running' : app.status,
           metrics,
           logs,
@@ -93,10 +97,6 @@ export class AppController {
   }
 
   static async createApp(req, res) {
-    // Role check: Only administrators can create new servers
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ error: 'Permission denied: Only administrators can create or deploy new servers.' });
-    }
     try {
       const { 
         name, 
@@ -131,11 +131,20 @@ export class AppController {
       const defaultEntry = main_file || entrypoint || (normalizedType === 'nodejs' ? 'index.js' : 'main.py');
       const envJson = typeof env_vars === 'object' ? JSON.stringify(env_vars) : (env_vars || '{}');
       const autoRestartVal = auto_restart === false || auto_restart === 0 ? 0 : 1;
-      const appPort = port ? parseInt(port, 10) : null;
+      let appPort = port ? parseInt(port, 10) : null;
+      if (!appPort) {
+        const appsWithPort = db.prepare('SELECT port FROM apps WHERE port IS NOT NULL').all();
+        const usedPorts = new Set(appsWithPort.map(a => a.port));
+        let candidate = 3000;
+        while (usedPorts.has(candidate) && candidate < 9999) {
+          candidate++;
+        }
+        appPort = candidate;
+      }
       const memLimit = memory_limit ? parseInt(memory_limit, 10) : 1024;
       const cpLimit = cpu_limit ? parseInt(cpu_limit, 10) : 100;
       const diskLimit = disk_limit ? parseInt(disk_limit, 10) : 5120;
-      const serverIp = primary_ip ? primary_ip.trim() : '0.0.0.0';
+      const serverIp = (primary_ip && primary_ip.trim() !== '0.0.0.0' && primary_ip.trim() !== '127.0.0.1') ? primary_ip.trim() : getHostIp();
       const baseDomain = process.env.BASE_DOMAIN || '';
       const serverDomain = domain ? domain.trim() : (baseDomain ? `${name.toLowerCase().replace(/[^a-z0-9-]/g, '')}.${baseDomain}` : '');
       const rVersion = runtime_version ? runtime_version.trim() : (normalizedType === 'nodejs' ? '20' : '3.11');
@@ -155,7 +164,7 @@ export class AppController {
           memory_limit, cpu_limit, disk_limit, primary_ip, domain, runtime_version, 
           startup_cmd, main_file, node_packages, node_args, requirements_file, status
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'stopped')
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'installing')
       `);
       insertStmt.run(
         appId, name.trim(), normalizedType, req.user.id, defaultEntry, appPort, envJson, autoRestartVal,
@@ -232,7 +241,17 @@ if __name__ == '__main__':
         fs.writeFileSync(path.join(appDir, 'requirements.txt'), starterReq, 'utf8');
       }
 
-      logStreamer.append(appId, 'system', `[Init] Application "${name}" created with starter template.`);
+      logStreamer.append(appId, 'system', `[Eclipse Daemon] Provisioning container files for "${name.trim()}"...`);
+      logStreamer.append(appId, 'system', `[Supervisor] Installing initial package dependencies (npm install / pip install)...`);
+      supervisor.installDependencies(appId)
+        .then(() => {
+          logStreamer.append(appId, 'system', '[Supervisor] Initial packages and environment ready.');
+          supervisor.updateAppStatus(appId, 'stopped');
+        })
+        .catch((err) => {
+          logStreamer.append(appId, 'system', `[Supervisor] Dependency setup notice: ${err.message}`);
+          supervisor.updateAppStatus(appId, 'stopped');
+        });
 
       return res.status(201).json({
         message: 'Application created successfully',
@@ -247,6 +266,7 @@ if __name__ == '__main__':
 
   static async updateApp(req, res) {
     try {
+      const { id } = req.params;
       const { 
         name, 
         entrypoint, 
@@ -491,6 +511,10 @@ if __name__ == '__main__':
           const result = await supervisor.restartApp(id);
           return res.json(result);
         }
+        case 'kill': {
+          const result = await supervisor.killApp(id);
+          return res.json(result);
+        }
         case 'install': {
           supervisor.installDependencies(id)
             .then(() => logStreamer.append(id, 'system', '[Daemon] Dependencies installation finished.'))
@@ -498,7 +522,7 @@ if __name__ == '__main__':
           return res.json({ message: 'Dependency installation started in background. Monitor live logs.' });
         }
         default:
-          return res.status(400).json({ error: `Unknown action: "${action}". Valid actions: start, stop, restart, install` });
+          return res.status(400).json({ error: `Unknown action: "${action}". Valid actions: start, stop, restart, kill, install` });
       }
     } catch (err) {
       return res.status(500).json({ error: err.message });
@@ -525,4 +549,70 @@ if __name__ == '__main__':
       return res.status(500).json({ error: err.message });
     }
   }
+
+  static async getActivity(req, res) {
+    try {
+      const { id } = req.params;
+      const stmt = db.prepare('SELECT id, action, details, created_at, username FROM audit_logs WHERE details LIKE ? OR details LIKE ? OR action LIKE ? ORDER BY created_at DESC LIMIT 50');
+      const param = '%' + id + '%';
+      const logs = stmt.all(param, param, param);
+      return res.json({ success: true, activity: logs });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
+  static async setDomain(req, res) {
+    try {
+      const { id } = req.params;
+      const { domain } = req.body;
+      const cleanDomain = (domain || '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+      db.prepare('UPDATE apps SET domain = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(cleanDomain, id);
+      return res.json({ success: true, domain: cleanDomain, message: 'Custom domain saved' });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
+  static async verifyDomain(req, res) {
+    try {
+      const { id } = req.params;
+      const { domain } = req.body;
+      const targetDomain = (domain || '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+      if (!targetDomain) return res.status(400).json({ error: 'Domain is required' });
+
+      let resolvedIps = [];
+      let isVerified = false;
+
+      try {
+        const records = await dns.promises.resolve4(targetDomain);
+        resolvedIps = records || [];
+        isVerified = resolvedIps.length > 0;
+      } catch (dnsErr) {
+        // Fallback check: could be CNAME or localhost
+        if (targetDomain === 'localhost' || targetDomain.endsWith('.local') || targetDomain.includes('127.0.0.1')) {
+          isVerified = true;
+          resolvedIps = ['127.0.0.1'];
+        }
+      }
+
+      // Save domain if verified
+      if (isVerified) {
+        db.prepare('UPDATE apps SET domain = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(targetDomain, id);
+      }
+
+      return res.json({
+        success: true,
+        verified: isVerified,
+        domain: targetDomain,
+        resolvedIps,
+        message: isVerified 
+          ? `DNS verified successfully! Domain resolves to ${resolvedIps.join(', ')}`
+          : `Could not resolve DNS records for ${targetDomain}. Please ensure your A or CNAME record has propagated.`
+      });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
 }

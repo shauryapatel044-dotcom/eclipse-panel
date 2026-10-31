@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Eclipse Panel - Control Matrix & Cockpit</title>
+  <title>Eclipse Panel · Made by Vexezor</title>
   <link rel="icon" type="image/png" href="./assets/logo.png"/>
   <link rel="alternate icon" type="image/jpeg" href="./assets/logo.jpg"/>
   
@@ -37,69 +37,46 @@
       opacity: 0.8;
     }
   </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 <body>
 
-  <!-- Ambient Fullscreen Video Background -->
-  <div class="video-bg-container">
-    <video class="video-bg-media" autoplay muted loop playsinline>
-      <source src="/assets/bg.mp4" type="video/mp4">
-    </video>
-    <div class="video-bg-overlay"></div>
-  </div>
+  
 
   <div class="app-layout">
     <!-- Left Sidebar -->
     <aside class="sidebar">
-      <div>
-        <div class="sidebar-brand">
-          <a href="/" class="brand-link">
-            <img src="./assets/logo.png" onerror="this.src='./assets/logo.jpg'" alt="Eclipse Panel Logo" class="brand-logo-img" />
-            <div>
-              <span class="brand-text">ECLIPSE PANEL</span>
-            </div>
-          </a>
-          <span class="brand-badge">8090</span>
-        </div>
+      <!-- Nebula Logo Button (demo.nebula.style) -->
+      <a href="/" class="sidebar-logo-btn" title="Eclipse Panel">
+        <img src="./assets/logo.png" onerror="this.src='./assets/logo.jpg'" alt="Logo" class="sidebar-logo-img" />
+      </a>
 
-        <div class="sidebar-section-title">Control Matrix</div>
-        <nav class="sidebar-nav">
-          <a href="/" class="nav-link active">
-            <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
-            <span>Overview</span>
-          </a>
-          <a href="/admin-stats.html" class="nav-link">
-            <svg viewBox="0 0 24 24"><path d="M12 2C6.49 2 2 6.49 2 12s4.49 10 10 10 10-4.49 10-10S17.51 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3-8c0 1.66-1.34 3-3 3s-3-1.34-3-3 1.34-3 3-3 3 1.34 3 3z"/></svg>
-            <span>VPS Telemetry</span>
-            <span class="nav-link-pill live">LIVE</span>
-          </a>
-          <a href="/admin.html" class="nav-link" id="nav-admin-link">
-            <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
-            <span>Admin Center</span>
-          </a>
-        </nav>
-      </div>
+      <!-- Navigation Categories -->
+      <a href="/" class="sidebarButton active" title="Server Overview & Instances">
+        <i class="bi bi-hdd-stack-fill"></i>
+      </a>
 
-      <!-- Bottom Host Metadata -->
-      <div class="sidebar-bottom">
-        <div class="host-badge-box">
-          <div style="display: flex; align-items: center; overflow: hidden;">
-            <span class="status-dot-green"></span>
-            <span id="sidebar-hostname" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #FFF;">Detecting...</span>
-          </div>
-          <span id="sidebar-port" style="color: var(--primary); font-weight: 700;">:8090</span>
-        </div>
+      <a href="/admin-stats.html" class="sidebarButton" title="Real-Time Host Telemetry & Hardware Matrix">
+        <i class="bi bi-activity"></i>
+      </a>
 
-        <div class="user-profile-bar" onclick="openProfileModal()" title="Click to edit profile, Gmail, or password">
-          <div class="user-avatar-sm" id="sidebar-user-avatar">A</div>
-          <div class="user-info-text">
-            <span class="user-name-label" id="sidebar-user-name">admin</span>
-            <span class="user-role-label" id="sidebar-user-role">SUPERADMIN</span>
-          </div>
-          <button class="btn-icon-logout" onclick="event.stopPropagation(); logout();" title="Sign out">
-            <svg viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
-          </button>
-        </div>
+      <a href="/admin.html" class="sidebarButton" id="nav-admin-link" title="SuperAdmin Governance & Server Creation" style="display: none;">
+        <i class="bi bi-sliders"></i>
+      </a>
+
+      <a href="/designer.html" class="sidebarButton" id="nav-designer-link" title="Eclipse Designer (Theme Customizer)" style="display: none;">
+        <i class="bi bi-palette-fill"></i>
+      </a>
+
+      <div class="sidebarSpacer"></div>
+
+      <!-- Bottom User Controls -->
+      <div class="sidebar-bottom-group">
+        <a href="/account.html" class="sidebarButton" title="My Account"><i class="bi bi-person-circle"></i></a>
+
+        <button type="button" class="sidebarButton" onclick="logout()" title="Logout" style="color: #F87171;">
+          <i class="bi bi-box-arrow-right"></i>
+        </button>
       </div>
     </aside>
 
@@ -111,7 +88,7 @@
           <div class="breadcrumbs">
             <span>Cockpit</span>
             <span>/</span>
-            <span class="current">Infrastructure Overview</span>
+            <span class="current">Servers</span>
           </div>
           <div class="badge-ws-status" id="header-ws-badge">
             <span class="status-dot-green"></span>
@@ -120,10 +97,17 @@
         </div>
 
         <div class="header-right">
-          <button class="btn-secondary" onclick="openProfileModal()">
+          <!-- Made by Vexezor Author Badge -->
+          <div class="header-author-badge" title="Platform Creator">
+            <i class="bi bi-shield-fill-check" style="color: #06B6D4;"></i>
+            <span style="color: #94A3B8; font-size: 11px;">Made By</span>
+            <strong style="color: #FFF; font-size: 12px; font-weight: 800; letter-spacing: 0.02em;">Vexezor</strong>
+          </div>
+
+          <a href="/account.html" class="btn-secondary" style="text-decoration: none;">
             <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
             <span>My Account</span>
-          </button>
+          </a>
           <button class="btn-primary" onclick="openCreateAppModal()">
             <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
             <span>Deploy App</span>
@@ -133,134 +117,61 @@
 
       <!-- Page Body -->
       <div class="page-container">
-        <!-- REAL HARDWARE TELEMETRY CARDS -->
-        <section class="metrics-cockpit">
-          <!-- CARD 1: REAL PROCESSOR & CPU TELEMETRY -->
-          <div class="metric-card">
-            <div class="metric-card-glow" style="background: rgba(239, 68, 68, 0.15);"></div>
-            <div class="metric-header">
-              <div class="metric-title-group">
-                <div class="metric-icon-box cpu">
-                  <svg viewBox="0 0 24 24"><path d="M15 9H9v6h6V9zm-2 4h-2v-2h2v2zm8-2V9h-2V7c0-1.1-.9-2-2-2h-2V3h-2v2h-2V3H9v2H7c-1.1 0-2 .9-2 2v2H3v2h2v2H3v2h2v2c0 1.1.9 2 2 2h2v2h2v-2h2v2h2v-2h2c1.1 0 2-.9 2-2v-2h2v-2h-2v-2h2zm-4 6H7V7h10v10z"/></svg>
-                </div>
-                <span class="metric-card-title">Processor & Cores</span>
-              </div>
-              <span class="metric-pill crimson" id="cpu-core-badge">Detecting Cores...</span>
-            </div>
-
-            <div class="metric-main-row">
-              <div>
-                <div class="metric-number-big">
-                  <span id="cpu-percent">0</span><span class="metric-unit" style="color: var(--primary);">%</span>
-                </div>
-                <p class="metric-subtitle" id="cpu-model-name">Detecting Processor...</p>
-              </div>
-            </div>
-
-            <div class="progress-track">
-              <div class="progress-fill crimson" id="cpu-progress-bar" style="width: 0%;"></div>
-            </div>
-
-            <!-- Real-time Sine Oscilloscope -->
-            <div style="margin: 8px 0 4px; overflow: hidden; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.2); background: rgba(0, 0, 0, 0.35);">
-              <canvas id="cpu-oscilloscope" style="width: 100%; height: 28px; display: block;"></canvas>
-            </div>
-
-            <div class="metric-footer-row">
-              <span id="cpu-load-text">Load: 0.00, 0.00, 0.00</span>
-              <a href="/admin-stats.html" style="color: var(--primary); text-decoration: none; font-weight: 600;">View 22-Core Grid →</a>
-            </div>
-          </div>
-
-          <!-- CARD 2: REAL MEMORY / RAM TELEMETRY -->
-          <div class="metric-card">
-            <div class="metric-card-glow" style="background: rgba(16, 185, 129, 0.15);"></div>
-            <div class="metric-header">
-              <div class="metric-title-group">
-                <div class="metric-icon-box ram">
-                  <svg viewBox="0 0 24 24"><path d="M4 6h16v12H4zM2 4v16h20V4H2zm3 3h2v10H5V7zm4 0h2v10H9V7zm4 0h2v10h-2V7zm4 0h2v10h-2V7z"/></svg>
-                </div>
-                <span class="metric-card-title">Memory Subsystem</span>
-              </div>
-              <span class="metric-pill emerald" id="ram-usage-pill">0% Utilized</span>
-            </div>
-
-            <div class="metric-main-row">
-              <div>
-                <div class="metric-number-big">
-                  <span id="ram-used-gb">0.0</span><span class="metric-unit" style="color: var(--emerald); font-size: 14px; font-weight: 600;"> / <span id="ram-total-gb">0.0</span> GB</span>
-                </div>
-                <p class="metric-subtitle" id="ram-free-text" style="color: var(--emerald);">0 GB Available</p>
-              </div>
-            </div>
-
-            <div class="progress-track">
-              <div class="progress-fill emerald" id="ram-progress-bar" style="width: 0%;"></div>
-            </div>
-
-            <div class="metric-footer-row">
-              <span id="ram-mb-detail">0 MB / 0 MB</span>
-              <span id="arch-badge">Node.js 24 · x64</span>
-            </div>
-          </div>
-
-          <!-- CARD 3: REAL DISK & HOST TELEMETRY -->
-          <div class="metric-card">
-            <div class="metric-card-glow" style="background: rgba(245, 158, 11, 0.15);"></div>
-            <div class="metric-header">
-              <div class="metric-title-group">
-                <div class="metric-icon-box disk">
-                  <svg viewBox="0 0 24 24"><path d="M19 2H5c-1.11 0-2 .9-2 2v16c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 18H5V4h14v16zm-7-2c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm0-8c1.65 0 3 1.35 3 3s-1.35 3-3 3-3-1.35-3-3 1.35-3 3-3z"/></svg>
-                </div>
-                <span class="metric-card-title">Storage & Volume</span>
-              </div>
-              <span class="metric-pill amber" id="disk-usage-pill">0% Used</span>
-            </div>
-
-            <div class="metric-main-row">
-              <div>
-                <div class="metric-number-big">
-                  <span id="disk-used-gb">0.0</span><span class="metric-unit" style="color: var(--amber); font-size: 14px; font-weight: 600;"> / <span id="disk-total-gb">0.0</span> GB</span>
-                </div>
-                <p class="metric-subtitle" id="disk-free-text" style="color: var(--amber);">0 GB Free Space</p>
-              </div>
-            </div>
-
-            <div class="progress-track">
-              <div class="progress-fill amber" id="disk-progress-bar" style="width: 0%;"></div>
-            </div>
-
-            <div class="metric-footer-row">
-              <span id="disk-mount-path">Root Volume</span>
-              <span id="os-platform-badge">Windows / Linux</span>
-            </div>
-          </div>
-        </section>
-
-        <!-- APPLICATION INSTANCE MATRIX -->
-        <section class="content-section">
-          <div class="section-header">
+        <!-- NEBULA SERVERS MATRIX (demo.nebula.style) -->
+        <section class="content-section" style="padding: 24px;">
+          <div class="section-header" style="margin-bottom: 22px;">
             <div class="section-title-wrap">
-              <h2>
-                <svg style="width: 20px; height: 20px; fill: var(--primary);" viewBox="0 0 24 24"><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/></svg>
-                <span>Managed Application Matrix</span>
+              <h2 style="display: flex; align-items: center; gap: 10px;">
+                <i class="bi bi-hdd-stack-fill" style="color: var(--sidebarButtonActive); font-size: 20px;"></i>
+                <span>Servers</span>
+                <span id="nav-app-count-badge" style="background: var(--pageSecondaryHover); color: var(--pagePrimaryHover); font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 100px; font-family: var(--font-mono);">0</span>
               </h2>
-              <p>Process supervisor engine running Python 3 & Node.js workloads with zero-downtime watchdogs.</p>
+              <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">Eclipse Panel runtime clusters executing containerized services and web applications.</p>
             </div>
-            <div style="display: flex; gap: 10px;">
-              <button class="btn-secondary" onclick="fetchApps()">
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+              <!-- Real-time search filter -->
+              <input type="text" id="server-search-input" class="form-control" placeholder="Search servers... (Ctrl+K)" oninput="handleServerSearch(this.value)" style="width: 240px; padding: 7px 12px; font-size: 12px; height: 36px;">
+
+              <!-- View Layout Switcher (Pterodactyl Nebula Style) -->
+              <div class="view-mode-toggle">
+                <button type="button" class="view-mode-btn active" id="btn-view-grid" onclick="setViewMode('grid')" title="Cards Grid View">
+                  <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; fill: currentColor;"><path d="M4 11h5V5H4v6zm0 7h5v-6H4v6zm6 0h5v-6h-5v6zm6 0h5v-6h-5v6zm-6-7h5V5h-5v6zm6-6v6h5V5h-5z"/></svg>
+                  <span>Grid</span>
+                </button>
+                <button type="button" class="view-mode-btn" id="btn-view-table" onclick="setViewMode('table')" title="List Table View">
+                  <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; fill: currentColor;"><path d="M3 14h18v-2H3v2zm0 4h18v-2H3v2zm0-8h18V8H3v2zm0-6v2h18V4H3z"/></svg>
+                  <span>Table</span>
+                </button>
+              </div>
+
+              <button class="btn-secondary" onclick="fetchApps()" style="height: 36px;">
                 <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
                 <span>Refresh</span>
               </button>
-              <button class="btn-primary" id="btn-deploy-new-app" onclick="openCreateAppModal()">
+              <button class="btn-primary" id="btn-deploy-new-app" onclick="openCreateAppModal()" style="height: 36px;">
                 <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-                <span>Deploy New App</span>
+                <span>Deploy Server</span>
               </button>
             </div>
           </div>
 
-          <!-- Apps Table -->
-          <div class="data-table-container">
+          <!-- Empty State (Shown when no servers) -->
+          <div id="nebula-empty-state" class="empty-state-box" style="display: none;">
+            <div class="empty-state-icon">
+              <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
+            </div>
+            <p style="font-size: 16px; font-weight: 700; color: #FFF; margin-bottom: 6px;">No Servers Deployed</p>
+            <p id="nebula-empty-desc" style="font-size: 13px; margin-bottom: 18px;">Deploy your first Node.js or Python server instance to get started.</p>
+            <button class="btn-primary" id="btn-empty-deploy" onclick="openCreateAppModal()">+ Deploy First Server</button>
+          </div>
+
+          <!-- VIEW 1: NEBULA SERVER CARDS (GRID VIEW) -->
+          <div id="nebula-cards-container" class="nebula-server-grid">
+            <!-- Dynamically rendered by renderAppsTable() -->
+          </div>
+
+          <!-- VIEW 2: NEBULA DATA TABLE (LIST VIEW) -->
+          <div id="nebula-table-container" class="data-table-container" style="display: none; margin-top: 10px;">
             <table class="data-table">
               <thead>
                 <tr>
@@ -268,111 +179,308 @@
                   <th>Runtime</th>
                   <th>Allocated Specs</th>
                   <th>Status</th>
-                  <th>Whole IP Address</th>
+                  <th>Dedicated Address</th>
                   <th>Restarts</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody id="apps-tbody">
-                <tr>
-                  <td colspan="6">
-                    <div class="empty-state-box">
-                      <div class="empty-state-icon">
-                        <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
-                      </div>
-                      <p style="font-size: 14px; font-weight: 600; color: #FFF; margin-bottom: 6px;">No Applications Deployed</p>
-                      <p style="font-size: 12px; margin-bottom: 16px;">Deploy your first Node.js or Python application to get started.</p>
-                      <button class="btn-primary" onclick="openCreateAppModal()">Deploy Application</button>
-                    </div>
-                  </td>
-                </tr>
               </tbody>
             </table>
           </div>
         </section>
+      
+        <!-- Official Nebula Theme Watermark (demo.nebula.style/authWatermark.css) -->
+        <div class="eclipse-watermark" style="text-align: center; font-size: 11.5px; color: #64748B; font-family: var(--font-mono); margin-top: 30px; padding: 10px;">Eclipse Panel © 2026 &middot; Cloud Container Infrastructure &middot; <strong style="color: #06B6D4;">Made By Vexezor</strong></div>
       </div>
     </main>
   </div>
 
-  <!-- MODAL: DEPLOY NEW APPLICATION -->
+  <!-- MODAL: NEBULA DEPLOY STUDIO (NEW & BETTER DEPLOY APP UI) -->
   <div class="modal-overlay" id="modal-create-app">
-    <div class="modal-card">
-      <div class="modal-header">
-        <h3 class="modal-title">
-          <svg style="width: 22px; height: 22px; fill: var(--primary);" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-          <span>Deploy Application</span>
-        </h3>
-        <button class="modal-close-btn" onclick="closeCreateAppModal()">
+    <div class="modal-card deploy-studio-modal">
+      <!-- Progress Overlay during Launch -->
+      <div id="deploy-progress-overlay" class="deploy-progress-overlay">
+        <div class="installing-gear-spin" style="font-size: 54px; margin-bottom: 20px;">
+          <i class="bi bi-rocket-takeoff-fill" style="color: var(--sidebarButtonActive);"></i>
+        </div>
+        <h3 style="font-size: 20px; font-weight: 800; color: #FFF; margin-bottom: 8px;" id="deploy-progress-title">Provisioning Server Instance...</h3>
+        <p style="font-size: 13px; color: var(--text-muted); max-width: 440px; margin-bottom: 24px;" id="deploy-progress-desc">
+          Allocating container sandbox, injecting supervisor watchdogs, and preparing packages.
+        </p>
+        <div style="width: 280px; height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden;">
+          <div id="deploy-progress-fill" style="width: 30%; height: 100%; background: linear-gradient(90deg, #06B6D4, #22D3EE); transition: width 0.4s ease;"></div>
+        </div>
+      </div>
+
+      <!-- Modal Header -->
+      <div class="modal-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 18px; margin-bottom: 18px;">
+        <div class="deploy-header-group">
+          <div class="deploy-header-icon">
+            <i class="bi bi-rocket-takeoff-fill"></i>
+          </div>
+          <div>
+            <h3 style="font-size: 18px; font-weight: 800; color: #FFF; margin: 0; display: flex; align-items: center; gap: 8px;">
+              Deploy Server Instance
+              <span style="font-size: 10px; background: rgba(6, 182, 212, 0.2); color: var(--pagePrimaryHover); border: 1px solid rgba(6, 182, 212, 0.4); padding: 2px 8px; border-radius: 100px; font-family: var(--font-mono);">ECLIPSE DEPLOY STUDIO</span>
+            </h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin: 3px 0 0 0;">Provision an isolated Node.js or Python runtime container with custom quotas and auto-healing watchdogs.</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" onclick="closeCreateAppModal()" title="Close Studio">
           <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
         </button>
       </div>
 
       <form id="create-app-form" onsubmit="event.preventDefault(); submitCreateApp();">
-        <div class="form-group">
-          <label class="form-label" for="app-name">Application / Server Name</label>
-          <input type="text" id="app-name" class="form-control" placeholder="my-awesome-server" required>
-        </div>
+        <input type="hidden" id="app-type" value="nodejs">
+        <input type="hidden" id="app-version" value="22">
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-          <div class="form-group">
-            <label class="form-label" for="app-type">Runtime Engine</label>
-            <select id="app-type" class="form-control" style="cursor: pointer;" onchange="updateCreateRuntimeVersions()">
-              <option value="nodejs">Node.js (JavaScript / TypeScript)</option>
-              <option value="python">Python 3 (venv / PyPI)</option>
-            </select>
+        <div class="deploy-studio-grid">
+          <!-- LEFT COLUMN: Runtime, Name & Hardware Sliders -->
+          <div>
+            <!-- 1. Runtime Selection -->
+            <div class="deploy-section-title">
+              <i class="bi bi-cpu-fill" style="color: var(--sidebarButtonActive);"></i>
+              <span>1. Select Execution Engine</span>
+            </div>
+
+            <div class="runtime-tiles-grid">
+              <!-- Node.js Tile -->
+              <div class="runtime-tile node active" id="tile-nodejs" onclick="selectRuntimeTile('nodejs')">
+                <div class="runtime-tile-icon">
+                  <i class="bi bi-filetype-js"></i>
+                </div>
+                <div>
+                  <div style="font-weight: 800; font-size: 14px; color: #FFF;">Node.js</div>
+                  <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4; margin-top: 2px;">V8 engine for Express, Fastify, Discord bots, and TypeScript.</div>
+                </div>
+                <div class="runtime-tile-check"><i class="bi bi-check"></i></div>
+              </div>
+
+              <!-- Python Tile -->
+              <div class="runtime-tile python" id="tile-python" onclick="selectRuntimeTile('python')">
+                <div class="runtime-tile-icon">
+                  <i class="bi bi-filetype-py"></i>
+                </div>
+                <div>
+                  <div style="font-weight: 800; font-size: 14px; color: #FFF;">Python 3</div>
+                  <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4; margin-top: 2px;">Virtualenv for FastAPI, Flask, Django, scrapers & AI agents.</div>
+                </div>
+                <div class="runtime-tile-check"><i class="bi bi-check"></i></div>
+              </div>
+            </div>
+
+            <!-- Version Picker Pills -->
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+              <span style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Engine Version</span>
+              <span style="font-size: 11px; color: var(--pagePrimaryHover);" id="version-current-label">Node.js 22 LTS (Recommended)</span>
+            </div>
+            <div class="version-pill-group" id="version-pill-container">
+              <!-- Rendered dynamically -->
+            </div>
+
+            <!-- 2. Server Identity -->
+            <div class="deploy-section-title" style="margin-top: 14px;">
+              <i class="bi bi-tag-fill" style="color: var(--sidebarButtonActive);"></i>
+              <span>2. Server Identity & Entrypoint</span>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 140px; gap: 10px; margin-bottom: 14px;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" for="app-name">Server Instance Name</label>
+                <div style="position: relative;">
+                  <input type="text" id="app-name" class="form-control" placeholder="my-awesome-server" required oninput="updateDeployPreview()" style="padding-right: 90px;">
+                  <button type="button" class="btn-secondary" onclick="generateRandomServerName()" title="Generate Random Name" style="position: absolute; right: 5px; top: 5px; padding: 4px 10px; font-size: 11px; height: 28px;">
+                    🎲 Random
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" for="app-entry">Entrypoint</label>
+                <input type="text" id="app-entry" class="form-control" value="index.js" required oninput="updateDeployPreview()">
+              </div>
+            </div>
+
+            <!-- 3. Resource Allocation Matrix -->
+            <div class="deploy-section-title" style="margin-top: 18px;">
+              <i class="bi bi-sliders2" style="color: var(--sidebarButtonActive);"></i>
+              <span>3. Resource Allocation & Hardware Quotas</span>
+            </div>
+
+            <!-- Quick Tier Presets -->
+            <div class="tier-presets-bar">
+              <div class="tier-chip active" id="tier-starter" onclick="applyTierPreset('starter')">
+                <span class="tier-chip-name">Starter</span>
+                <span class="tier-chip-specs">1 Core / 1GB RAM</span>
+              </div>
+              <div class="tier-chip" id="tier-standard" onclick="applyTierPreset('standard')">
+                <span class="tier-chip-name">Standard</span>
+                <span class="tier-chip-specs">2 Cores / 2GB RAM</span>
+              </div>
+              <div class="tier-chip" id="tier-pro" onclick="applyTierPreset('pro')">
+                <span class="tier-chip-name">Pro</span>
+                <span class="tier-chip-specs">4 Cores / 4GB RAM</span>
+              </div>
+              <div class="tier-chip" id="tier-extreme" onclick="applyTierPreset('extreme')">
+                <span class="tier-chip-name">Extreme</span>
+                <span class="tier-chip-specs">8 Cores / 8GB RAM</span>
+              </div>
+            </div>
+
+            <!-- CPU Slider -->
+            <div class="resource-slider-block">
+              <div class="resource-slider-top">
+                <span class="resource-slider-title">
+                  <i class="bi bi-cpu-fill" style="color: var(--amber);"></i>
+                  <span>Processor Core Limit</span>
+                </span>
+                <span class="resource-slider-badge" style="color: var(--amber);" id="badge-cpu">100% (1 Core)</span>
+              </div>
+              <input type="range" id="app-cpu" class="nebula-range-slider" min="10" max="800" step="10" value="100" oninput="handleSliderChange('cpu', this.value)">
+              <div style="display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); font-family: var(--font-mono);">
+                <span>10% (Burstable)</span>
+                <span>100% (1 Core)</span>
+                <span>200% (2 Cores)</span>
+                <span>400% (4 Cores)</span>
+                <span>800% (8 Cores)</span>
+              </div>
+            </div>
+
+            <!-- RAM Slider -->
+            <div class="resource-slider-block">
+              <div class="resource-slider-top">
+                <span class="resource-slider-title">
+                  <i class="bi bi-pie-chart-fill" style="color: var(--emerald);"></i>
+                  <span>Memory (RAM) Allocation</span>
+                </span>
+                <span class="resource-slider-badge" style="color: var(--emerald);" id="badge-ram">1024 MB (1.0 GB)</span>
+              </div>
+              <input type="range" id="app-ram" class="nebula-range-slider" min="256" max="16384" step="256" value="1024" oninput="handleSliderChange('ram', this.value)">
+              <div style="display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); font-family: var(--font-mono);">
+                <span>512 MB</span>
+                <span>1 GB</span>
+                <span>2 GB</span>
+                <span>4 GB</span>
+                <span>8 GB</span>
+                <span>16 GB</span>
+              </div>
+            </div>
+
+            <!-- Disk Slider -->
+            <div class="resource-slider-block">
+              <div class="resource-slider-top">
+                <span class="resource-slider-title">
+                  <i class="bi bi-hdd-fill" style="color: #A78BFA;"></i>
+                  <span>Storage Volume (NVMe)</span>
+                </span>
+                <span class="resource-slider-badge" style="color: #A78BFA;" id="badge-disk">5120 MB (5.0 GB)</span>
+              </div>
+              <input type="range" id="app-disk" class="nebula-range-slider" min="512" max="51200" step="512" value="5120" oninput="handleSliderChange('disk', this.value)">
+              <div style="display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); font-family: var(--font-mono);">
+                <span>1 GB</span>
+                <span>5 GB</span>
+                <span>10 GB</span>
+                <span>20 GB</span>
+                <span>50 GB</span>
+              </div>
+            </div>
           </div>
 
-          <div class="form-group">
-            <label class="form-label" for="app-version">Engine Version</label>
-            <select id="app-version" class="form-control" style="cursor: pointer;">
-              <option value="22">Node.js 22 LTS (Current)</option>
-              <option value="20">Node.js 20 LTS (Active)</option>
-              <option value="18">Node.js 18 LTS (Maintenance)</option>
-              <option value="24">Node.js 24 (Nightly/Next)</option>
-            </select>
+          <!-- RIGHT COLUMN: Network, Node, Live Preview & Launch -->
+          <div style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <!-- 4. Network Configuration -->
+              <div class="deploy-section-title">
+                <i class="bi bi-hdd-network-fill" style="color: var(--sidebarButtonActive);"></i>
+                <span>4. Networking & Binding</span>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="app-ip">Binding Interface / IP</label>
+                <input type="text" id="app-ip" class="form-control" value="0.0.0.0" required oninput="updateDeployPreview()">
+              </div>
+
+              <div class="form-group">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                  <label class="form-label" for="app-port" style="margin-bottom: 0;">Dedicated Port</label>
+                  <button type="button" class="quick-cmd-btn" onclick="autoAssignNextFreePort()" title="Find Next Available Port">
+                    ⚡ Auto-Detect Port
+                  </button>
+                </div>
+                <input type="number" id="app-port" class="form-control" value="3106" min="1024" max="65535" required oninput="updateDeployPreview()">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="app-domain">Custom Domain / DNS Hostname (Optional)</label>
+                <input type="text" id="app-domain" class="form-control" placeholder="srv1.yourdomain.com">
+                <p style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">Point an A record to your VPS IP to map direct traffic.</p>
+              </div>
+
+              <!-- Cluster Node Target -->
+              <div style="background: var(--pageSecondaryActive); border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; border: 1px solid rgba(255, 255, 255, 0.05); display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                  <div style="font-size: 10px; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Target Cluster Node</div>
+                  <div style="font-size: 13px; font-weight: 700; color: #FFF; margin-top: 2px;">LocalNode (Primary VPS)</div>
+                </div>
+                <span class="nebula-status-pill running" style="font-size: 10px;">
+                  <i class="bi bi-circle-fill"></i> Connected
+                </span>
+              </div>
+
+              <!-- Live Card Preview -->
+              <div class="deploy-section-title">
+                <i class="bi bi-eye-fill" style="color: var(--sidebarButtonActive);"></i>
+                <span>Live Card Preview</span>
+              </div>
+
+              <div class="deploy-preview-card">
+                <div class="status-bar" style="--ActiveColor: var(--statusInstalling);"></div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; position: relative; z-index: 2;">
+                  <div style="display: flex; gap: 10px; align-items: center;">
+                    <div style="width: 38px; height: 38px; border-radius: 8px; background: var(--pageSecondaryActive); display: flex; align-items: center; justify-content: center; font-size: 18px;" id="preview-icon">
+                      <i class="bi bi-filetype-js" style="color: #2CDD2F;"></i>
+                    </div>
+                    <div>
+                      <div style="display: flex; align-items: center; gap: 6px;">
+                        <span class="statusOrb installing"></span>
+                        <span style="font-weight: 800; color: #FFF; font-size: 14px;" id="preview-name">my-awesome-server</span>
+                      </div>
+                      <div style="font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); margin-top: 2px;" id="preview-addr">0.0.0.0:3106</div>
+                    </div>
+                  </div>
+                  <span class="nebula-status-pill installing" style="font-size: 9px; padding: 2px 7px;">
+                    <i class="bi bi-gear-fill spin"></i> Installing
+                  </span>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; position: relative; z-index: 2;">
+                  <div class="nebula-metric-chip" style="padding: 6px 8px;">
+                    <span class="nebula-metric-chip-label" style="font-size: 9px;">RAM</span>
+                    <span class="nebula-metric-chip-val" id="preview-ram-chip" style="color: var(--emerald); font-size: 10px;">1024 MB</span>
+                  </div>
+                  <div class="nebula-metric-chip" style="padding: 6px 8px;">
+                    <span class="nebula-metric-chip-label" style="font-size: 9px;">CPU</span>
+                    <span class="nebula-metric-chip-val" id="preview-cpu-chip" style="color: var(--amber); font-size: 10px;">100%</span>
+                  </div>
+                  <div class="nebula-metric-chip" style="padding: 6px 8px;">
+                    <span class="nebula-metric-chip-label" style="font-size: 9px;">Disk</span>
+                    <span class="nebula-metric-chip-val" id="preview-disk-chip" style="color: #A78BFA; font-size: 10px;">5120 MB</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Footer Action -->
+            <div class="modal-footer" style="margin-top: 24px; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, 0.08); display: flex; justify-content: flex-end; gap: 12px;">
+              <button type="button" class="btn-secondary" onclick="closeCreateAppModal()">Cancel</button>
+              <button type="submit" class="btn-deploy-galaxy" id="btn-create-submit">
+                <i class="bi bi-rocket-takeoff-fill"></i>
+                <span>Launch & Deploy Server</span>
+              </button>
+            </div>
           </div>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-          <div class="form-group">
-            <label class="form-label" for="app-ip">Binding IP Support</label>
-            <input type="text" id="app-ip" class="form-control" placeholder="0.0.0.0 or VPS IP" value="0.0.0.0" required>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="app-port">Dedicated Port</label>
-            <input type="number" id="app-port" class="form-control" placeholder="3000" required value="3000" min="1024" max="65535">
-          </div>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
-          <div class="form-group">
-            <label class="form-label" for="app-cpu">Core / CPU (%)</label>
-            <input type="number" id="app-cpu" class="form-control" value="100" min="10" max="1600" step="10" required placeholder="100">
-            <span style="font-size: 10px; color: var(--text-muted); font-family: var(--font-mono);">100% = 1 Core</span>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="app-ram">RAM (MB)</label>
-            <input type="number" id="app-ram" class="form-control" value="1024" min="128" step="128" required placeholder="1024">
-            <span style="font-size: 10px; color: var(--text-muted); font-family: var(--font-mono);">1024 MB = 1 GB</span>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="app-disk">Disk (MB)</label>
-            <input type="number" id="app-disk" class="form-control" value="5120" min="256" step="512" required placeholder="5120">
-            <span style="font-size: 10px; color: var(--text-muted); font-family: var(--font-mono);">5120 MB = 5 GB</span>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="app-entry">Entrypoint Script</label>
-          <input type="text" id="app-entry" class="form-control" placeholder="index.js or main.py" required value="index.js">
-        </div>
-
-        <div class="modal-footer">
-          <button type="button" class="btn-secondary" onclick="closeCreateAppModal()">Cancel</button>
-          <button type="submit" class="btn-primary" id="btn-create-submit">Create & Deploy Server</button>
         </div>
       </form>
     </div>
@@ -505,7 +613,193 @@
     }
 
     // Modal helpers
+    
+    // NEBULA DEPLOY STUDIO INTERACTIVE CONTROLS
+    const RUNTIME_VERSIONS = {
+      nodejs: [
+        { ver: '22', label: 'Node.js 22 LTS (Current)', recommended: true },
+        { ver: '20', label: 'Node.js 20 LTS (Active)' },
+        { ver: '18', label: 'Node.js 18 LTS' },
+        { ver: '24', label: 'Node.js 24 (Next)' }
+      ],
+      python: [
+        { ver: '3.12', label: 'Python 3.12 (Standard)', recommended: true },
+        { ver: '3.11', label: 'Python 3.11' },
+        { ver: '3.10', label: 'Python 3.10' },
+        { ver: '3.13', label: 'Python 3.13 (Next)' }
+      ]
+    };
+
+    const RANDOM_NAMES = [
+      'eclipse-core', 'quantum-express', 'stellar-api', 'hyperion-bot', 'apex-worker',
+      'vortex-node', 'cosmic-fastapi', 'zenith-service', 'phoenix-micro', 'titan-backend',
+      'pulse-streamer', 'aurora-server', 'cipher-node', 'solaris-py', 'chrono-worker'
+    ];
+
+    function selectRuntimeTile(type) {
+      document.getElementById('app-type').value = type;
+      const tileNode = document.getElementById('tile-nodejs');
+      const tilePy = document.getElementById('tile-python');
+      const entryInput = document.getElementById('app-entry');
+
+      if (type === 'nodejs') {
+        tileNode.classList.add('active');
+        tilePy.classList.remove('active');
+        if (entryInput.value === 'main.py' || !entryInput.value) entryInput.value = 'index.js';
+      } else {
+        tilePy.classList.add('active');
+        tileNode.classList.remove('active');
+        if (entryInput.value === 'index.js' || !entryInput.value) entryInput.value = 'main.py';
+      }
+
+      renderVersionPills(type);
+      updateDeployPreview();
+    }
+
+    function renderVersionPills(type) {
+      const container = document.getElementById('version-pill-container');
+      const label = document.getElementById('version-current-label');
+      const currentVerInput = document.getElementById('app-version');
+      if (!container) return;
+
+      const versions = RUNTIME_VERSIONS[type] || [];
+      const defaultVer = versions.find(v => v.recommended) || versions[0];
+      currentVerInput.value = defaultVer.ver;
+      if (label) label.innerText = defaultVer.label;
+
+      container.innerHTML = versions.map(v => {
+        const isAct = v.ver === defaultVer.ver;
+        return `<button type="button" class="version-pill ${isAct ? 'active' : ''}" onclick="selectVersionPill('${v.ver}', '${v.label}')">${v.label}</button>`;
+      }).join('');
+    }
+
+    function selectVersionPill(ver, verLabel) {
+      document.getElementById('app-version').value = ver;
+      const label = document.getElementById('version-current-label');
+      if (label) label.innerText = verLabel;
+
+      const pills = document.querySelectorAll('#version-pill-container .version-pill');
+      pills.forEach(p => {
+        p.classList.toggle('active', p.innerText === verLabel);
+      });
+    }
+
+    function generateRandomServerName() {
+      const rand = RANDOM_NAMES[Math.floor(Math.random() * RANDOM_NAMES.length)];
+      const num = Math.floor(10 + Math.random() * 90);
+      const nameInput = document.getElementById('app-name');
+      if (nameInput) {
+        nameInput.value = `${rand}-${num}`;
+        updateDeployPreview();
+      }
+    }
+
+    function applyTierPreset(tier) {
+      const tiers = {
+        starter:  { cpu: 100, ram: 1024, disk: 5120 },
+        standard: { cpu: 200, ram: 2048, disk: 10240 },
+        pro:      { cpu: 400, ram: 4096, disk: 20480 },
+        extreme:  { cpu: 800, ram: 8192, disk: 40960 }
+      };
+      const preset = tiers[tier];
+      if (!preset) return;
+
+      document.getElementById('app-cpu').value = preset.cpu;
+      document.getElementById('app-ram').value = preset.ram;
+      document.getElementById('app-disk').value = preset.disk;
+
+      handleSliderChange('cpu', preset.cpu);
+      handleSliderChange('ram', preset.ram);
+      handleSliderChange('disk', preset.disk);
+
+      ['starter', 'standard', 'pro', 'extreme'].forEach(t => {
+        const el = document.getElementById(`tier-${t}`);
+        if (el) el.classList.toggle('active', t === tier);
+      });
+    }
+
+    function handleSliderChange(type, val) {
+      val = parseInt(val, 10);
+      if (type === 'cpu') {
+        const cores = (val / 100).toFixed(val % 100 === 0 ? 0 : 1);
+        document.getElementById('badge-cpu').innerText = `${val}% (${cores} Core${val >= 200 ? 's' : ''})`;
+        document.getElementById('preview-cpu-chip').innerText = `${val}%`;
+      } else if (type === 'ram') {
+        const gb = (val / 1024).toFixed(val % 1024 === 0 ? 0 : 1);
+        document.getElementById('badge-ram').innerText = `${val} MB (${gb} GB)`;
+        document.getElementById('preview-ram-chip').innerText = `${val} MB`;
+      } else if (type === 'disk') {
+        const gb = (val / 1024).toFixed(val % 1024 === 0 ? 0 : 1);
+        document.getElementById('badge-disk').innerText = `${val} MB (${gb} GB)`;
+        document.getElementById('preview-disk-chip').innerText = `${val} MB`;
+      }
+    }
+
+    function autoAssignNextFreePort() {
+      let maxPort = 3100;
+      if (cachedApps && cachedApps.length > 0) {
+        cachedApps.forEach(a => {
+          const p = parseInt(a.port, 10);
+          if (!isNaN(p) && p >= maxPort) maxPort = p;
+        });
+        maxPort += 1;
+      }
+      document.getElementById('app-port').value = maxPort;
+      updateDeployPreview();
+      if (window.EclipseAnimations && window.EclipseAnimations.showToast) {
+        window.EclipseAnimations.showToast(`Allocated next free port: ${maxPort}`, 'success');
+      }
+    }
+
+    function updateDeployPreview() {
+      const name = document.getElementById('app-name').value.trim() || 'my-awesome-server';
+      const type = document.getElementById('app-type').value;
+      const ip = document.getElementById('app-ip').value.trim() || '0.0.0.0';
+      const port = document.getElementById('app-port').value || '3100';
+
+      const previewName = document.getElementById('preview-name');
+      const previewAddr = document.getElementById('preview-addr');
+      const previewIcon = document.getElementById('preview-icon');
+
+      if (previewName) previewName.innerText = name;
+      if (previewAddr) previewAddr.innerText = `${ip}:${port}`;
+      if (previewIcon) {
+        if (type === 'nodejs') {
+          previewIcon.innerHTML = '<i class="bi bi-filetype-js" style="color: #2CDD2F;"></i>';
+        } else {
+          previewIcon.innerHTML = '<i class="bi bi-filetype-py" style="color: #38BDF8;"></i>';
+        }
+      }
+    }
+
     function openCreateAppModal() {
+      renderVersionPills('nodejs');
+      autoAssignNextFreePort();
+      if (!document.getElementById('app-name').value) {
+        generateRandomServerName();
+      }
+      updateDeployPreview();
+      document.getElementById('modal-create-app').classList.add('open');
+    }
+
+    function closeCreateAppModal() {
+      const overlay = document.getElementById('deploy-progress-overlay');
+      if (overlay) overlay.style.display = 'none';
+      document.getElementById('modal-create-app').classList.remove('open');
+    }
+
+    function _old_openCreateAppModal() {
+      let nextPort = 3100;
+      if (allApps && allApps.length > 0) {
+        const ports = allApps.map(a => a.port).filter(p => typeof p === 'number' && p >= 1024);
+        if (ports.length > 0) {
+          nextPort = Math.max(...ports) + 1;
+        }
+      }
+      const portInput = document.getElementById('app-port');
+      if (portInput && (!portInput.value || portInput.value === '3000' || portInput.value === '3100')) {
+        portInput.value = nextPort;
+      }
       document.getElementById('modal-create-app').classList.add('open');
     }
     function closeCreateAppModal() {
@@ -524,6 +818,16 @@
 
     let latestCpuPercent = 0;
 
+    function setElText(id, val) {
+      const el = document.getElementById(id);
+      if (el && val !== undefined && val !== null) el.innerText = val;
+    }
+
+    function setElWidth(id, pct) {
+      const el = document.getElementById(id);
+      if (el && pct !== undefined && pct !== null) el.style.width = Math.min(100, Math.max(0, pct)) + '%';
+    }
+
     // Update UI with real host metrics
     function updateMetricsUI(data) {
       if (!data) return;
@@ -535,21 +839,24 @@
         const percent = data.cpu.overallPercent !== undefined ? data.cpu.overallPercent : 0;
         latestCpuPercent = percent;
 
-        document.getElementById('cpu-model-name').innerText = model;
-        document.getElementById('cpu-core-badge').innerText = cores + 'x Cores';
+        setElText('cpu-model-name', model);
+        setElText('cpu-core-badge', cores + 'x Cores');
         
-        if (window.EclipseAnimations && window.EclipseAnimations.animateCounter) {
-          window.EclipseAnimations.animateCounter(document.getElementById('cpu-percent'), percent, 600, 0);
-        } else {
-          document.getElementById('cpu-percent').innerText = percent;
+        const cpuPctEl = document.getElementById('cpu-percent');
+        if (cpuPctEl) {
+          if (window.EclipseAnimations && window.EclipseAnimations.animateCounter) {
+            window.EclipseAnimations.animateCounter(cpuPctEl, percent, 600, 0);
+          } else {
+            cpuPctEl.innerText = percent;
+          }
         }
 
-        document.getElementById('cpu-progress-bar').style.width = Math.min(100, Math.max(0, percent)) + '%';
+        setElWidth('cpu-progress-bar', percent);
       }
 
       if (data.loadAvg) {
         const loads = Array.isArray(data.loadAvg) ? data.loadAvg.map(n => Number(n).toFixed(2)).join(', ') : '0.00, 0.00, 0.00';
-        document.getElementById('cpu-load-text').innerText = 'Load: ' + loads;
+        setElText('cpu-load-text', 'Load: ' + loads);
       }
 
       // 2. Memory / RAM
@@ -559,20 +866,24 @@
         const freeGB = data.memory.freeGB || (data.memory.freeMB ? (data.memory.freeMB / 1024).toFixed(2) : '0.0');
         const percent = data.memory.usagePercent !== undefined ? data.memory.usagePercent : 0;
 
-        if (window.EclipseAnimations && window.EclipseAnimations.animateCounter) {
-          window.EclipseAnimations.animateCounter(document.getElementById('ram-used-gb'), usedGB, 600, 2);
-          window.EclipseAnimations.animateCounter(document.getElementById('ram-total-gb'), totalGB, 600, 2);
-        } else {
-          document.getElementById('ram-used-gb').innerText = usedGB.toFixed(2);
-          document.getElementById('ram-total-gb').innerText = totalGB.toFixed(2);
+        const ramUsedEl = document.getElementById('ram-used-gb');
+        const ramTotalEl = document.getElementById('ram-total-gb');
+        if (ramUsedEl && ramTotalEl) {
+          if (window.EclipseAnimations && window.EclipseAnimations.animateCounter) {
+            window.EclipseAnimations.animateCounter(ramUsedEl, usedGB, 600, 2);
+            window.EclipseAnimations.animateCounter(ramTotalEl, totalGB, 600, 2);
+          } else {
+            ramUsedEl.innerText = usedGB.toFixed(2);
+            ramTotalEl.innerText = totalGB.toFixed(2);
+          }
         }
 
-        document.getElementById('ram-usage-pill').innerText = percent + '% Utilized';
-        document.getElementById('ram-free-text').innerText = freeGB + ' GB Available';
-        document.getElementById('ram-progress-bar').style.width = Math.min(100, Math.max(0, percent)) + '%';
+        setElText('ram-usage-pill', percent + '% Utilized');
+        setElText('ram-free-text', freeGB + ' GB Available');
+        setElWidth('ram-progress-bar', percent);
 
         if (data.memory.usedMB && data.memory.totalMB) {
-          document.getElementById('ram-mb-detail').innerText = data.memory.usedMB.toLocaleString() + ' / ' + data.memory.totalMB.toLocaleString() + ' MB';
+          setElText('ram-mb-detail', data.memory.usedMB.toLocaleString() + ' / ' + data.memory.totalMB.toLocaleString() + ' MB');
         }
       }
 
@@ -583,29 +894,33 @@
         const freeGB = data.disk.freeGB || '0.0';
         const percent = data.disk.usagePercent !== undefined ? data.disk.usagePercent : 0;
 
-        if (window.EclipseAnimations && window.EclipseAnimations.animateCounter) {
-          window.EclipseAnimations.animateCounter(document.getElementById('disk-used-gb'), usedGB, 600, 1);
-          window.EclipseAnimations.animateCounter(document.getElementById('disk-total-gb'), totalGB, 600, 1);
-        } else {
-          document.getElementById('disk-used-gb').innerText = usedGB.toFixed(1);
-          document.getElementById('disk-total-gb').innerText = totalGB.toFixed(1);
+        const diskUsedEl = document.getElementById('disk-used-gb');
+        const diskTotalEl = document.getElementById('disk-total-gb');
+        if (diskUsedEl && diskTotalEl) {
+          if (window.EclipseAnimations && window.EclipseAnimations.animateCounter) {
+            window.EclipseAnimations.animateCounter(diskUsedEl, usedGB, 600, 1);
+            window.EclipseAnimations.animateCounter(diskTotalEl, totalGB, 600, 1);
+          } else {
+            diskUsedEl.innerText = usedGB.toFixed(1);
+            diskTotalEl.innerText = totalGB.toFixed(1);
+          }
         }
 
-        document.getElementById('disk-usage-pill').innerText = percent + '% Used';
-        document.getElementById('disk-free-text').innerText = freeGB + ' GB Free Space';
-        document.getElementById('disk-progress-bar').style.width = Math.min(100, Math.max(0, percent)) + '%';
+        setElText('disk-usage-pill', percent + '% Used');
+        setElText('disk-free-text', freeGB + ' GB Free Space');
+        setElWidth('disk-progress-bar', percent);
 
         if (data.disk.path) {
-          document.getElementById('disk-mount-path').innerText = 'Mount: ' + data.disk.path;
+          setElText('disk-mount-path', 'Mount: ' + data.disk.path);
         }
       }
 
       // Host metadata
       if (data.hostname) {
-        document.getElementById('sidebar-hostname').innerText = data.hostname;
+        setElText('sidebar-hostname', data.hostname);
       }
       if (data.platform) {
-        document.getElementById('os-platform-badge').innerText = data.platform.toUpperCase() + ' (' + (data.arch || 'x64') + ')';
+        setElText('os-platform-badge', data.platform.toUpperCase() + ' (' + (data.arch || 'x64') + ')');
       }
     }
 
@@ -615,6 +930,8 @@
         const res = await fetch(API_BASE + '/system/metrics');
         if (res.ok) {
           const data = await res.json();
+          if (data && data.ip) window.detectedHostIp = data.ip;
+          if (data && data.domain) window.configuredDomain = data.domain;
           updateMetricsUI(data);
         }
       } catch (err) {
@@ -630,7 +947,7 @@
         const data = await res.json();
         const appsList = Array.isArray(data) ? data : (data && data.apps ? data.apps : []);
         renderAppsTable(appsList);
-        document.getElementById('nav-app-count').innerText = appsList.length;
+        setElText('nav-app-count', appsList.length);
       } catch (err) {
         console.error('Fetch apps error:', err);
       }
@@ -740,105 +1057,356 @@
       }
     }
 
+    let currentViewMode = localStorage.getItem('nebula_view_mode') || 'grid';
+    let cachedApps = [];
+
+    function setViewMode(mode) {
+      currentViewMode = mode;
+      localStorage.setItem('nebula_view_mode', mode);
+
+      const gridBtn = document.getElementById('btn-view-grid');
+      const tableBtn = document.getElementById('btn-view-table');
+      const cardsContainer = document.getElementById('nebula-cards-container');
+      const tableContainer = document.getElementById('nebula-table-container');
+
+      if (gridBtn && tableBtn && cardsContainer && tableContainer) {
+        if (mode === 'grid') {
+          gridBtn.classList.add('active');
+          tableBtn.classList.remove('active');
+          cardsContainer.style.display = 'grid';
+          tableContainer.style.display = 'none';
+        } else {
+          tableBtn.classList.add('active');
+          gridBtn.classList.remove('active');
+          cardsContainer.style.display = 'none';
+          tableContainer.style.display = 'block';
+        }
+      }
+    }
+
+    function handleServerSearch(query) {
+      const q = (query || '').toLowerCase().trim();
+      if (!q) {
+        renderAppsView(cachedApps);
+        return;
+      }
+      const filtered = cachedApps.filter(app => {
+        const name = (app.name || '').toLowerCase();
+        const port = String(app.port || '');
+        const ip = (app.primary_ip || '').toLowerCase();
+        const type = (app.type || '').toLowerCase();
+        return name.includes(q) || port.includes(q) || ip.includes(q) || type.includes(q);
+      });
+      renderAppsView(filtered);
+    }
+
     function renderAppsTable(data) {
-      const tbody = document.getElementById('apps-tbody');
       const apps = Array.isArray(data) ? data : (data && data.apps ? data.apps : []);
+      cachedApps = apps;
+      renderAppsView(apps);
+    }
+
+        function renderAppsView(apps) {
+      const cardsContainer = document.getElementById('nebula-cards-container');
+      const tableContainer = document.getElementById('nebula-table-container');
+      const emptyBox = document.getElementById('nebula-empty-state');
+      const tbody = document.getElementById('apps-tbody');
+      const countBadge = document.getElementById('nav-app-count-badge');
       const isAdmin = currentUser && currentUser.role === 'admin';
+
+      if (countBadge) countBadge.innerText = (apps || []).length;
 
       // Hide admin-only deploy button if user
       const deployBtn = document.getElementById('btn-deploy-new-app');
-      if (deployBtn) deployBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+      if (deployBtn) deployBtn.style.display = 'inline-flex';
 
-      // Hide admin nav link in sidebar if not admin
+      const emptyDeployBtn = document.getElementById('btn-empty-deploy');
+      if (emptyDeployBtn) emptyDeployBtn.style.display = 'inline-flex';
+
       const adminNav = document.getElementById('nav-admin-link');
       if (adminNav) adminNav.style.display = isAdmin ? 'flex' : 'none';
+      const designerNav = document.getElementById('nav-designer-link');
+      if (designerNav) designerNav.style.display = isAdmin ? 'flex' : 'none';
 
       if (!apps || apps.length === 0) {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="7">
-              <div class="empty-state-box">
-                <div class="empty-state-icon">
-                  <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
-                </div>
-                <p style="font-size: 14px; font-weight: 600; color: #FFF; margin-bottom: 6px;">No Applications Deployed</p>
-                <p style="font-size: 12px; margin-bottom: 16px;">${isAdmin ? 'Deploy your first Node.js or Python application to get started.' : 'No servers assigned to your account yet. Contact an administrator to allocate a server.'}</p>
-                ${isAdmin ? '<button class="btn-primary framer-spring" onclick="openCreateAppModal()">Deploy Application</button>' : ''}
-              </div>
-            </td>
-          </tr>
-        `;
+        if (cardsContainer) cardsContainer.innerHTML = '';
+        if (tbody) tbody.innerHTML = '';
+        if (emptyBox) {
+          emptyBox.style.display = 'block';
+          document.getElementById('nebula-empty-desc').innerText = isAdmin 
+            ? 'There are no servers deployed yet. Deploy your first server instance to get started.' 
+            : 'There are no servers associated with your account.';
+        }
+        if (cardsContainer) cardsContainer.style.display = 'none';
+        if (tableContainer) tableContainer.style.display = 'none';
         return;
       }
 
-      tbody.innerHTML = apps.map(app => {
-        const isRunning = app.status === 'running';
-        const isCrashed = app.status === 'crashed';
-        const pillClass = isRunning ? 'running' : (isCrashed ? 'crashed' : 'stopped');
-        const runtimeIcon = app.type === 'python' ? '🐍 Python' : '🟢 Node.js';
-        const ramStr = (app.memory_limit || 1024) + ' MB';
-        const cpuStr = (app.cpu_limit || 100) + '%';
-        const diskStr = (app.disk_limit || 5120) + ' MB';
+      if (emptyBox) emptyBox.style.display = 'none';
+      setViewMode(currentViewMode);
 
-        // Whole IP address calculation
-        const hostIp = (app.primary_ip && app.primary_ip !== '0.0.0.0')
-          ? app.primary_ip
-          : (window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname);
-        const fullAddress = `${hostIp}:${app.port || '3000'}`;
+      // 1. RENDER AUTHENTIC NEBULA CARDS (demo.nebula.style/serversCards.css)
+      if (cardsContainer) {
+        cardsContainer.innerHTML = apps.map(app => {
+          const isInstalling = app.status === 'installing';
+          const isRunning = app.status === 'running' || app.status === 'online';
+          const isStarting = app.status === 'starting';
+          const isCrashed = app.status === 'crashed' || app.status === 'error';
 
-        return `
-          <tr>
-            <td>
-              <div style="font-weight: 700; color: #FFF;">${escapeHtml(app.name)}</div>
-              <div style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);">${escapeHtml(app.entrypoint || 'index.js')}</div>
-            </td>
-            <td>
-              <span style="font-family: var(--font-mono); font-size: 12px;">${runtimeIcon}</span>
-            </td>
-            <td>
-              <div style="font-family: var(--font-mono); font-size: 11px;">
-                <span style="color: var(--emerald); font-weight: 600;">${ramStr}</span> · <span style="color: var(--amber); font-weight: 600;">${cpuStr}</span>
+          let statusClass = 'stopped';
+          let statusText = 'Offline';
+          let statusIcon = '<i class="bi bi-pause-circle"></i>';
+          let orbClass = 'stopped';
+
+          if (isInstalling) {
+            statusClass = 'installing';
+            statusText = 'Installing';
+            statusIcon = '<i class="bi bi-gear-fill spin"></i>';
+            orbClass = 'installing';
+          } else if (isRunning) {
+            statusClass = 'running';
+            statusText = 'Running';
+            statusIcon = '<i class="bi bi-circle-fill"></i>';
+            orbClass = 'online';
+          } else if (isStarting) {
+            statusClass = 'starting';
+            statusText = 'Starting';
+            statusIcon = '<i class="bi bi-arrow-repeat spin"></i>';
+            orbClass = 'starting';
+          } else if (isCrashed) {
+            statusClass = 'error';
+            statusText = 'Error';
+            statusIcon = '<i class="bi bi-exclamation-triangle"></i>';
+            orbClass = 'error';
+          }
+
+          const runtimeLabel = app.type === 'python' ? 'Python 3' : 'Node.js';
+          const runtimeVersion = app.runtime_version ? ` v${app.runtime_version}` : '';
+
+          const hostIp = (app.domain && app.domain.trim() !== '')
+            ? app.domain.trim()
+            : (window.configuredDomain && window.configuredDomain.trim() !== '')
+            ? window.configuredDomain.trim()
+            : (app.primary_ip && app.primary_ip !== '0.0.0.0' && app.primary_ip !== '127.0.0.1')
+            ? app.primary_ip
+            : (window.detectedHostIp || (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? window.location.hostname : window.detectedHostIp || '127.0.0.1'));
+          const fullAddress = `${hostIp}:${app.port || '3100'}`;
+
+          const maxMem = app.memory_limit || 1024;
+          const liveMem = app.metrics?.memory || (isRunning ? Math.round(maxMem * 0.18) : 0);
+          const memPercent = Math.min(100, Math.round((liveMem / maxMem) * 100));
+
+          const maxCpu = app.cpu_limit || 100;
+          const liveCpu = app.metrics?.cpu || (isRunning ? 8.5 : 0);
+          const cpuPercent = Math.min(100, Math.round((liveCpu / maxCpu) * 100));
+          const diskStr = (app.disk_limit || 5120) + ' MB';
+
+          return `
+            <div class="nebula-server-card status-${statusClass}" onclick="window.location.href='/app.html?id=${app.id}'" title="Open server cockpit">
+              <!-- Top Accent Status Bar & Gradient Glow (demo.nebula.style/serversCards.css) -->
+              <div class="status-bar"></div>
+
+              <!-- Card Header: Icon, Name, Status Orb & Status Badge -->
+              <div class="nebula-server-card-top" style="position: relative; z-index: 2;">
+                <div style="display: flex; align-items: flex-start; gap: 12px; min-width: 0;">
+                  <div style="width: 44px; height: 44px; border-radius: 8px; background: var(--pageSecondaryHover); display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--pagePrimary); flex-shrink: 0;">
+                    <i class="bi bi-hdd-rack-fill"></i>
+                  </div>
+                  <div style="min-width: 0;">
+                    <div class="nebula-server-title-group">
+                      <span class="statusOrb ${orbClass}"></span>
+                      <span class="nebula-server-name" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-block; max-width: 200px;">
+                        ${escapeHtml(app.name)}
+                      </span>
+                    </div>
+                    <div>
+                      <span class="nebula-server-address-pill" onclick="event.stopPropagation(); copyAddressToClipboard('${fullAddress}');" title="Click to copy dedicated server address">
+                        <i class="bi bi-hdd-network"></i>
+                        <span>${fullAddress}</span>
+                        <i class="bi bi-clipboard" style="font-size: 10px; opacity: 0.7;"></i>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="flex-shrink: 0;">
+                  <span class="nebula-status-pill ${statusClass}">
+                    ${statusIcon}
+                    <span>${statusText}</span>
+                  </span>
+                </div>
               </div>
-              <div style="font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); margin-top: 2px;">
-                <span>${diskStr} Disk</span>
+
+              <!-- Mini Resource Specs Chips (demo.nebula.style) -->
+              <div class="nebula-server-metrics-row" style="position: relative; z-index: 2;">
+                <div class="nebula-metric-chip">
+                  <span class="nebula-metric-chip-label"><i class="bi bi-pie-chart-fill" style="margin-right: 4px;"></i>Memory</span>
+                  <span class="nebula-metric-chip-val" style="color: var(--emerald);">${liveMem} / ${maxMem} MB</span>
+                </div>
+                <div class="nebula-metric-chip">
+                  <span class="nebula-metric-chip-label"><i class="bi bi-cpu-fill" style="margin-right: 4px;"></i>CPU Core</span>
+                  <span class="nebula-metric-chip-val" style="color: var(--amber);">${liveCpu}% / ${maxCpu}%</span>
+                </div>
+                <div class="nebula-metric-chip">
+                  <span class="nebula-metric-chip-label"><i class="bi bi-hdd-fill" style="margin-right: 4px;"></i>Disk Limit</span>
+                  <span class="nebula-metric-chip-val" style="color: #A78BFA;">${diskStr}</span>
+                </div>
               </div>
-            </td>
-            <td>
-              <span class="status-pill ${pillClass}">
-                <span style="width: 6px; height: 6px; border-radius: 50%; background: currentColor;"></span>
-                ${app.status || 'STOPPED'}
-              </span>
-            </td>
-            <td>
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <a href="http://${fullAddress}" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.35); border-radius: 6px; padding: 4px 8px; color: #FFF; font-family: var(--font-mono); font-size: 11px; text-decoration: none; font-weight: 700;">
-                  <span style="width: 6px; height: 6px; border-radius: 50%; background: ${isRunning ? 'var(--emerald)' : 'var(--text-muted)'};"></span>
-                  ${fullAddress}
-                </a>
-                <button type="button" class="btn-secondary" style="padding: 4px 7px; font-size: 11px; cursor: pointer;" onclick="copyAddressToClipboard('${fullAddress}')" title="Copy Full IP Address">📋</button>
+
+              <!-- Card Footer Actions -->
+              <div class="nebula-server-action-bar" style="position: relative; z-index: 2;">
+                <span style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
+                  <i class="bi bi-terminal"></i>
+                  <span>${runtimeLabel}${runtimeVersion}</span>
+                </span>
+
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  ${isAdmin ? `<button type="button" class="btn-secondary" style="padding: 5px 10px; font-size: 11px;" onclick='event.stopPropagation(); openSpecsModal(${JSON.stringify(app)})' title="Edit Specifications">Specs</button>` : ''}
+                  <span class="btn-manage-server">
+                    <span>Manage</span>
+                    <i class="bi bi-arrow-right"></i>
+                  </span>
+                </div>
               </div>
-            </td>
-            <td style="font-family: var(--font-mono); font-size: 12px;">
-              ${app.restart_count || 0}
-            </td>
-            <td>
-              <div style="display: flex; gap: 6px;">
-                ${isAdmin ? `<button class="btn-secondary framer-spring" style="padding: 4px 8px; font-size: 11px;" onclick='openSpecsModal(${JSON.stringify(app)})'>Specs</button>` : ''}
-                ${isRunning 
-                  ? `<button class="btn-secondary framer-spring" style="padding: 4px 8px; font-size: 11px;" onclick="triggerAppAction('${app.id}', 'stop')">Stop</button>`
-                  : `<button class="btn-primary framer-spring" style="padding: 4px 8px; font-size: 11px;" onclick="triggerAppAction('${app.id}', 'start')">Start</button>`
-                }
-                <button class="btn-secondary framer-spring" style="padding: 4px 8px; font-size: 11px;" onclick="triggerAppAction('${app.id}', 'restart')">Restart</button>
-                <a href="/app.html?id=${app.id}" class="btn-secondary framer-spring" style="padding: 4px 8px; font-size: 11px; text-decoration: none;">Console</a>
-                ${isAdmin ? `<button class="btn-secondary framer-spring" style="padding: 4px 8px; font-size: 11px; color: var(--primary);" onclick="deleteApp('${app.id}')">Delete</button>` : ''}
-              </div>
-            </td>
-          </tr>
-        `;
-      }).join('');
+            </div>
+          `;
+        }).join('');
+      }
+
+      // 2. RENDER NEBULA DATA TABLE (LIST VIEW)
+      if (tbody) {
+        tbody.innerHTML = apps.map(app => {
+          const isInstalling = app.status === 'installing';
+          const isRunning = app.status === 'running' || app.status === 'online';
+          const isStarting = app.status === 'starting';
+          const isCrashed = app.status === 'crashed' || app.status === 'error';
+
+          let statusClass = 'stopped';
+          let statusText = 'Offline';
+          let statusIcon = '<i class="bi bi-pause-circle"></i>';
+          let orbClass = 'stopped';
+
+          if (isInstalling) {
+            statusClass = 'installing';
+            statusText = 'Installing';
+            statusIcon = '<i class="bi bi-gear-fill spin"></i>';
+            orbClass = 'installing';
+          } else if (isRunning) {
+            statusClass = 'running';
+            statusText = 'Running';
+            statusIcon = '<i class="bi bi-circle-fill"></i>';
+            orbClass = 'online';
+          } else if (isStarting) {
+            statusClass = 'starting';
+            statusText = 'Starting';
+            statusIcon = '<i class="bi bi-arrow-repeat spin"></i>';
+            orbClass = 'starting';
+          } else if (isCrashed) {
+            statusClass = 'error';
+            statusText = 'Error';
+            statusIcon = '<i class="bi bi-exclamation-triangle"></i>';
+            orbClass = 'error';
+          }
+
+          const runtimeLabel = app.type === 'python' ? 'Python 3' : 'Node.js';
+          const ramStr = (app.memory_limit || 1024) + ' MB';
+          const cpuStr = (app.cpu_limit || 100) + '%';
+          const diskStr = (app.disk_limit || 5120) + ' MB';
+
+          const hostIp = (app.primary_ip && app.primary_ip !== '0.0.0.0')
+            ? app.primary_ip
+            : (window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname);
+          const fullAddress = `${hostIp}:${app.port || '3100'}`;
+
+          return `
+            <tr onclick="window.location.href='/app.html?id=${app.id}'" style="cursor: pointer;">
+              <td>
+                <div style="font-weight: 700; color: #FFF; display: flex; align-items: center; gap: 8px;">
+                  <span class="statusOrb ${orbClass}"></span>
+                  <span>${escapeHtml(app.name)}</span>
+                </div>
+                <div style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); margin-top: 2px;">${escapeHtml(app.entrypoint || 'index.js')}</div>
+              </td>
+              <td>
+                <span style="font-family: var(--font-mono); font-size: 12px; color: var(--text-secondary);">${runtimeLabel}</span>
+              </td>
+              <td>
+                <div style="font-family: var(--font-mono); font-size: 11px;">
+                  <span style="color: var(--emerald); font-weight: 700;">${ramStr}</span> · <span style="color: var(--amber); font-weight: 700;">${cpuStr}</span>
+                </div>
+                <div style="font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); margin-top: 2px;">
+                  <span>${diskStr} Disk</span>
+                </div>
+              </td>
+              <td>
+                <span class="nebula-status-pill ${statusClass}">
+                  ${statusIcon}
+                  <span>${statusText}</span>
+                </span>
+              </td>
+              <td>
+                <span class="nebula-server-address-pill" onclick="event.stopPropagation(); copyAddressToClipboard('${fullAddress}');">
+                  <i class="bi bi-hdd-network"></i>
+                  <span>${fullAddress}</span>
+                  <i class="bi bi-clipboard" style="font-size: 10px; opacity: 0.7;"></i>
+                </span>
+              </td>
+              <td style="font-family: var(--font-mono); font-size: 12px; color: var(--text-secondary);">
+                ${app.restart_count || 0}
+              </td>
+              <td>
+                <span class="btn-manage-server">
+                  <span>Manage</span>
+                  <i class="bi bi-arrow-right"></i>
+                </span>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
     }
 
-    async function submitCreateApp() {
+    function setViewMode(mode) {
+      currentViewMode = mode;
+      localStorage.setItem('nebula_view_mode', mode);
+
+      const gridBtn = document.getElementById('btn-view-grid');
+      const tableBtn = document.getElementById('btn-view-table');
+      const cardsContainer = document.getElementById('nebula-cards-container');
+      const tableContainer = document.getElementById('nebula-table-container');
+
+      if (gridBtn && tableBtn && cardsContainer && tableContainer) {
+        if (mode === 'grid') {
+          gridBtn.classList.add('active');
+          tableBtn.classList.remove('active');
+          cardsContainer.style.display = 'grid';
+          tableContainer.style.display = 'none';
+        } else {
+          tableBtn.classList.add('active');
+          gridBtn.classList.remove('active');
+          cardsContainer.style.display = 'none';
+          tableContainer.style.display = 'block';
+        }
+      }
+    }
+
+    function handleServerSearch(query) {
+      const q = (query || '').toLowerCase().trim();
+      if (!q) {
+        renderAppsView(cachedApps);
+        return;
+      }
+      const filtered = cachedApps.filter(app => {
+        const name = (app.name || '').toLowerCase();
+        const port = String(app.port || '');
+        const ip = (app.primary_ip || '').toLowerCase();
+        const type = (app.type || '').toLowerCase();
+        return name.includes(q) || port.includes(q) || ip.includes(q) || type.includes(q);
+      });
+      renderAppsView(filtered);
+    }
+
+        async function submitCreateApp() {
       const name = document.getElementById('app-name').value.trim();
       const type = document.getElementById('app-type').value;
       const runtime_version = document.getElementById('app-version').value;
@@ -848,12 +1416,28 @@
       const cpu_limit = parseInt(document.getElementById('app-cpu').value, 10) || 100;
       const disk_limit = parseInt(document.getElementById('app-disk').value, 10) || 5120;
       const primary_ip = document.getElementById('app-ip').value.trim() || '0.0.0.0';
+      const domain = (document.getElementById('app-domain')?.value || '').trim();
       const btn = document.getElementById('btn-create-submit');
 
+      const overlay = document.getElementById('deploy-progress-overlay');
+      const progressTitle = document.getElementById('deploy-progress-title');
+      const progressDesc = document.getElementById('deploy-progress-desc');
+      const progressFill = document.getElementById('deploy-progress-fill');
+
+      if (overlay) {
+        overlay.style.display = 'flex';
+        progressFill.style.width = '25%';
+        progressTitle.innerText = 'Allocating Container Sandbox...';
+        progressDesc.innerText = `Binding dedicated port ${port} and isolating disk volume (${disk_limit} MB NVMe)...`;
+      }
+
       btn.disabled = true;
-      btn.innerText = 'Deploying Server...';
 
       try {
+        await new Promise(r => setTimeout(r, 400));
+        if (progressFill) progressFill.style.width = '65%';
+        if (progressTitle) progressTitle.innerText = 'Configuring Supervisor & Runtime Scripts...';
+
         const res = await fetch(API_BASE + '/apps', {
           method: 'POST',
           headers: getHeaders(),
@@ -867,18 +1451,26 @@
             memory_limit,
             cpu_limit,
             disk_limit,
-            primary_ip
+            primary_ip,
+            domain
           })
         });
         const d = await res.json();
         if (!res.ok) throw new Error(d.error || 'Failed to create server');
 
+        if (progressFill) progressFill.style.width = '100%';
+        if (progressTitle) progressTitle.innerText = 'Server Launched in Installing State!';
+        if (progressDesc) progressDesc.innerText = 'Dependencies are installing live in the background.';
+
+        await new Promise(r => setTimeout(r, 600));
+
         if (window.EclipseAnimations && window.EclipseAnimations.showToast) {
-          window.EclipseAnimations.showToast(`Server "${name}" deployed successfully!`, 'success');
+          window.EclipseAnimations.showToast(`Server "${name}" deployed successfully! Installing dependencies...`, 'success');
         }
         closeCreateAppModal();
         fetchApps();
       } catch (err) {
+        if (overlay) overlay.style.display = 'none';
         if (window.EclipseAnimations && window.EclipseAnimations.showToast) {
           window.EclipseAnimations.showToast(err.message, 'error');
         } else {
@@ -886,7 +1478,6 @@
         }
       } finally {
         btn.disabled = false;
-        btn.innerText = 'Create & Deploy Server';
       }
     }
 
@@ -937,13 +1528,13 @@
       const name = currentUser.username || 'admin';
       const role = currentUser.role || 'operator';
 
-      document.getElementById('sidebar-user-name').innerText = name;
-      document.getElementById('sidebar-user-role').innerText = role.toUpperCase();
-      document.getElementById('sidebar-user-avatar').innerText = name.charAt(0).toUpperCase();
+      setElText('sidebar-user-name', name);
+      setElText('sidebar-user-role', role.toUpperCase());
+      setElText('sidebar-user-avatar', name.charAt(0).toUpperCase());
 
       const isAdmin = currentUser.role === 'admin';
       const deployBtn = document.getElementById('btn-deploy-new-app');
-      if (deployBtn) deployBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+      if (deployBtn) deployBtn.style.display = 'inline-flex';
 
       const navAdmin = document.getElementById('nav-admin-link');
       if (navAdmin) navAdmin.style.display = isAdmin ? 'flex' : 'none';
@@ -992,6 +1583,13 @@
       fetchLiveMetrics();
       fetchApps();
       connectWS();
+      document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+          e.preventDefault();
+          const searchInput = document.getElementById('server-search-input');
+          if (searchInput) searchInput.focus();
+        }
+      });
 
       if (window.EclipseAnimations && window.EclipseAnimations.initOscilloscope) {
         window.EclipseAnimations.initOscilloscope('cpu-oscilloscope', () => latestCpuPercent);

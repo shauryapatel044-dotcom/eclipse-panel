@@ -27,4 +27,8 @@ router.post('/alerts/test', AdminController.testAlert);
 // Port pool
 router.get('/next-port', AdminController.getNextAvailablePort);
 
+// Designer theme settings
+router.get('/theme', AdminController.getTheme);
+router.post('/theme', AdminController.updateTheme);
+
 export default router;

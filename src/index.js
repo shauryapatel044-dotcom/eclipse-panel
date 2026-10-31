@@ -59,6 +59,7 @@ app.use('/api/nodes', nodeRoutes);
 app.get('/login', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'login.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'admin.html')));
 app.get('/app', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'app.html')));
+app.get('/account', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'account.html')));
 app.get('/stats', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'admin-stats.html')));
 app.get('/admin-stats', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'admin-stats.html')));
 
@@ -116,7 +117,14 @@ async function start() {
   }
 }
 
-// Graceful Shutdown
+// Graceful Shutdown & Process Stability
+process.on('uncaughtException', (err) => {
+  console.error('[Daemon Error] Uncaught Exception:', err);
+});
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[Daemon Error] Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
 async function shutdown(signal) {
   console.log(`\n[Shutdown] Received ${signal}. Stopping running apps...`);
   for (const [appId] of supervisor.managedProcesses) {

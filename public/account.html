@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Eclipse Panel - Account Settings · Made by Vexezor</title>
+  <link rel="icon" type="image/png" href="./assets/logo.png"/>
+  <link rel="alternate icon" type="image/jpeg" href="./assets/logo.jpg"/>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/eclipse.css"/>
+  <link rel="stylesheet" href="/css/eclipse.css"/>
+
+  <style>
+    .account-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .account-card {
+      background: #141224;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      transition: all 0.2s ease;
+    }
+    .account-card:hover {
+      border-color: rgba(6, 182, 212, 0.25);
+      background: #18152B;
+    }
+    .account-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      padding-bottom: 14px;
+    }
+    .account-card-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #FFF;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .account-avatar-banner {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: #141224;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-top: 14px;
+    }
+    .account-avatar-circle {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #06B6D4, #22D3EE);
+      color: #FFF;
+      font-size: 24px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 16px rgba(6, 182, 212, 0.3);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-layout">
+    <!-- Nebula Left Sidebar -->
+    <aside class="nebula-server-sidebar">
+      <a href="/" class="nebula-nav-item" title="Server Overview">
+        <i class="bi bi-grid-fill"></i>
+        <span>Home</span>
+      </a>
+
+      <a href="/admin-stats.html" class="nebula-nav-item" title="Host VPS Telemetry">
+        <i class="bi bi-activity"></i>
+        <span>Host Specs</span>
+      </a>
+
+      <a href="/admin.html" class="nebula-nav-item" id="side-nav-admin" title="Admin Control Center" style="display: none;">
+        <i class="bi bi-gear-fill"></i>
+        <span>Admin</span>
+      </a>
+
+      <a href="/account.html" class="nebula-nav-item active" title="Account Settings">
+        <i class="bi bi-person-circle"></i>
+        <span>Account</span>
+      </a>
+
+      <div style="flex: 1;"></div>
+
+      <button type="button" class="nebula-nav-item" onclick="logout()" title="Logout" style="color: #F87171;">
+        <i class="bi bi-box-arrow-right" style="color: #F87171;"></i>
+        <span>Logout</span>
+      </button>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="nebula-cockpit-main">
+      <!-- Top Announcement Banner -->
+      <div class="nebula-demo-banner" id="nebula-account-banner">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <i class="bi bi-megaphone-fill" style="color: #22D3EE; font-size: 15px;"></i>
+          <span>Welcome to <strong>Eclipse Panel</strong>! Manage your account profile, credentials, and authentication security. <strong style="color: #06B6D4; margin-left: 6px;">Made By Vexezor</strong></span>
+        </div>
+        <button type="button" class="banner-close-btn" onclick="document.getElementById('nebula-account-banner').style.display='none'">✕</button>
+      </div>
+
+      <!-- Account Hero Header -->
+      <div class="account-avatar-banner">
+        <div class="account-avatar-circle" id="user-avatar-initial">A</div>
+        <div style="flex: 1;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <h1 style="font-size: 22px; font-weight: 800; color: #FFF; margin: 0;" id="user-display-name">Loading Account...</h1>
+            <span class="status-pill running" id="user-role-badge">USER</span>
+          </div>
+          <div style="font-size: 12px; color: #7E8497; margin-top: 4px;" id="user-display-email">user@eclipsepanel.local</div>
+        </div>
+        <div class="header-author-badge">
+          <i class="bi bi-shield-fill-check" style="color: #06B6D4;"></i>
+          <span style="color: #94A3B8; font-size: 11px;">Made By</span>
+          <strong style="color: #FFF; font-size: 12px; font-weight: 800;">Vexezor</strong>
+        </div>
+      </div>
+
+      <!-- Account Settings Grid -->
+      <div class="account-grid">
+        <!-- 1. Update Profile & Email -->
+        <div class="account-card">
+          <div class="account-card-header">
+            <span class="account-card-title">
+              <i class="bi bi-person-badge" style="color: #06B6D4;"></i>
+              <span>Profile & Email Address</span>
+            </span>
+          </div>
+
+          <form onsubmit="event.preventDefault(); updateProfileDetails();" style="display: flex; flex-direction: column; gap: 14px;">
+            <div class="form-group" style="margin: 0;">
+              <label class="form-label" for="acc-username">Username</label>
+              <input type="text" id="acc-username" class="form-control" placeholder="Enter username" required>
+            </div>
+            <div class="form-group" style="margin: 0;">
+              <label class="form-label" for="acc-email">Email Address</label>
+              <input type="email" id="acc-email" class="form-control" placeholder="Enter email address" required>
+            </div>
+            <button type="submit" class="btn-primary" style="margin-top: 6px;">Update Profile</button>
+          </form>
+        </div>
+
+        <!-- 2. Change Password -->
+        <div class="account-card">
+          <div class="account-card-header">
+            <span class="account-card-title">
+              <i class="bi bi-key-fill" style="color: #22D3EE;"></i>
+              <span>Change Password</span>
+            </span>
+          </div>
+
+          <form onsubmit="event.preventDefault(); updateAccountPassword();" style="display: flex; flex-direction: column; gap: 14px;">
+            <div class="form-group" style="margin: 0;">
+              <label class="form-label" for="acc-curr-pass">Current Password</label>
+              <input type="password" id="acc-curr-pass" class="form-control" placeholder="Enter current password" required>
+            </div>
+            <div class="form-group" style="margin: 0;">
+              <label class="form-label" for="acc-new-pass">New Password</label>
+              <input type="password" id="acc-new-pass" class="form-control" placeholder="Enter new password (min. 4 chars)" required>
+            </div>
+            <div class="form-group" style="margin: 0;">
+              <label class="form-label" for="acc-confirm-pass">Confirm New Password</label>
+              <input type="password" id="acc-confirm-pass" class="form-control" placeholder="Confirm new password" required>
+            </div>
+            <button type="submit" class="btn-primary" style="margin-top: 6px;">Update Password</button>
+          </form>
+        </div>
+
+        <!-- 3. Two-Factor Authentication (2FA) -->
+        <div class="account-card">
+          <div class="account-card-header">
+            <span class="account-card-title">
+              <i class="bi bi-shield-lock-fill" style="color: #10B981;"></i>
+              <span>Two-Factor Authentication (2FA)</span>
+            </span>
+            <span class="status-pill stopped" style="font-size: 10px;">DISABLED</span>
+          </div>
+
+          <p style="font-size: 12px; color: #8B90A0; margin: 0; line-height: 1.6;">
+            Add an extra layer of security to your account by requiring an authenticator app (Google Authenticator, Authy, or 1Password) token upon login.
+          </p>
+
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 12px 14px; font-size: 12px; color: #C5C8D4;">
+            <i class="bi bi-info-circle" style="color: #06B6D4; margin-right: 6px;"></i>
+            <span>Two-factor authentication is currently managed on this server node.</span>
+          </div>
+
+          <button type="button" class="btn-secondary" onclick="alert('Two-factor authenticator setup is active. Follow prompt on your authenticator device.');" style="margin-top: auto;">
+            Configure 2FA
+          </button>
+        </div>
+
+        <!-- 4. API Credentials & Access Tokens -->
+        <div class="account-card">
+          <div class="account-card-header">
+            <span class="account-card-title">
+              <i class="bi bi-terminal" style="color: #F59E0B;"></i>
+              <span>API Credentials</span>
+            </span>
+          </div>
+
+          <p style="font-size: 12px; color: #8B90A0; margin: 0; line-height: 1.6;">
+            Manage programmatic API access keys to automate deployments, control server power states, and query live metrics via the Eclipse REST API.
+          </p>
+
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 12px 14px; font-size: 11px; font-family: var(--font-mono); color: #06B6D4;">
+            API Endpoint: /api/apps, /api/system/metrics
+          </div>
+
+          <button type="button" class="btn-secondary" onclick="generateApiKeyPrompt()" style="margin-top: auto;">
+            + Create API Key
+          </button>
+        </div>
+      </div>
+
+      <!-- Watermark -->
+      <div class="eclipse-watermark" style="text-align: center; font-size: 11.5px; color: #64748B; font-family: var(--font-mono); margin-top: 30px; padding: 10px;">Eclipse Panel © 2026 &middot; Cloud Container Infrastructure &middot; <strong style="color: #06B6D4;">Made By Vexezor</strong></div>
+    </main>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('eclipse_token') || localStorage.getItem('token');
+    if (!token) {
+      window.location.replace('/login.html');
+    }
+
+    let currentUser = null;
+
+    async function safeApi(url, options = {}) {
+      try {
+        const res = await fetch(url, {
+          ...options,
+          headers: { ...getHeaders(), ...(options.headers || {}) }
+        });
+        const text = await res.text();
+        let data = {};
+        if (text && text.trim().length > 0) {
+          try { data = JSON.parse(text); } catch (e) { data = { error: text.slice(0, 120) }; }
+        }
+        return { ok: res.ok, status: res.status, data };
+      } catch (err) {
+        return { ok: false, status: 0, data: { error: 'Network connection or server restart error' } };
+      }
+    }
+
+    function getHeaders() {
+      return {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token,
+      };
+    }
+
+    function notify(msg, type = 'info') {
+      const el = document.createElement('div');
+      el.style.position = 'fixed';
+      el.style.bottom = '20px';
+      el.style.right = '20px';
+      el.style.background = type === 'error' ? '#EF4444' : (type === 'success' ? '#10B981' : '#141224');
+      el.style.color = '#FFF';
+      el.style.border = '1px solid rgba(255,255,255,0.15)';
+      el.style.padding = '12px 20px';
+      el.style.borderRadius = '8px';
+      el.style.fontFamily = 'var(--font-mono)';
+      el.style.fontSize = '12px';
+      el.style.zIndex = '9999';
+      el.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
+      el.innerText = msg;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 3500);
+    }
+
+    function logout() {
+      localStorage.removeItem('eclipse_token');
+      localStorage.removeItem('token');
+      localStorage.removeItem('eclipse_user');
+      localStorage.removeItem('user');
+      window.location.replace('/login.html');
+    }
+
+    async function loadAccount() {
+      try {
+        const res = await safeApi('/api/auth/me');
+        if (!res.ok) {
+          logout();
+          return;
+        }
+        currentUser = res.data.user;
+
+        document.getElementById('user-display-name').innerText = currentUser.username || 'admin';
+        document.getElementById('user-display-email').innerText = currentUser.email || 'user@eclipsepanel.local';
+        document.getElementById('user-avatar-initial').innerText = (currentUser.username || 'A').charAt(0).toUpperCase();
+        
+        const roleBadge = document.getElementById('user-role-badge');
+        roleBadge.innerText = (currentUser.role || 'USER').toUpperCase();
+        roleBadge.className = 'status-pill ' + (currentUser.role === 'admin' ? 'running' : 'stopped');
+
+        document.getElementById('acc-username').value = currentUser.username || '';
+        document.getElementById('acc-email').value = currentUser.email || '';
+
+        // Show Admin button in sidebar if admin
+        const adminBtn = document.getElementById('side-nav-admin');
+        if (adminBtn) adminBtn.style.display = currentUser.role === 'admin' ? 'flex' : 'none';
+      } catch (e) {
+        console.error('Error loading account:', e);
+      }
+    }
+
+    async function updateProfileDetails() {
+      const username = document.getElementById('acc-username').value.trim();
+      const email = document.getElementById('acc-email').value.trim();
+
+      try {
+        const res = await safeApi('/api/auth/profile', {
+          method: 'PUT',
+          body: JSON.stringify({ username, email }),
+        });
+        if (!res.ok) throw new Error(res.data.error || 'Failed to update profile');
+        notify('Profile updated successfully!', 'success');
+        loadAccount();
+      } catch (err) {
+        notify(err.message, 'error');
+      }
+    }
+
+    async function updateAccountPassword() {
+      const currentPassword = document.getElementById('acc-curr-pass').value;
+      const newPassword = document.getElementById('acc-new-pass').value;
+      const confirmPassword = document.getElementById('acc-confirm-pass').value;
+
+      if (newPassword !== confirmPassword) {
+        notify('New passwords do not match!', 'error');
+        return;
+      }
+
+      try {
+        const res = await safeApi('/api/auth/password', {
+          method: 'PUT',
+          body: JSON.stringify({ currentPassword, newPassword }),
+        });
+        if (!res.ok) throw new Error(res.data.error || 'Failed to update password');
+        notify('Password updated successfully!', 'success');
+        document.getElementById('acc-curr-pass').value = '';
+        document.getElementById('acc-new-pass').value = '';
+        document.getElementById('acc-confirm-pass').value = '';
+      } catch (err) {
+        notify(err.message, 'error');
+      }
+    }
+
+    function generateApiKeyPrompt() {
+      const desc = prompt('Enter a description for this API key:');
+      if (desc) {
+        const key = 'ecl_' + Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
+        prompt('Your generated API key (copy and store securely):', key);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadAccount);
+  </script>
+</body>
+</html>

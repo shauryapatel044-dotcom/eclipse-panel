@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Eclipse Panel - Admin Matrix & Server Governance</title>
+  <title>Eclipse Panel - Administration · Made by Vexezor</title>
   <link rel="icon" type="image/png" href="./assets/logo.png"/>
   <link rel="alternate icon" type="image/jpeg" href="./assets/logo.jpg"/>
   
@@ -28,9 +28,9 @@
       gap: 6px;
     }
     .role-badge.admin {
-      background: rgba(239, 68, 68, 0.15);
-      color: #F87171;
-      border: 1px solid rgba(239, 68, 68, 0.35);
+      background: rgba(124, 58, 237, 0.18);
+      color: #22D3EE;
+      border: 1px solid rgba(124, 58, 237, 0.45);
     }
     .role-badge.user {
       background: rgba(148, 163, 184, 0.15);
@@ -43,95 +43,73 @@
       border-bottom: 1px solid var(--border-subtle);
       padding-bottom: 12px;
       margin-bottom: 24px;
+      overflow-x: auto;
     }
     .admin-tab-btn {
       padding: 9px 18px;
-      border-radius: 8px;
+      border-radius: 10px;
       background: transparent;
       border: 1px solid transparent;
       color: var(--text-secondary);
       font-size: 13px;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
       display: flex;
       align-items: center;
       gap: 8px;
       transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      font-family: inherit;
     }
     .admin-tab-btn:hover {
       background: rgba(255, 255, 255, 0.04);
       color: #FFF;
     }
     .admin-tab-btn.active {
-      background: var(--bg-card);
-      border-color: var(--border-crimson);
+      background: rgba(124, 58, 237, 0.2);
+      border-color: rgba(124, 58, 237, 0.5);
       color: #FFFFFF;
-      box-shadow: 0 4px 15px rgba(239, 68, 68, 0.15);
+      box-shadow: 0 4px 18px rgba(124, 58, 237, 0.25);
     }
   </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 <body>
 
-  <!-- Ambient Fullscreen Video Background -->
-  <div class="video-bg-container">
-    <video class="video-bg-media" autoplay muted loop playsinline>
-      <source src="/assets/bg.mp4" type="video/mp4">
-    </video>
-    <div class="video-bg-overlay"></div>
-  </div>
+  
 
   <div class="app-layout">
     <!-- Left Sidebar -->
     <aside class="sidebar">
-      <div>
-        <div class="sidebar-brand">
-          <a href="/" class="brand-link">
-            <img src="./assets/logo.png" onerror="this.src='./assets/logo.jpg'" alt="Eclipse Panel Logo" class="brand-logo-img" />
-            <div>
-              <span class="brand-text">ECLIPSE PANEL</span>
-            </div>
-          </a>
-          <span class="brand-badge">8090</span>
-        </div>
+      <a href="/" class="sidebar-logo-btn" title="Eclipse Panel">
+        <img src="./assets/logo.png" onerror="this.src='./assets/logo.jpg'" alt="Logo" class="sidebar-logo-img" />
+      </a>
 
-        <div class="sidebar-section-title">Control Matrix</div>
-        <nav class="sidebar-nav">
-          <a href="/" class="nav-link">
-            <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
-            <span>Overview</span>
-          </a>
-          <a href="/admin-stats.html" class="nav-link">
-            <svg viewBox="0 0 24 24"><path d="M12 2C6.49 2 2 6.49 2 12s4.49 10 10 10 10-4.49 10-10S17.51 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3-8c0 1.66-1.34 3-3 3s-3-1.34-3-3 1.34-3 3-3 3 1.34 3 3z"/></svg>
-            <span>VPS Telemetry</span>
-            <span class="nav-link-pill live">LIVE</span>
-          </a>
-          <a href="/admin.html" class="nav-link active">
-            <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
-            <span>Admin Center</span>
-          </a>
-        </nav>
-      </div>
+      <a href="/" class="sidebarButton" title="Server Overview & Instances">
+        <i class="bi bi-hdd-stack-fill"></i>
+      </a>
 
-      <!-- Bottom Host Metadata -->
-      <div class="sidebar-bottom">
-        <div class="host-badge-box">
-          <div style="display: flex; align-items: center; overflow: hidden;">
-            <span class="status-dot-green"></span>
-            <span id="sidebar-hostname" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #FFF;">Detecting...</span>
-          </div>
-          <span style="color: var(--primary); font-weight: 700;">:8090</span>
-        </div>
+      <a href="/admin-stats.html" class="sidebarButton" title="Host VPS Telemetry">
+        <i class="bi bi-activity"></i>
+      </a>
 
-        <div class="user-profile-bar" onclick="openProfileModal()" title="Click to edit profile or change password">
-          <div class="user-avatar-sm" id="sidebar-user-avatar">A</div>
-          <div class="user-info-text">
-            <span class="user-name-label" id="sidebar-user-name">admin</span>
-            <span class="user-role-label" id="sidebar-user-role">SUPERADMIN</span>
-          </div>
-          <button class="btn-icon-logout" onclick="event.stopPropagation(); logout();" title="Sign out">
-            <svg viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
-          </button>
-        </div>
+      <a href="/admin.html" class="sidebarButton active" title="SuperAdmin Center">
+        <i class="bi bi-sliders"></i>
+      </a>
+
+      <a href="/designer.html" class="sidebarButton" title="Eclipse Designer (Theme Customizer)">
+        <i class="bi bi-palette-fill"></i>
+      </a>
+
+      <div class="sidebarSpacer"></div>
+
+      <div class="sidebar-bottom-group">
+        <a href="/account.html" class="sidebarButton" title="My Account">
+          <i class="bi bi-person-circle"></i>
+        </a>
+
+        <button type="button" class="sidebarButton" onclick="logout()" title="Logout" style="color: #F87171;">
+          <i class="bi bi-box-arrow-right"></i>
+        </button>
       </div>
     </aside>
 
@@ -148,10 +126,17 @@
         </div>
 
         <div class="header-right">
-          <button class="btn-secondary framer-spring" onclick="openProfileModal()">
+          <!-- Made by Vexezor Author Badge -->
+          <div class="header-author-badge" title="Platform Creator">
+            <i class="bi bi-shield-fill-check" style="color: #06B6D4;"></i>
+            <span style="color: #94A3B8; font-size: 11px;">Made By</span>
+            <strong style="color: #FFF; font-size: 12px; font-weight: 800; letter-spacing: 0.02em;">Vexezor</strong>
+          </div>
+
+          <a href="/account.html" class="btn-secondary framer-spring" style="text-decoration: none;">
             <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
             <span>My Account</span>
-          </button>
+          </a>
           <button class="btn-primary framer-spring" onclick="openCreateServerModal()">
             <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
             <span>Deploy Server</span>
@@ -458,6 +443,8 @@
             </div>
           </div>
         </section>
+      <!-- Official Nebula Theme Watermark (demo.nebula.style/authWatermark.css) -->
+        <div class="eclipse-watermark" style="text-align: center; font-size: 11.5px; color: #64748B; font-family: var(--font-mono); margin-top: 30px; padding: 10px;">Eclipse Panel © 2026 &middot; Administration Infrastructure &middot; <strong style="color: #06B6D4;">Made By Vexezor</strong></div>
       </div>
     </main>
   </div>
@@ -540,78 +527,290 @@
     </div>
   </div>
 
-  <!-- MODAL: DEPLOY SERVER (Admin Can Make Servers) -->
+  <!-- MODAL: ECLIPSE DEPLOY STUDIO (NEW & BETTER DEPLOY APP UI) -->
   <div class="modal-overlay" id="modal-create-server">
-    <div class="modal-card">
-      <div class="modal-header">
-        <h3 class="modal-title"><span>Deploy New Server</span></h3>
-        <button class="modal-close-btn" onclick="closeCreateServerModal()"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
+    <div class="modal-card deploy-studio-modal">
+      <!-- Progress Overlay during Launch -->
+      <div id="admin-deploy-progress-overlay" class="deploy-progress-overlay">
+        <div class="installing-gear-spin" style="font-size: 54px; margin-bottom: 20px;">
+          <i class="bi bi-rocket-takeoff-fill" style="color: var(--sidebarButtonActive);"></i>
+        </div>
+        <h3 style="font-size: 20px; font-weight: 800; color: #FFF; margin-bottom: 8px;" id="admin-deploy-progress-title">Provisioning Server Instance...</h3>
+        <p style="font-size: 13px; color: var(--text-muted); max-width: 440px; margin-bottom: 24px;" id="admin-deploy-progress-desc">
+          Allocating container sandbox, injecting supervisor watchdogs, and preparing packages.
+        </p>
+        <div style="width: 280px; height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden;">
+          <div id="admin-deploy-progress-fill" style="width: 30%; height: 100%; background: linear-gradient(90deg, #06B6D4, #22D3EE); transition: width 0.4s ease;"></div>
+        </div>
       </div>
 
-      <form onsubmit="event.preventDefault(); submitAdminCreateServer();">
-        <div class="form-group">
-          <label class="form-label">Server Name</label>
-          <input type="text" id="admin-new-name" class="form-control" required placeholder="production-api">
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-          <div class="form-group">
-            <label class="form-label">Runtime Engine</label>
-            <select id="admin-new-type" class="form-control" onchange="updateAdminNewRuntimeVersions()">
-              <option value="nodejs">Node.js (JavaScript / TypeScript)</option>
-              <option value="python">Python 3 (venv / PyPI)</option>
-            </select>
+      <!-- Modal Header -->
+      <div class="modal-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 18px; margin-bottom: 18px;">
+        <div class="deploy-header-group">
+          <div class="deploy-header-icon">
+            <i class="bi bi-rocket-takeoff-fill"></i>
           </div>
-          <div class="form-group">
-            <label class="form-label">Engine Version</label>
-            <select id="admin-new-version" class="form-control">
-              <option value="22" selected>Node.js 22 LTS (Current)</option>
-              <option value="20">Node.js 20 LTS (Active)</option>
-              <option value="18">Node.js 18 LTS (Maintenance)</option>
-              <option value="24">Node.js 24 (Nightly/Next)</option>
-            </select>
+          <div>
+            <h3 style="font-size: 18px; font-weight: 800; color: #FFF; margin: 0; display: flex; align-items: center; gap: 8px;">
+              Deploy Server Instance
+              <span style="font-size: 10px; background: rgba(6, 182, 212, 0.2); color: var(--pagePrimaryHover); border: 1px solid rgba(6, 182, 212, 0.4); padding: 2px 8px; border-radius: 100px; font-family: var(--font-mono);">ADMIN STUDIO</span>
+            </h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin: 3px 0 0 0;">Create a containerized server with dedicated limits, assigned node, and runtime supervisor.</p>
           </div>
         </div>
+        <button class="modal-close-btn" onclick="closeCreateServerModal()" title="Close Studio">
+          <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-          <div class="form-group">
-            <label class="form-label">Binding IP</label>
-            <input type="text" id="admin-new-ip" class="form-control" required value="0.0.0.0" placeholder="0.0.0.0">
+      <form id="admin-create-server-form" onsubmit="event.preventDefault(); submitAdminCreateServer();">
+        <input type="hidden" id="admin-new-type" value="nodejs">
+        <input type="hidden" id="admin-new-version" value="22">
+
+        <div class="deploy-studio-grid">
+          <!-- LEFT COLUMN: Runtime, Name & Hardware Sliders -->
+          <div>
+            <!-- 1. Runtime Selection -->
+            <div class="deploy-section-title">
+              <i class="bi bi-cpu-fill" style="color: var(--sidebarButtonActive);"></i>
+              <span>1. Select Execution Engine</span>
+            </div>
+
+            <div class="runtime-tiles-grid">
+              <!-- Node.js Tile -->
+              <div class="runtime-tile node active" id="admin-tile-nodejs" onclick="selectAdminRuntimeTile('nodejs')">
+                <div class="runtime-tile-icon">
+                  <i class="bi bi-filetype-js"></i>
+                </div>
+                <div>
+                  <div style="font-weight: 800; font-size: 14px; color: #FFF;">Node.js</div>
+                  <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4; margin-top: 2px;">V8 engine for Express, Fastify, Discord bots, and TypeScript.</div>
+                </div>
+                <div class="runtime-tile-check"><i class="bi bi-check"></i></div>
+              </div>
+
+              <!-- Python Tile -->
+              <div class="runtime-tile python" id="admin-tile-python" onclick="selectAdminRuntimeTile('python')">
+                <div class="runtime-tile-icon">
+                  <i class="bi bi-filetype-py"></i>
+                </div>
+                <div>
+                  <div style="font-weight: 800; font-size: 14px; color: #FFF;">Python 3</div>
+                  <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4; margin-top: 2px;">Virtualenv for FastAPI, Flask, Django, scrapers & AI agents.</div>
+                </div>
+                <div class="runtime-tile-check"><i class="bi bi-check"></i></div>
+              </div>
+            </div>
+
+            <!-- Version Picker Pills -->
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+              <span style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Engine Version</span>
+              <span style="font-size: 11px; color: var(--pagePrimaryHover);" id="admin-version-current-label">Node.js 22 LTS (Recommended)</span>
+            </div>
+            <div class="version-pill-group" id="admin-version-pill-container">
+              <!-- Rendered dynamically -->
+            </div>
+
+            <!-- 2. Server Identity -->
+            <div class="deploy-section-title" style="margin-top: 14px;">
+              <i class="bi bi-tag-fill" style="color: var(--sidebarButtonActive);"></i>
+              <span>2. Server Identity & Entrypoint</span>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 140px; gap: 10px; margin-bottom: 14px;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" for="admin-new-name">Server Instance Name</label>
+                <div style="position: relative;">
+                  <input type="text" id="admin-new-name" class="form-control" placeholder="production-api" required oninput="updateAdminDeployPreview()" style="padding-right: 90px;">
+                  <button type="button" class="btn-secondary" onclick="generateAdminRandomServerName()" title="Generate Random Name" style="position: absolute; right: 5px; top: 5px; padding: 4px 10px; font-size: 11px; height: 28px;">
+                    🎲 Random
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" for="admin-new-entry">Entrypoint</label>
+                <input type="text" id="admin-new-entry" class="form-control" value="index.js" required oninput="updateAdminDeployPreview()">
+              </div>
+            </div>
+
+            <!-- 3. Resource Allocation Matrix -->
+            <div class="deploy-section-title" style="margin-top: 18px;">
+              <i class="bi bi-sliders2" style="color: var(--sidebarButtonActive);"></i>
+              <span>3. Resource Allocation & Hardware Quotas</span>
+            </div>
+
+            <!-- Quick Tier Presets -->
+            <div class="tier-presets-bar">
+              <div class="tier-chip active" id="admin-tier-starter" onclick="applyAdminTierPreset('starter')">
+                <span class="tier-chip-name">Starter</span>
+                <span class="tier-chip-specs">1 Core / 1GB RAM</span>
+              </div>
+              <div class="tier-chip" id="admin-tier-standard" onclick="applyAdminTierPreset('standard')">
+                <span class="tier-chip-name">Standard</span>
+                <span class="tier-chip-specs">2 Cores / 2GB RAM</span>
+              </div>
+              <div class="tier-chip" id="admin-tier-pro" onclick="applyAdminTierPreset('pro')">
+                <span class="tier-chip-name">Pro</span>
+                <span class="tier-chip-specs">4 Cores / 4GB RAM</span>
+              </div>
+              <div class="tier-chip" id="admin-tier-extreme" onclick="applyAdminTierPreset('extreme')">
+                <span class="tier-chip-name">Extreme</span>
+                <span class="tier-chip-specs">8 Cores / 8GB RAM</span>
+              </div>
+            </div>
+
+            <!-- CPU Slider -->
+            <div class="resource-slider-block">
+              <div class="resource-slider-top">
+                <span class="resource-slider-title">
+                  <i class="bi bi-cpu-fill" style="color: var(--amber);"></i>
+                  <span>Processor Core Limit</span>
+                </span>
+                <span class="resource-slider-badge" style="color: var(--amber);" id="admin-badge-cpu">100% (1 Core)</span>
+              </div>
+              <input type="range" id="admin-new-cpu" class="nebula-range-slider" min="10" max="800" step="10" value="100" oninput="handleAdminSliderChange('cpu', this.value)">
+              <div style="display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); font-family: var(--font-mono);">
+                <span>10%</span>
+                <span>100% (1 Core)</span>
+                <span>200% (2 Cores)</span>
+                <span>400% (4 Cores)</span>
+                <span>800% (8 Cores)</span>
+              </div>
+            </div>
+
+            <!-- RAM Slider -->
+            <div class="resource-slider-block">
+              <div class="resource-slider-top">
+                <span class="resource-slider-title">
+                  <i class="bi bi-pie-chart-fill" style="color: var(--emerald);"></i>
+                  <span>Memory (RAM) Allocation</span>
+                </span>
+                <span class="resource-slider-badge" style="color: var(--emerald);" id="admin-badge-ram">1024 MB (1.0 GB)</span>
+              </div>
+              <input type="range" id="admin-new-ram" class="nebula-range-slider" min="256" max="16384" step="256" value="1024" oninput="handleAdminSliderChange('ram', this.value)">
+              <div style="display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); font-family: var(--font-mono);">
+                <span>512 MB</span>
+                <span>1 GB</span>
+                <span>2 GB</span>
+                <span>4 GB</span>
+                <span>8 GB</span>
+                <span>16 GB</span>
+              </div>
+            </div>
+
+            <!-- Disk Slider -->
+            <div class="resource-slider-block">
+              <div class="resource-slider-top">
+                <span class="resource-slider-title">
+                  <i class="bi bi-hdd-fill" style="color: #A78BFA;"></i>
+                  <span>Storage Volume (NVMe)</span>
+                </span>
+                <span class="resource-slider-badge" style="color: #A78BFA;" id="admin-badge-disk">5120 MB (5.0 GB)</span>
+              </div>
+              <input type="range" id="admin-new-disk" class="nebula-range-slider" min="512" max="51200" step="512" value="5120" oninput="handleAdminSliderChange('disk', this.value)">
+              <div style="display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); font-family: var(--font-mono);">
+                <span>1 GB</span>
+                <span>5 GB</span>
+                <span>10 GB</span>
+                <span>20 GB</span>
+                <span>50 GB</span>
+              </div>
+            </div>
           </div>
-          <div class="form-group">
-            <label class="form-label">Dedicated Port</label>
-            <input type="number" id="admin-new-port" class="form-control" required value="3000" min="1024" max="65535">
+
+          <!-- RIGHT COLUMN: Network, Node, Live Preview & Launch -->
+          <div style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <!-- 4. Network Configuration -->
+              <div class="deploy-section-title">
+                <i class="bi bi-hdd-network-fill" style="color: var(--sidebarButtonActive);"></i>
+                <span>4. Networking & Binding</span>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="admin-new-ip">Binding Interface / IP</label>
+                <input type="text" id="admin-new-ip" class="form-control" value="0.0.0.0" required oninput="updateAdminDeployPreview()">
+              </div>
+
+              <div class="form-group">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                  <label class="form-label" for="admin-new-port" style="margin-bottom: 0;">Dedicated Port</label>
+                  <button type="button" class="quick-cmd-btn" onclick="autoAssignAdminNextFreePort()" title="Find Next Available Port">
+                    ⚡ Auto-Detect Port
+                  </button>
+                </div>
+                <input type="number" id="admin-new-port" class="form-control" value="3106" min="1024" max="65535" required oninput="updateAdminDeployPreview()">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="admin-new-domain">Domain / Hostname (Optional)</label>
+                <input type="text" id="admin-new-domain" class="form-control" placeholder="srv1.yourdomain.com">
+              </div>
+
+              <!-- Cluster Node Target -->
+              <div style="background: var(--pageSecondaryActive); border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; border: 1px solid rgba(255, 255, 255, 0.05); display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                  <div style="font-size: 10px; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Target Cluster Node</div>
+                  <div style="font-size: 13px; font-weight: 700; color: #FFF; margin-top: 2px;">LocalNode (Primary VPS)</div>
+                </div>
+                <span class="nebula-status-pill running" style="font-size: 10px;">
+                  <i class="bi bi-circle-fill"></i> Connected
+                </span>
+              </div>
+
+              <!-- Live Card Preview -->
+              <div class="deploy-section-title">
+                <i class="bi bi-eye-fill" style="color: var(--sidebarButtonActive);"></i>
+                <span>Live Card Preview</span>
+              </div>
+
+              <div class="deploy-preview-card">
+                <div class="status-bar" style="--ActiveColor: var(--statusInstalling);"></div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; position: relative; z-index: 2;">
+                  <div style="display: flex; gap: 10px; align-items: center;">
+                    <div style="width: 38px; height: 38px; border-radius: 8px; background: var(--pageSecondaryActive); display: flex; align-items: center; justify-content: center; font-size: 18px;" id="admin-preview-icon">
+                      <i class="bi bi-filetype-js" style="color: #2CDD2F;"></i>
+                    </div>
+                    <div>
+                      <div style="display: flex; align-items: center; gap: 6px;">
+                        <span class="statusOrb installing"></span>
+                        <span style="font-weight: 800; color: #FFF; font-size: 14px;" id="admin-preview-name">production-api</span>
+                      </div>
+                      <div style="font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); margin-top: 2px;" id="admin-preview-addr">0.0.0.0:3106</div>
+                    </div>
+                  </div>
+                  <span class="nebula-status-pill installing" style="font-size: 9px; padding: 2px 7px;">
+                    <i class="bi bi-gear-fill spin"></i> Installing
+                  </span>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; position: relative; z-index: 2;">
+                  <div class="nebula-metric-chip" style="padding: 6px 8px;">
+                    <span class="nebula-metric-chip-label" style="font-size: 9px;">RAM</span>
+                    <span class="nebula-metric-chip-val" id="admin-preview-ram-chip" style="color: var(--emerald); font-size: 10px;">1024 MB</span>
+                  </div>
+                  <div class="nebula-metric-chip" style="padding: 6px 8px;">
+                    <span class="nebula-metric-chip-label" style="font-size: 9px;">CPU</span>
+                    <span class="nebula-metric-chip-val" id="admin-preview-cpu-chip" style="color: var(--amber); font-size: 10px;">100%</span>
+                  </div>
+                  <div class="nebula-metric-chip" style="padding: 6px 8px;">
+                    <span class="nebula-metric-chip-label" style="font-size: 9px;">Disk</span>
+                    <span class="nebula-metric-chip-val" id="admin-preview-disk-chip" style="color: #A78BFA; font-size: 10px;">5120 MB</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Footer Action -->
+            <div class="modal-footer" style="margin-top: 24px; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, 0.08); display: flex; justify-content: flex-end; gap: 12px;">
+              <button type="button" class="btn-secondary" onclick="closeCreateServerModal()">Cancel</button>
+              <button type="submit" class="btn-deploy-galaxy" id="btn-admin-create-submit">
+                <i class="bi bi-rocket-takeoff-fill"></i>
+                <span>Deploy Server Instance</span>
+              </button>
+            </div>
           </div>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
-          <div class="form-group">
-            <label class="form-label">Core / CPU (%)</label>
-            <input type="number" id="admin-new-cpu" class="form-control" value="100" min="10" max="1600" step="10" required placeholder="100">
-            <span style="font-size: 10px; color: var(--text-muted); font-family: var(--font-mono);">100% = 1 Core</span>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">RAM Allocation (MB)</label>
-            <input type="number" id="admin-new-ram" class="form-control" value="1024" min="128" step="128" required placeholder="1024">
-            <span style="font-size: 10px; color: var(--text-muted); font-family: var(--font-mono);">1024 MB = 1 GB</span>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Disk Limit (MB)</label>
-            <input type="number" id="admin-new-disk" class="form-control" value="5120" min="256" step="512" required placeholder="5120">
-            <span style="font-size: 10px; color: var(--text-muted); font-family: var(--font-mono);">5120 MB = 5 GB</span>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Entrypoint Script</label>
-          <input type="text" id="admin-new-entry" class="form-control" required value="index.js" placeholder="index.js or main.py">
-        </div>
-
-        <div class="modal-footer">
-          <button type="button" class="btn-secondary" onclick="closeCreateServerModal()">Cancel</button>
-          <button type="submit" class="btn-primary framer-spring" id="btn-create-server-submit">Deploy Server</button>
         </div>
       </form>
     </div>
@@ -1034,7 +1233,181 @@
     function openCreateUserModal() { document.getElementById('modal-create-user').classList.add('open'); }
     function closeCreateUserModal() { document.getElementById('modal-create-user').classList.remove('open'); }
 
-    function openCreateServerModal() { document.getElementById('modal-create-server').classList.add('open'); }
+    
+    // ADMIN ECLIPSE DEPLOY STUDIO INTERACTIVE CONTROLS
+    const ADMIN_RUNTIME_VERSIONS = {
+      nodejs: [
+        { ver: '22', label: 'Node.js 22 LTS (Current)', recommended: true },
+        { ver: '20', label: 'Node.js 20 LTS (Active)' },
+        { ver: '18', label: 'Node.js 18 LTS' },
+        { ver: '24', label: 'Node.js 24 (Next)' }
+      ],
+      python: [
+        { ver: '3.12', label: 'Python 3.12 (Standard)', recommended: true },
+        { ver: '3.11', label: 'Python 3.11' },
+        { ver: '3.10', label: 'Python 3.10' },
+        { ver: '3.13', label: 'Python 3.13 (Next)' }
+      ]
+    };
+
+    const ADMIN_RANDOM_NAMES = [
+      'production-api', 'quantum-bot', 'stellar-service', 'hyperion-worker', 'apex-node',
+      'vortex-backend', 'zenith-micro', 'phoenix-py', 'titan-cluster', 'aurora-gateway'
+    ];
+
+    function selectAdminRuntimeTile(type) {
+      document.getElementById('admin-new-type').value = type;
+      const tileNode = document.getElementById('admin-tile-nodejs');
+      const tilePy = document.getElementById('admin-tile-python');
+      const entryInput = document.getElementById('admin-new-entry');
+
+      if (type === 'nodejs') {
+        tileNode.classList.add('active');
+        tilePy.classList.remove('active');
+        if (entryInput.value === 'main.py' || !entryInput.value) entryInput.value = 'index.js';
+      } else {
+        tilePy.classList.add('active');
+        tileNode.classList.remove('active');
+        if (entryInput.value === 'index.js' || !entryInput.value) entryInput.value = 'main.py';
+      }
+
+      renderAdminVersionPills(type);
+      updateAdminDeployPreview();
+    }
+
+    function renderAdminVersionPills(type) {
+      const container = document.getElementById('admin-version-pill-container');
+      const label = document.getElementById('admin-version-current-label');
+      const currentVerInput = document.getElementById('admin-new-version');
+      if (!container) return;
+
+      const versions = ADMIN_RUNTIME_VERSIONS[type] || [];
+      const defaultVer = versions.find(v => v.recommended) || versions[0];
+      currentVerInput.value = defaultVer.ver;
+      if (label) label.innerText = defaultVer.label;
+
+      container.innerHTML = versions.map(v => {
+        const isAct = v.ver === defaultVer.ver;
+        return `<button type="button" class="version-pill ${isAct ? 'active' : ''}" onclick="selectAdminVersionPill('${v.ver}', '${v.label}')">${v.label}</button>`;
+      }).join('');
+    }
+
+    function selectAdminVersionPill(ver, verLabel) {
+      document.getElementById('admin-new-version').value = ver;
+      const label = document.getElementById('admin-version-current-label');
+      if (label) label.innerText = verLabel;
+
+      const pills = document.querySelectorAll('#admin-version-pill-container .version-pill');
+      pills.forEach(p => {
+        p.classList.toggle('active', p.innerText === verLabel);
+      });
+    }
+
+    function generateAdminRandomServerName() {
+      const rand = ADMIN_RANDOM_NAMES[Math.floor(Math.random() * ADMIN_RANDOM_NAMES.length)];
+      const num = Math.floor(10 + Math.random() * 90);
+      const nameInput = document.getElementById('admin-new-name');
+      if (nameInput) {
+        nameInput.value = `${rand}-${num}`;
+        updateAdminDeployPreview();
+      }
+    }
+
+    function applyAdminTierPreset(tier) {
+      const tiers = {
+        starter:  { cpu: 100, ram: 1024, disk: 5120 },
+        standard: { cpu: 200, ram: 2048, disk: 10240 },
+        pro:      { cpu: 400, ram: 4096, disk: 20480 },
+        extreme:  { cpu: 800, ram: 8192, disk: 40960 }
+      };
+      const preset = tiers[tier];
+      if (!preset) return;
+
+      document.getElementById('admin-new-cpu').value = preset.cpu;
+      document.getElementById('admin-new-ram').value = preset.ram;
+      document.getElementById('admin-new-disk').value = preset.disk;
+
+      handleAdminSliderChange('cpu', preset.cpu);
+      handleAdminSliderChange('ram', preset.ram);
+      handleAdminSliderChange('disk', preset.disk);
+
+      ['starter', 'standard', 'pro', 'extreme'].forEach(t => {
+        const el = document.getElementById(`admin-tier-${t}`);
+        if (el) el.classList.toggle('active', t === tier);
+      });
+    }
+
+    function handleAdminSliderChange(type, val) {
+      val = parseInt(val, 10);
+      if (type === 'cpu') {
+        const cores = (val / 100).toFixed(val % 100 === 0 ? 0 : 1);
+        document.getElementById('admin-badge-cpu').innerText = `${val}% (${cores} Core${val >= 200 ? 's' : ''})`;
+        document.getElementById('admin-preview-cpu-chip').innerText = `${val}%`;
+      } else if (type === 'ram') {
+        const gb = (val / 1024).toFixed(val % 1024 === 0 ? 0 : 1);
+        document.getElementById('admin-badge-ram').innerText = `${val} MB (${gb} GB)`;
+        document.getElementById('admin-preview-ram-chip').innerText = `${val} MB`;
+      } else if (type === 'disk') {
+        const gb = (val / 1024).toFixed(val % 1024 === 0 ? 0 : 1);
+        document.getElementById('admin-badge-disk').innerText = `${val} MB (${gb} GB)`;
+        document.getElementById('admin-preview-disk-chip').innerText = `${val} MB`;
+      }
+    }
+
+    function autoAssignAdminNextFreePort() {
+      let maxPort = 3100;
+      if (allServers && allServers.length > 0) {
+        allServers.forEach(a => {
+          const p = parseInt(a.port, 10);
+          if (!isNaN(p) && p >= maxPort) maxPort = p;
+        });
+        maxPort += 1;
+      }
+      document.getElementById('admin-new-port').value = maxPort;
+      updateAdminDeployPreview();
+      if (window.EclipseAnimations && window.EclipseAnimations.showToast) {
+        window.EclipseAnimations.showToast(`Allocated next free port: ${maxPort}`, 'success');
+      }
+    }
+
+    function updateAdminDeployPreview() {
+      const name = document.getElementById('admin-new-name').value.trim() || 'production-api';
+      const type = document.getElementById('admin-new-type').value;
+      const ip = document.getElementById('admin-new-ip').value.trim() || '0.0.0.0';
+      const port = document.getElementById('admin-new-port').value || '3100';
+
+      const previewName = document.getElementById('admin-preview-name');
+      const previewAddr = document.getElementById('admin-preview-addr');
+      const previewIcon = document.getElementById('admin-preview-icon');
+
+      if (previewName) previewName.innerText = name;
+      if (previewAddr) previewAddr.innerText = `${ip}:${port}`;
+      if (previewIcon) {
+        if (type === 'nodejs') {
+          previewIcon.innerHTML = '<i class="bi bi-filetype-js" style="color: #2CDD2F;"></i>';
+        } else {
+          previewIcon.innerHTML = '<i class="bi bi-filetype-py" style="color: #38BDF8;"></i>';
+        }
+      }
+    }
+
+    function openCreateServerModal() {
+      renderAdminVersionPills('nodejs');
+      autoAssignAdminNextFreePort();
+      if (!document.getElementById('admin-new-name').value) {
+        generateAdminRandomServerName();
+      }
+      updateAdminDeployPreview();
+      document.getElementById('modal-create-server').classList.add('open');
+    }
+
+    function closeCreateServerModal() {
+      const overlay = document.getElementById('admin-deploy-progress-overlay');
+      if (overlay) overlay.style.display = 'none';
+      document.getElementById('modal-create-server').classList.remove('open');
+    }
+
+    function _old_openCreateServerModal() { document.getElementById('modal-create-server').classList.add('open'); }
     function closeCreateServerModal() { document.getElementById('modal-create-server').classList.remove('open'); }
 
     function openEditUserModal(user) {
@@ -1110,6 +1483,10 @@
 
         if (sysRes.ok) {
           const sysData = await sysRes.json();
+          if (sysData.system && sysData.system.ip) window.detectedHostIp = sysData.system.ip;
+          if (sysData.system && sysData.system.domain) window.configuredDomain = sysData.system.domain;
+          if (sysData.ip) window.detectedHostIp = sysData.ip;
+          if (sysData.domain) window.configuredDomain = sysData.domain;
           renderSystemData(sysData);
         }
 
@@ -1146,9 +1523,8 @@
         if (data.system.platform) {
           document.getElementById('admin-host-platform').innerText = 'Platform: ' + data.system.platform.toUpperCase() + ' (' + (data.system.arch || 'x64') + ')';
         }
-        if (data.system.hostname) {
-          document.getElementById('sidebar-hostname').innerText = data.system.hostname;
-        }
+        const hostEl = document.getElementById('sidebar-hostname');
+        if (hostEl) hostEl.innerText = data.system.hostname;
       }
     }
 
@@ -1180,8 +1556,14 @@
         const diskStr = (app.disk_limit || 5120) + ' MB';
         const ownerName = app.owner_username || 'admin';
 
-        // Whole IP address calculation
-        const hostIp = (app.primary_ip && app.primary_ip !== '0.0.0.0') ? app.primary_ip : (window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname);
+        // Whole IP / domain address calculation
+        const hostIp = (app.domain && app.domain.trim() !== '') 
+          ? app.domain.trim() 
+          : (window.configuredDomain && window.configuredDomain.trim() !== '') 
+          ? window.configuredDomain.trim() 
+          : ((app.primary_ip && app.primary_ip !== '0.0.0.0' && app.primary_ip !== '127.0.0.1') 
+            ? app.primary_ip 
+            : (window.detectedHostIp || (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? window.location.hostname : window.detectedHostIp || '127.0.0.1')));
         const fullAddress = `${hostIp}:${app.port || '3000'}`;
 
         return `
@@ -1311,10 +1693,12 @@
       const cpu_limit = parseInt(document.getElementById('admin-new-cpu').value, 10) || 100;
       const disk_limit = parseInt(document.getElementById('admin-new-disk').value, 10) || 5120;
       const entrypoint = document.getElementById('admin-new-entry').value.trim() || 'index.js';
-      const btn = document.getElementById('btn-create-server-submit');
+      const btn = document.getElementById('btn-admin-create-submit') || document.getElementById('btn-create-server-submit');
 
-      btn.disabled = true;
-      btn.innerText = 'Deploying...';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerText = 'Deploying...';
+      }
 
       try {
         const res = await fetch(API_BASE + '/apps', {
@@ -1342,8 +1726,10 @@
       } catch (e) {
         notify(e.message, 'error');
       } finally {
-        btn.disabled = false;
-        btn.innerText = 'Deploy Server';
+        if (btn) {
+          btn.disabled = false;
+          btn.innerText = 'Deploy Server Instance';
+        }
       }
     }
 
@@ -1514,9 +1900,12 @@
       if (!currentUser) return;
       const name = currentUser.username || 'admin';
       const role = currentUser.role || 'admin';
-      document.getElementById('sidebar-user-name').innerText = name;
-      document.getElementById('sidebar-user-role').innerText = role.toUpperCase();
-      document.getElementById('sidebar-user-avatar').innerText = name.charAt(0).toUpperCase();
+      const uEl = document.getElementById('sidebar-user-name');
+      if (uEl) uEl.innerText = name;
+      const rEl = document.getElementById('sidebar-user-role');
+      if (rEl) rEl.innerText = role.toUpperCase();
+      const aEl = document.getElementById('sidebar-user-avatar');
+      if (aEl) aEl.innerText = name.charAt(0).toUpperCase();
     }
 
     function escapeHtml(str) {

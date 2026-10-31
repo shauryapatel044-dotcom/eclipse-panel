@@ -280,4 +280,44 @@ export class AdminController {
       return res.status(500).json({ error: err.message });
     }
   }
+
+  static async getTheme(req, res) {
+    try {
+      const row = db.prepare("SELECT value FROM panel_settings WHERE key = 'designer_theme_config'").get();
+      if (!row || !row.value) {
+        return res.json({
+          success: true,
+          theme: {
+            primary: '#06B6D4',
+            primaryHover: '#22D3EE',
+            bgRoot: '#0B0D17',
+            sidebarActive: '#06B6D4',
+            cardBg: '#121526',
+            borderColor: 'rgba(6, 182, 212, 0.2)',
+            borderRadius: '12px',
+            powerStyle: 'pills',
+            graphsVisible: true,
+            watermarkVisible: true,
+            bannerText: 'Welcome to Eclipse Panel! High-performance cloud container infrastructure. Made By Vexezor',
+            bannerIcon: 'bi-megaphone-fill',
+            bannerEnabled: true
+          }
+        });
+      }
+      return res.json({ success: true, theme: JSON.parse(row.value) });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
+  static async updateTheme(req, res) {
+    try {
+      const themeConfig = req.body;
+      db.prepare("INSERT OR REPLACE INTO panel_settings (key, value) VALUES ('designer_theme_config', ?)")
+        .run(JSON.stringify(themeConfig));
+      return res.json({ success: true, message: 'Designer theme settings updated successfully!' });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
 }

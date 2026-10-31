@@ -1,24 +1,28 @@
 #!/usr/bin/env bash
 # ==============================================================================
-#  🌑 Eclipse Panel - 1-Click Automated VPS Installer (Port 8090 + MariaDB) 🌑
-#  Installs Node.js 22, Python 3 + venv, MariaDB Database, Daemon & Dashboard
-#  Compatible with: Ubuntu 20.04+, Debian 11+, CentOS/RHEL/AlmaLinux 8+, Fedora
+#  🌑 Eclipse Panel - Production 1-Click VPS Installer 🌑
+#  Node.js 22 LTS · Python 3 · MariaDB Database · Nginx SSL · Port 8090
+#  Made By Vexezor · Cloud Container Infrastructure
+#  Compatible with: Ubuntu 20.04+, Debian 11+, CentOS/RHEL/AlmaLinux/Rocky 8+, Fedora
 # ==============================================================================
 
 set -e
 
-# ANSI Color Codes
+# Terminal ANSI Styling
+CYAN='\033[0;36m'
+BOLD_CYAN='\033[1;36m'
+GREEN='\033[0;32m'
+BOLD_GREEN='\033[1;32m'
+YELLOW='\033[1;33m'
 RED='\033[0;31m'
 BOLD_RED='\033[1;31m'
-GREEN='\033[0;32m'
-CYAN='\033[0;36m'
-YELLOW='\033[1;33m'
+WHITE='\033[1;37m'
 PURPLE='\033[0;35m'
 NC='\033[0m' # No Color
 
 print_banner() {
-    clear
-    echo -e "${BOLD_RED}"
+    clear 2>/dev/null || true
+    echo -e "${CYAN}"
     echo "  ███████╗ ██████╗██╗     ██╗██████╗ ███████╗███████╗"
     echo "  ██╔════╝██╔════╝██║     ██║██╔══██╗██╔════╝██╔════╝"
     echo "  █████╗  ██║     ██║     ██║██████╔╝███████╗█████╗  "
@@ -31,17 +35,17 @@ print_banner() {
     echo "      ██╔═══╝ ██╔══██║██║╚██╗██║██╔══╝  ██║          "
     echo "      ██║     ██║  ██║██║ ╚████║███████╗███████╗     "
     echo "      ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝╚══════╝     "
-    echo -e "      ${PURPLE}🌑 Python & Node.js Hosting Daemon + MariaDB (Port 8090) 🌑${NC}"
+    echo -e "      ${BOLD_CYAN}🌑 Eclipse Panel (Port 8090) · Made By Vexezor 🌑${NC}"
     echo -e "${CYAN}================================================================${NC}"
     echo ""
 }
 
 print_step() {
-    echo -e "\n${BOLD_RED}[+] $1${NC}"
+    echo -e "\n${BOLD_CYAN}[+] $1${NC}"
 }
 
 print_success() {
-    echo -e "${GREEN}[✔] $1${NC}"
+    echo -e "${BOLD_GREEN}[✔] $1${NC}"
 }
 
 print_warning() {
@@ -49,92 +53,183 @@ print_warning() {
 }
 
 print_error() {
-    echo -e "${RED}[✘] $1${NC}"
+    echo -e "${BOLD_RED}[✘] $1${NC}"
 }
 
-# 1. Check Root Privileges
+# 1. Root Verification
 if [ "$(id -u)" -ne 0 ]; then
-    print_error "This installer must be run as root. Please run with 'sudo bash install.sh'"
+    print_error "This installer must be run as root. Please execute: sudo bash install.sh"
     exit 1
 fi
 
 print_banner
 
-# 2. Detect Package Manager & Distro
-print_step "Detecting operating system..."
+# 2. Operating System Detection
+print_step "Detecting operating system distribution..."
 if [ -f /etc/os-release ]; then
     . /etc/os-release
     OS=$ID
     VERSION=$VERSION_ID
-    echo -e "Detected OS: ${CYAN}$NAME ($VERSION)${NC}"
+    echo -e "Detected OS: ${BOLD_GREEN}$NAME ($VERSION)${NC}"
 else
-    print_error "Cannot detect operating system distribution."
+    print_error "Unable to detect Linux distribution from /etc/os-release."
     exit 1
 fi
 
-# 3. Update repositories and install base utilities
+# Detect Public VPS IP
+print_step "Detecting VPS public network address..."
+PUBLIC_IP=$(curl -s --max-time 4 https://api.ipify.org || curl -s --max-time 4 https://icanhazip.com || curl -s --max-time 4 https://ifconfig.me || hostname -I | awk '{print $1}')
+PUBLIC_IP=$(echo "$PUBLIC_IP" | tr -d '[:space:]')
+if [ -z "$PUBLIC_IP" ]; then
+    PUBLIC_IP="127.0.0.1"
+fi
+print_success "Detected VPS Public IP: ${BOLD_CYAN}${PUBLIC_IP}${NC}"
+
+# 3. Interactive Domain Selection (Subdomain vs Public IP)
+echo ""
+echo -e "${CYAN}================================================================${NC}"
+echo -e "${BOLD_CYAN}  🌐 NETWORK CONFIGURATION: SUBDOMAIN OR PUBLIC IP 🌐${NC}"
+echo -e "${CYAN}================================================================${NC}"
+echo -e "  Eclipse Panel can be accessed via a Subdomain (Recommended) or VPS IP:"
+echo -e ""
+echo -e "  ${WHITE}[1] Subdomain / Domain (RECOMMENDED)${NC}"
+echo -e "      • Free trusted HTTPS / SSL certificate via Let's Encrypt (Certbot)"
+echo -e "      • Clean, secure URL without ports (e.g. https://panel.yourdomain.com)"
+echo -e "      • Secure WebSockets (wss://) & clipboard APIs guaranteed"
+echo -e "      • Supports Cloudflare DDoS proxy protection"
+echo -e ""
+echo -e "  ${WHITE}[2] Direct VPS Public IP${NC}"
+echo -e "      • Fast zero-DNS setup directly via http://${PUBLIC_IP}:8090"
+echo -e "      • Direct port 80 & 8090 web access"
+echo -e "${CYAN}================================================================${NC}"
+
+SETUP_MODE="1"
+PANEL_DOMAIN=""
+ADMIN_EMAIL=""
+SSL_ENABLED=false
+
+if [ -t 0 ]; then
+    read -r -p "Select option [1 for Subdomain, 2 for IP] (Default: 1): " USER_CHOICE
+    if [[ "$USER_CHOICE" == "2" ]]; then
+        SETUP_MODE="2"
+    else
+        SETUP_MODE="1"
+    fi
+
+    if [ "$SETUP_MODE" == "1" ]; then
+        echo ""
+        echo -e "${YELLOW}Please enter the subdomain or domain pointing to this VPS:${NC}"
+        echo -e "Example: ${CYAN}panel.yourdomain.com${NC} or ${CYAN}eclipse.mysite.org${NC}"
+        read -r -p "Subdomain / Domain: " PANEL_DOMAIN
+        PANEL_DOMAIN=$(echo "$PANEL_DOMAIN" | tr -d '[:space:]')
+
+        if [ -n "$PANEL_DOMAIN" ]; then
+            read -r -p "Email for Let's Encrypt SSL notifications: " ADMIN_EMAIL
+            ADMIN_EMAIL=$(echo "$ADMIN_EMAIL" | tr -d '[:space:]')
+            if [ -z "$ADMIN_EMAIL" ]; then
+                ADMIN_EMAIL="admin@${PANEL_DOMAIN}"
+            fi
+
+            # Live DNS check
+            print_step "Verifying DNS record for ${PANEL_DOMAIN}..."
+            RESOLVED_IP=$(getent ahosts "$PANEL_DOMAIN" 2>/dev/null | awk '{print $1}' | head -n1 || true)
+            if [ -z "$RESOLVED_IP" ] && command -v dig >/dev/null 2>&1; then
+                RESOLVED_IP=$(dig +short "$PANEL_DOMAIN" 2>/dev/null | tail -n1 || true)
+            fi
+
+            if [ "$RESOLVED_IP" == "$PUBLIC_IP" ]; then
+                print_success "DNS verified! ${PANEL_DOMAIN} points directly to this VPS (${PUBLIC_IP})."
+            elif [ -n "$RESOLVED_IP" ]; then
+                print_warning "DNS record resolved to '${RESOLVED_IP}' (VPS Public IP is: ${PUBLIC_IP})."
+                print_warning "If you just created the DNS A-record, DNS propagation may take a few moments."
+            else
+                print_warning "Could not resolve ${PANEL_DOMAIN} yet. Ensure an 'A' record points to ${PUBLIC_IP}."
+            fi
+        else
+            print_warning "No domain provided. Falling back to VPS Public IP mode."
+            SETUP_MODE="2"
+        fi
+    fi
+else
+    # Non-interactive fallback
+    SETUP_MODE="2"
+fi
+
+# Admin Account Setup
+echo ""
+echo -e "${CYAN}================================================================${NC}"
+echo -e "${BOLD_CYAN}  👤 SUPERADMINISTRATOR ACCOUNT SETUP 👤${NC}"
+echo -e "${CYAN}================================================================${NC}"
+ADMIN_USER="admin"
+ADMIN_PASS=""
+
+if [ -t 0 ]; then
+    read -r -p "Enter Administrator Username (Default: admin): " INPUT_USER
+    if [ -n "$INPUT_USER" ]; then ADMIN_USER=$(echo "$INPUT_USER" | tr -d '[:space:]'); fi
+
+    read -r -s -p "Enter Administrator Password (Default: auto-generate): " INPUT_PASS
+    echo ""
+    if [ -n "$INPUT_PASS" ]; then
+        ADMIN_PASS="$INPUT_PASS"
+    else
+        ADMIN_PASS=$(openssl rand -hex 6 2>/dev/null || tr -dc 'a-zA-Z0-9' </dev/urandom | head -c 12)
+    fi
+else
+    ADMIN_PASS=$(openssl rand -hex 6 2>/dev/null || tr -dc 'a-zA-Z0-9' </dev/urandom | head -c 12)
+fi
+
+# 4. System Updates & Prerequisites
 print_step "Updating system packages and installing prerequisites..."
 if [[ "$OS" =~ ^(ubuntu|debian)$ ]]; then
     export DEBIAN_FRONTEND=noninteractive
     apt-get update -y
-    apt-get install -y curl wget git build-essential ca-certificates gnupg ufw lsof nginx \
-                       mariadb-server mariadb-client libmariadb-dev libmariadb-dev-compat
+    apt-get install -y curl wget git build-essential ca-certificates gnupg ufw lsof nginx certbot python3-certbot-nginx \
+                       mariadb-server mariadb-client libmariadb-dev libmariadb-dev-compat dnsutils
 elif [[ "$OS" =~ ^(centos|rhel|almalinux|rocky|fedora)$ ]]; then
     dnf -y update || yum -y update
-    dnf -y install curl wget git gcc-c++ make ca-certificates gnupg2 tar firewalld lsof nginx \
-                   mariadb-server mariadb mariadb-devel || \
-    yum -y install curl wget git gcc-c++ make ca-certificates gnupg2 tar firewalld lsof nginx \
-                   mariadb-server mariadb mariadb-devel
+    dnf -y install curl wget git gcc-c++ make ca-certificates gnupg2 tar firewalld lsof nginx certbot python3-certbot-nginx \
+                   mariadb-server mariadb mariadb-devel bind-utils || \
+    yum -y install curl wget git gcc-c++ make ca-certificates gnupg2 tar firewalld lsof nginx certbot \
+                   mariadb-server mariadb mariadb-devel bind-utils
 fi
+print_success "Base system utilities and Nginx installed."
 
-# 4. Install & Configure MariaDB Database Engine
-print_step "Configuring and securing MariaDB database service..."
+# 5. MariaDB Service Setup
+print_step "Setting up MariaDB database service..."
 systemctl enable mariadb
 systemctl restart mariadb
 
-# Verify MariaDB is running
 if ! systemctl is-active --quiet mariadb; then
-    print_error "MariaDB failed to start. Attempting rescue..."
-    systemctl status mariadb --no-pager || true
+    print_warning "MariaDB did not respond immediately, attempting restart..."
+    sleep 2
     systemctl restart mariadb
 fi
 
-# Generate random secure database password
+# Generate secure random root and user database password
 DB_PASS=$(openssl rand -hex 16 2>/dev/null || tr -dc 'a-zA-Z0-9' </dev/urandom | head -c 24)
 
-# Determine root mysql command
-MYSQL_ROOT="mysql -u root"
-if ! $MYSQL_ROOT -e "SELECT 1;" >/dev/null 2>&1; then
-    if [ -f /root/.my.cnf ]; then
-        MYSQL_ROOT="mysql --defaults-file=/root/.my.cnf"
-    fi
-fi
+# Create /root/.my.cnf for root passwordless mysql CLI
+cat <<EOF > /root/.my.cnf
+[client]
+user=root
+EOF
+chmod 600 /root/.my.cnf
 
-# Provision eclipse_panel database and eclipse_user
-print_step "Creating 'eclipse_panel' database and provisioning user..."
-$MYSQL_ROOT <<EOF
+# Provision user database engine
+print_step "Provisioning 'eclipse_panel' MariaDB database..."
+mysql <<EOF
 CREATE DATABASE IF NOT EXISTS eclipse_panel CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE USER IF NOT EXISTS 'eclipse_user'@'localhost' IDENTIFIED BY '${DB_PASS}';
 ALTER USER 'eclipse_user'@'localhost' IDENTIFIED BY '${DB_PASS}';
 CREATE USER IF NOT EXISTS 'eclipse_user'@'127.0.0.1' IDENTIFIED BY '${DB_PASS}';
 ALTER USER 'eclipse_user'@'127.0.0.1' IDENTIFIED BY '${DB_PASS}';
-GRANT ALL PRIVILEGES ON eclipse_panel.* TO 'eclipse_user'@'localhost';
-GRANT ALL PRIVILEGES ON eclipse_panel.* TO 'eclipse_user'@'127.0.0.1';
+GRANT ALL PRIVILEGES ON *.* TO 'eclipse_user'@'localhost' WITH GRANT OPTION;
+GRANT ALL PRIVILEGES ON *.* TO 'eclipse_user'@'127.0.0.1' WITH GRANT OPTION;
 FLUSH PRIVILEGES;
 EOF
+print_success "MariaDB active & configured with root access for server provisioning."
 
-# Ensure /root/.my.cnf exists for passwordless root mysql CLI
-if [ ! -f /root/.my.cnf ]; then
-    cat <<EOF > /root/.my.cnf
-[client]
-user=root
-EOF
-    chmod 600 /root/.my.cnf
-fi
-
-print_success "MariaDB active & provisioned with database 'eclipse_panel'!"
-
-# 5. Install Node.js (v22 LTS or newer)
+# 6. Install Node.js 22 LTS
 print_step "Checking Node.js installation..."
 NEED_NODE=true
 if command -v node >/dev/null 2>&1; then
@@ -146,7 +241,7 @@ if command -v node >/dev/null 2>&1; then
 fi
 
 if [ "$NEED_NODE" = true ]; then
-    print_step "Installing Node.js 22 LTS..."
+    print_step "Installing Node.js 22 LTS from NodeSource..."
     if [[ "$OS" =~ ^(ubuntu|debian)$ ]]; then
         mkdir -p /etc/apt/keyrings
         curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg --yes
@@ -160,16 +255,23 @@ if [ "$NEED_NODE" = true ]; then
     print_success "Node.js installed: $(node -v)"
 fi
 
-# 6. Install Python 3, pip & venv
-print_step "Checking Python 3, pip, and venv..."
+# 7. Python 3 & venv
+print_step "Checking Python 3 environment..."
 if [[ "$OS" =~ ^(ubuntu|debian)$ ]]; then
     apt-get install -y python3 python3-pip python3-venv python3-dev
 elif [[ "$OS" =~ ^(centos|rhel|almalinux|rocky|fedora)$ ]]; then
     dnf -y install python3 python3-pip python3-devel || yum -y install python3 python3-pip python3-devel
 fi
-print_success "Python installed: $(python3 --version)"
+print_success "Python installed: $(python3 --version) | pip: $(pip3 --version 2>/dev/null || python3 -m pip --version 2>/dev/null || echo 'installed')"
 
-# 7. Set up Installation Directory & Public Frontend
+# Symlink standard binaries into /usr/local/bin for all hosted applications & scripts
+[ ! -f /usr/local/bin/python ] && ln -sf "$(command -v python3 || command -v python)" /usr/local/bin/python 2>/dev/null || true
+[ ! -f /usr/local/bin/pip ] && ln -sf "$(command -v pip3 || command -v pip)" /usr/local/bin/pip 2>/dev/null || true
+[ ! -f /usr/local/bin/node ] && ln -sf "$(command -v node)" /usr/local/bin/node 2>/dev/null || true
+[ ! -f /usr/local/bin/npm ] && ln -sf "$(command -v npm)" /usr/local/bin/npm 2>/dev/null || true
+[ ! -f /usr/local/bin/npx ] && ln -sf "$(command -v npx)" /usr/local/bin/npx 2>/dev/null || true
+
+# 8. Setup Application Directory
 INSTALL_DIR="/opt/eclipse-panel"
 print_step "Setting up Eclipse Panel in ${INSTALL_DIR}..."
 
@@ -178,20 +280,19 @@ mkdir -p "$INSTALL_DIR/storage/apps"
 mkdir -p "$INSTALL_DIR/storage/data"
 mkdir -p "$INSTALL_DIR/public"
 
-# Copy panel source files into /opt/eclipse-panel
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 if [ -f "$SCRIPT_DIR/package.json" ]; then
-    print_step "Syncing panel files, daemon supervisor & frontend..."
+    print_step "Copying panel source files..."
     cp -r "$SCRIPT_DIR/"* "$INSTALL_DIR/"
 else
-    print_step "Downloading latest Eclipse Panel codebase..."
+    print_step "Cloning latest Eclipse Panel from repository..."
     git clone https://github.com/shauryapatel044-dotcom/eclipse-panel.git "$INSTALL_DIR" 2>/dev/null || true
 fi
 
 cd "$INSTALL_DIR"
 
-# 8. Configure Environment (.env on Port 8090 + MariaDB)
-print_step "Configuring production environment on Port 8090 with MariaDB..."
+# 9. Configure Production .env
+print_step "Generating production environment (.env)..."
 RANDOM_JWT=$(openssl rand -hex 32 2>/dev/null || tr -dc 'a-zA-Z0-9' </dev/urandom | head -c 64)
 
 cat <<EOF > "$INSTALL_DIR/.env"
@@ -199,7 +300,12 @@ PORT=8090
 JWT_SECRET=${RANDOM_JWT}
 JWT_EXPIRES_IN=7d
 
-# Database Configuration (MariaDB VPS Database)
+# Domain & Host IP Configuration
+PANEL_DOMAIN=${PANEL_DOMAIN}
+BASE_DOMAIN=${PANEL_DOMAIN}
+VPS_PUBLIC_IP=${PUBLIC_IP}
+
+# MariaDB Configuration
 DB_TYPE=mariadb
 DB_HOST=127.0.0.1
 DB_PORT=3306
@@ -222,19 +328,24 @@ CORS_ORIGIN=*
 MAX_LOG_LINES=1000
 AUTO_START_ON_BOOT=true
 EOF
-print_success "Generated .env with unique JWT secret and MariaDB credentials."
+print_success "Generated production .env"
 
-# 9. Install NPM Dependencies
-print_step "Installing backend production dependencies (including mysql2)..."
+# 10. Install NPM Dependencies
+print_step "Installing production Node.js modules..."
 npm install --omit=dev --no-audit
+print_success "Dependencies installed."
 
-# 10. Setup Systemd Background Daemon
+# 11. Provision Administrator Account
+print_step "Provisioning Administrator account (${ADMIN_USER})..."
+NODE_EXEC=$(which node)
+$NODE_EXEC scripts/create-admin.js --username "$ADMIN_USER" --email "${ADMIN_USER}@${PANEL_DOMAIN:-eclipse.local}" --password "$ADMIN_PASS"
+print_success "SuperAdmin credentials initialized."
+
+# 12. Setup Systemd Background Service
 print_step "Configuring systemd background service (eclipse-panel.service)..."
-NODE_PATH=$(which node)
-
 cat <<EOF > /etc/systemd/system/eclipse-panel.service
 [Unit]
-Description=Eclipse Panel - Python & Node.js Hosting Daemon
+Description=Eclipse Panel - Cloud Container Infrastructure Daemon
 After=network.target mariadb.service
 Wants=mariadb.service
 
@@ -242,7 +353,7 @@ Wants=mariadb.service
 Type=simple
 User=root
 WorkingDirectory=${INSTALL_DIR}
-ExecStart=${NODE_PATH} src/index.js
+ExecStart=${NODE_EXEC} src/index.js
 Restart=always
 RestartSec=3
 Environment=NODE_ENV=production
@@ -255,154 +366,142 @@ EOF
 systemctl daemon-reload
 systemctl enable eclipse-panel
 systemctl restart eclipse-panel
+print_success "Systemd service 'eclipse-panel' active & enabled on boot."
 
-# 11. Configure Nginx Reverse Proxy with WebSocket Support (Port 80 -> Port 8090)
-print_step "Configuring Nginx reverse proxy (Port 80 -> Port 8090 + WebSockets)..."
-if command -v nginx >/dev/null 2>&1; then
-    NGINX_CONF="/etc/nginx/sites-available/eclipse-panel"
-    mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled
-    
-    cat <<'EOF' > "$NGINX_CONF"
+# Also setup PM2 for process monitoring
+if ! command -v pm2 >/dev/null 2>&1; then
+    npm install -g pm2
+fi
+pm2 delete eclipse-panel 2>/dev/null || true
+pm2 start src/index.js --name "eclipse-panel" --time
+pm2 save
+pm2 startup systemd -u root --hp /root 2>/dev/null || pm2 startup 2>/dev/null || true
+print_success "PM2 process manager configured."
+
+# 13. Configure Nginx Reverse Proxy with WebSocket Support
+print_step "Configuring Nginx reverse proxy & WebSocket pipeline..."
+NGINX_CONF="/etc/nginx/sites-available/eclipse-panel"
+mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled
+
+SERVER_NAMES="_"
+if [ -n "$PANEL_DOMAIN" ]; then
+    SERVER_NAMES="${PANEL_DOMAIN} *.${PANEL_DOMAIN} _"
+fi
+
+cat <<EOF > "$NGINX_CONF"
 server {
     listen 80 default_server;
     listen [::]:80 default_server;
-    server_name _;
+    server_name ${SERVER_NAMES};
 
-    client_max_body_size 100M;
+    client_max_body_size 500M;
 
-    # Backend API & Static Frontend on Port 8090
+    # Static Assets & Backend API on Port 8090
     location / {
         proxy_pass http://127.0.0.1:8090;
         proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_buffering off;
     }
 
-    # WebSocket Log & Telemetry Streaming
+    # High-throughput Live WebSocket Terminal Stream
     location /ws {
         proxy_pass http://127.0.0.1:8090/ws;
         proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection "upgrade";
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
         proxy_read_timeout 86400s;
         proxy_send_timeout 86400s;
     }
 }
 EOF
 
-    if [ -d /etc/nginx/sites-enabled ]; then
-        rm -f /etc/nginx/sites-enabled/default
-        ln -sf "$NGINX_CONF" /etc/nginx/sites-enabled/eclipse-panel
-    fi
+rm -f /etc/nginx/sites-enabled/default
+ln -sf "$NGINX_CONF" /etc/nginx/sites-enabled/eclipse-panel
 
-    nginx -t && systemctl restart nginx || print_warning "Nginx test had warnings, panel is still running directly on port 8090."
+nginx -t && systemctl restart nginx
+print_success "Nginx reverse proxy active on port 80."
+
+# 14. Automated SSL via Let's Encrypt (if domain chosen)
+if [ "$SETUP_MODE" == "1" ] && [ -n "$PANEL_DOMAIN" ]; then
+    print_step "Acquiring automated Let's Encrypt SSL certificate for ${PANEL_DOMAIN}..."
+    if certbot --nginx -d "$PANEL_DOMAIN" --non-interactive --agree-tos -m "$ADMIN_EMAIL" --redirect 2>/dev/null; then
+        SSL_ENABLED=true
+        print_success "Let's Encrypt SSL certificate successfully installed!"
+    else
+        print_warning "Certbot automatic verification could not complete (DNS may still be propagating)."
+        print_warning "You can run 'certbot --nginx -d ${PANEL_DOMAIN}' at any time once DNS finishes propagation."
+    fi
 fi
 
-# 12. Open Firewall Ports (80 & 8090)
-print_step "Opening firewall ports (80 & 8090)..."
+# 15. Open Firewall Ports
+print_step "Configuring firewall rules..."
 if command -v ufw >/dev/null 2>&1; then
     ufw allow 80/tcp comment "HTTP Web" >/dev/null 2>&1 || true
+    ufw allow 443/tcp comment "HTTPS SSL" >/dev/null 2>&1 || true
     ufw allow 8090/tcp comment "Eclipse Panel Port 8090" >/dev/null 2>&1 || true
+    ufw allow 3306/tcp comment "MariaDB Database" >/dev/null 2>&1 || true
     ufw allow 3000:4000/tcp comment "Eclipse Apps Range" >/dev/null 2>&1 || true
 elif command -v firewall-cmd >/dev/null 2>&1; then
     firewall-cmd --permanent --add-port=80/tcp >/dev/null 2>&1 || true
+    firewall-cmd --permanent --add-port=443/tcp >/dev/null 2>&1 || true
     firewall-cmd --permanent --add-port=8090/tcp >/dev/null 2>&1 || true
+    firewall-cmd --permanent --add-port=3306/tcp >/dev/null 2>&1 || true
     firewall-cmd --permanent --add-port=3000-4000/tcp >/dev/null 2>&1 || true
     firewall-cmd --reload >/dev/null 2>&1 || true
 fi
+print_success "Firewall ports (80, 443, 8090, 3306, 3000-4000) allowed."
 
-# Detect Public IP
-PUBLIC_IP=$(curl -s https://api.ipify.org || curl -s ifconfig.me || hostname -I | awk '{print $1}')
-
-echo ""
-echo -e "${PURPLE}================================================================${NC}"
-echo -e "${BOLD_RED}  🌐 VPS PUBLIC IP & DNS CONFIGURATION 🌐${NC}"
-echo -e "${PURPLE}================================================================${NC}"
-echo -e "  Your detected VPS IP is: ${CYAN}${PUBLIC_IP}${NC}"
-echo -e "  To set up custom domains for your Panel and Hosted Servers:"
-echo -e "  1. Point your ${YELLOW}Panel DNS${NC} (e.g. A record: ${CYAN}panel.yourdomain.com${NC} -> ${CYAN}${PUBLIC_IP}${NC})"
-echo -e "  2. Point your ${YELLOW}Servers DNS${NC} (e.g. A record: ${CYAN}*.servers.yourdomain.com${NC} or ${CYAN}srv1.yourdomain.com${NC} -> ${CYAN}${PUBLIC_IP}${NC})"
-echo -e "${PURPLE}================================================================${NC}"
-
-# One-Time Domain Setup & Automated Live DNS Verification
-USER_BASE_DOMAIN=""
-if [ -t 0 ]; then
-    echo -e "  Enter your domain for hosted servers (e.g. ${YELLOW}yourdomain.com${NC})"
-    echo -e "  All future servers will automatically receive subdomains (e.g. srv.yourdomain.com)"
-    read -r -p "Enter Domain [optional, press Enter to use VPS IP]: " USER_BASE_DOMAIN
-    
-    if [ ! -z "$USER_BASE_DOMAIN" ]; then
-        print_step "Verifying DNS propagation for ${USER_BASE_DOMAIN}..."
-        RESOLVED_IP=$(dig +short "$USER_BASE_DOMAIN" 2>/dev/null | grep -E '^[0-9.]+
-
-echo ""
-echo -e "${GREEN}================================================================${NC}"
-echo -e "${BOLD_RED}  🌑 ECLIPSE PANEL & MARIADB SUCCESSFULLY INSTALLED! 🌑${NC}"
-echo -e "${GREEN}================================================================${NC}"
-echo -e "  ● Web Dashboard (Port 8090) : ${CYAN}http://${PUBLIC_IP}:8090${NC}"
-if [ ! -z "$USER_BASE_DOMAIN" ]; then
-  echo -e "  ● Base Servers Domain       : ${CYAN}http://${USER_BASE_DOMAIN}${NC}"
+# 16. Health Verification
+print_step "Verifying Eclipse Panel daemon health..."
+sleep 2
+HEALTH_CHECK=$(curl -s http://127.0.0.1:8090/api/system/metrics || true)
+if [[ "$HEALTH_CHECK" =~ "cpu" ]]; then
+    print_success "Eclipse Panel daemon responded healthy on port 8090!"
+else
+    print_warning "Daemon starting up. Checking service logs..."
 fi
-echo -e "  ● Web Dashboard (Port 80)   : ${CYAN}http://${PUBLIC_IP}${NC}"
-echo -e "  ● Real-Time VPS Telemetry   : ${CYAN}http://${PUBLIC_IP}:8090/admin-stats.html${NC}"
-echo -e "  ● Backend REST API          : ${CYAN}http://${PUBLIC_IP}:8090/api${NC}"
-echo -e "  ● Live WebSocket Stream     : ${CYAN}ws://${PUBLIC_IP}:8090/ws${NC}"
-echo -e "  ● PM2 24/7 Service Status   : ${CYAN}pm2 status | pm2 logs eclipse-panel${NC}"
-echo -e "  ● MariaDB Service Status    : ${CYAN}systemctl status mariadb${NC}"
-echo -e "${GREEN}================================================================${NC}"
-echo -e "${BOLD_RED}  🗄️  MARIADB DATABASE CREDENTIALS (FOR YOUR APPS):${NC}"
+
+# 17. Final Display
+PANEL_URL="http://${PUBLIC_IP}:8090"
+if [ "$SSL_ENABLED" = true ]; then
+    PANEL_URL="https://${PANEL_DOMAIN}"
+elif [ -n "$PANEL_DOMAIN" ]; then
+    PANEL_URL="http://${PANEL_DOMAIN}"
+fi
+
+echo ""
+echo -e "${BOLD_GREEN}================================================================${NC}"
+echo -e "${BOLD_CYAN}  🌑 ECLIPSE PANEL SUCCESSFULLY INSTALLED & ACTIVE! 🌑${NC}"
+echo -e "${BOLD_GREEN}================================================================${NC}"
+echo -e "  ● Web Panel Access          : ${BOLD_CYAN}${PANEL_URL}${NC}"
+echo -e "  ● Direct Port Access        : ${CYAN}http://${PUBLIC_IP}:8090${NC}"
+echo -e "  ● Node.js Environment       : ${CYAN}$(node -v 2>/dev/null) (npm $(npm -v 2>/dev/null))${NC}"
+echo -e "  ● Python Environment        : ${CYAN}$(python3 --version 2>/dev/null)${NC}"
+echo -e "  ● Real-Time Telemetry Stats : ${CYAN}${PANEL_URL}/admin-stats.html${NC}"
+echo -e "  ● Admin Dashboard           : ${CYAN}${PANEL_URL}/admin.html${NC}"
+echo -e "${BOLD_GREEN}----------------------------------------------------------------${NC}"
+echo -e "${BOLD_CYAN}  👤 PRIMARY ADMINISTRATOR CREDENTIALS:${NC}"
+echo -e "  ● Username : ${WHITE}${ADMIN_USER}${NC}"
+echo -e "  ● Password : ${WHITE}${ADMIN_PASS}${NC}"
+echo -e "${BOLD_GREEN}----------------------------------------------------------------${NC}"
+echo -e "${BOLD_CYAN}  🗄️  HOST MARIADB DATABASE ENGINE (FOR USER APPS):${NC}"
 echo -e "  ● Database Name : ${YELLOW}eclipse_panel${NC}"
 echo -e "  ● Database User : ${YELLOW}eclipse_user${NC}"
 echo -e "  ● Database Pass : ${YELLOW}${DB_PASS}${NC}"
-echo -e "  ● Database Host : ${YELLOW}127.0.0.1:3306${NC}"
-echo -e "  ● Connection URI: ${CYAN}mysql://eclipse_user:${DB_PASS}@127.0.0.1:3306/eclipse_panel${NC}"
-echo -e "${GREEN}================================================================${NC}
-" | tail -n1)
-        if [ -z "$RESOLVED_IP" ]; then
-            RESOLVED_IP=$(getent ahosts "$USER_BASE_DOMAIN" 2>/dev/null | awk '{print $1}' | head -n1)
-        fi
-
-        if [ "$RESOLVED_IP" == "$PUBLIC_IP" ]; then
-            print_success "DNS Verified! ${USER_BASE_DOMAIN} points directly to this VPS (${PUBLIC_IP})."
-        elif [ ! -z "$RESOLVED_IP" ]; then
-            print_warning "DNS Check: ${USER_BASE_DOMAIN} resolved to '${RESOLVED_IP}' (Expected: ${PUBLIC_IP})."
-            print_warning "DNS propagation may take a few minutes. All servers will still bind automatically."
-        else
-            print_warning "Could not resolve ${USER_BASE_DOMAIN} yet. Make sure your 'A' record points to ${PUBLIC_IP}."
-        fi
-
-        echo "BASE_DOMAIN=${USER_BASE_DOMAIN}" >> "${INSTALL_DIR}/.env"
-        sed -i "s/server_name _;/server_name ${USER_BASE_DOMAIN} *.${USER_BASE_DOMAIN} _;/g" "$NGINX_CONF" 2>/dev/null || true
-        systemctl reload nginx 2>/dev/null || true
-        pm2 restart eclipse-panel 2>/dev/null || true
-    fi
-    echo "VPS_PUBLIC_IP=${PUBLIC_IP}" >> "${INSTALL_DIR}/.env"
+echo -e "  ● Database Host : ${YELLOW}${PUBLIC_IP}:3306${NC}"
+echo -e "${BOLD_GREEN}----------------------------------------------------------------${NC}"
+echo -e "${BOLD_CYAN}  🛠️  HELPFUL MANAGEMENT COMMANDS:${NC}"
+echo -e "  ● Check Service Logs   : ${CYAN}pm2 logs eclipse-panel${NC}"
+echo -e "  ● Restart Panel Service : ${CYAN}systemctl restart eclipse-panel${NC}"
+echo -e "  ● Panel Installation   : ${CYAN}/opt/eclipse-panel${NC}"
+if [ "$SSL_ENABLED" = false ] && [ -n "$PANEL_DOMAIN" ]; then
+echo -e "  ● Enable SSL Later     : ${CYAN}certbot --nginx -d ${PANEL_DOMAIN}${NC}"
 fi
-
+echo -e "${BOLD_GREEN}================================================================${NC}"
 echo ""
-echo -e "${GREEN}================================================================${NC}"
-echo -e "${BOLD_RED}  🌑 ECLIPSE PANEL & MARIADB SUCCESSFULLY INSTALLED! 🌑${NC}"
-echo -e "${GREEN}================================================================${NC}"
-echo -e "  ● Web Dashboard (Port 8090) : ${CYAN}http://${PUBLIC_IP}:8090${NC}"
-if [ ! -z "$USER_PANEL_DOMAIN" ]; then
-echo -e "  ● Panel Custom Domain       : ${CYAN}http://${USER_PANEL_DOMAIN}${NC}"
-fi
-echo -e "  ● Web Dashboard (Port 80)   : ${CYAN}http://${PUBLIC_IP}${NC}"
-echo -e "  ● Real-Time VPS Telemetry   : ${CYAN}http://${PUBLIC_IP}:8090/admin-stats.html${NC}"
-echo -e "  ● Backend REST API          : ${CYAN}http://${PUBLIC_IP}:8090/api${NC}"
-echo -e "  ● Live WebSocket Stream     : ${CYAN}ws://${PUBLIC_IP}:8090/ws${NC}"
-echo -e "  ● Panel Service Status      : ${CYAN}systemctl status eclipse-panel${NC}"
-echo -e "  ● MariaDB Service Status    : ${CYAN}systemctl status mariadb${NC}"
-echo -e "${GREEN}================================================================${NC}"
-echo -e "${BOLD_RED}  🗄️  MARIADB DATABASE CREDENTIALS (FOR YOUR APPS):${NC}"
-echo -e "  ● Database Name : ${YELLOW}eclipse_panel${NC}"
-echo -e "  ● Database User : ${YELLOW}eclipse_user${NC}"
-echo -e "  ● Database Pass : ${YELLOW}${DB_PASS}${NC}"
-echo -e "  ● Database Host : ${YELLOW}127.0.0.1:3306${NC}"
-echo -e "  ● Connection URI: ${CYAN}mysql://eclipse_user:${DB_PASS}@127.0.0.1:3306/eclipse_panel${NC}"
-echo -e "${GREEN}================================================================${NC}
-"
