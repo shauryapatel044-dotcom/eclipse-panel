@@ -113,17 +113,17 @@ class DiscordBotService {
     this.loadSettings();
   }
 
-  // Check if a Discord user is authorized to perform actions
-  isAuthorized(userId, member = null) {
-    if (this.adminUserIds.length > 0) {
-      if (this.adminUserIds.includes(userId)) return true;
+  // Check if a Discord user is authorized to perform actions (Admin only)
+  isAuthorized(userId, member = null, guild = null) {
+    if (this.adminUserIds.length > 0 && this.adminUserIds.includes(userId)) {
+      return true;
+    }
+    if (guild && guild.ownerId === userId) {
+      return true;
     }
     if (member && member.permissions) {
       if (member.permissions.has(PermissionFlagsBits.Administrator)) return true;
       if (member.permissions.has(PermissionFlagsBits.ManageGuild)) return true;
-    }
-    if (this.adminUserIds.length === 0 && member && member.permissions) {
-      return member.permissions.has(PermissionFlagsBits.Administrator);
     }
     return false;
   }
@@ -230,11 +230,13 @@ class DiscordBotService {
     const commands = [
       new SlashCommandBuilder()
         .setName('servers')
-        .setDescription('List all hosted servers and their current status'),
+        .setDescription('List all hosted servers and their current status')
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
       new SlashCommandBuilder()
         .setName('server')
         .setDescription('View and control a specific server with interactive buttons')
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
         .addStringOption(opt =>
           opt.setName('identifier')
             .setDescription('Server name or ID (e.g. app_9d50e0fc or MyServer)')
@@ -244,6 +246,7 @@ class DiscordBotService {
       new SlashCommandBuilder()
         .setName('createserver')
         .setDescription('Deploy a new server instance directly from Discord')
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
         .addStringOption(opt =>
           opt.setName('name')
             .setDescription('Server instance name')
@@ -257,6 +260,11 @@ class DiscordBotService {
               { name: 'Node.js (LTS)', value: 'nodejs' },
               { name: 'Python 3', value: 'python' }
             )
+        )
+        .addStringOption(opt =>
+          opt.setName('owner')
+            .setDescription("Owner's Gmail or email address (e.g. user@gmail.com)")
+            .setRequired(false)
         )
         .addIntegerOption(opt =>
           opt.setName('ram')
@@ -272,16 +280,12 @@ class DiscordBotService {
           opt.setName('port')
             .setDescription('Custom TCP port (e.g. 3100, default: auto-assign)')
             .setRequired(false)
-        )
-        .addStringOption(opt =>
-          opt.setName('owner')
-            .setDescription('Recipient Gmail / email address or username on the panel')
-            .setRequired(false)
         ),
 
       new SlashCommandBuilder()
         .setName('deleteserver')
         .setDescription('Permanently delete a server container and release its port')
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
         .addStringOption(opt =>
           opt.setName('identifier')
             .setDescription('Server name or ID to delete')
@@ -291,6 +295,7 @@ class DiscordBotService {
       new SlashCommandBuilder()
         .setName('startserver')
         .setDescription('Power on a server container')
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
         .addStringOption(opt =>
           opt.setName('identifier')
             .setDescription('Server name or ID')
@@ -300,6 +305,7 @@ class DiscordBotService {
       new SlashCommandBuilder()
         .setName('stopserver')
         .setDescription('Stop a running server container')
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
         .addStringOption(opt =>
           opt.setName('identifier')
             .setDescription('Server name or ID')
@@ -309,6 +315,7 @@ class DiscordBotService {
       new SlashCommandBuilder()
         .setName('restartserver')
         .setDescription('Restart a server container')
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
         .addStringOption(opt =>
           opt.setName('identifier')
             .setDescription('Server name or ID')
@@ -318,6 +325,7 @@ class DiscordBotService {
       new SlashCommandBuilder()
         .setName('cmd')
         .setDescription('Send a command directly to a server console')
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
         .addStringOption(opt =>
           opt.setName('identifier')
             .setDescription('Server name or ID')
@@ -332,6 +340,7 @@ class DiscordBotService {
       new SlashCommandBuilder()
         .setName('logs')
         .setDescription('View the latest live console output of a server')
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
         .addStringOption(opt =>
           opt.setName('identifier')
             .setDescription('Server name or ID')
@@ -346,6 +355,7 @@ class DiscordBotService {
       new SlashCommandBuilder()
         .setName('serverinfo')
         .setDescription('Inspect detailed server specifications, storage size, and files count')
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
         .addStringOption(opt =>
           opt.setName('identifier')
             .setDescription('Server name or ID')
@@ -355,6 +365,7 @@ class DiscordBotService {
       new SlashCommandBuilder()
         .setName('createuser')
         .setDescription('Create a new user account on Eclipse Panel')
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
         .addStringOption(opt =>
           opt.setName('username')
             .setDescription('Unique username')
@@ -382,15 +393,18 @@ class DiscordBotService {
 
       new SlashCommandBuilder()
         .setName('users')
-        .setDescription('List all registered panel operators, roles, and server counts'),
+        .setDescription('List all registered panel operators, roles, and server counts')
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
       new SlashCommandBuilder()
         .setName('panel')
-        .setDescription('View live VPS telemetry, CPU, RAM, and infrastructure health'),
+        .setDescription('View live VPS telemetry, CPU, RAM, and infrastructure health')
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
       new SlashCommandBuilder()
         .setName('help')
         .setDescription('View documentation and command reference for Eclipse Discord Bot')
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     ].map(cmd => cmd.toJSON());
 
     const rest = new REST({ version: '10' }).setToken(this.token);
@@ -418,15 +432,12 @@ class DiscordBotService {
   async handleCommand(interaction) {
     const { commandName } = interaction;
 
-    // Check authorization for management commands
-    const adminCommands = ['createserver', 'deleteserver', 'createuser', 'cmd', 'startserver', 'stopserver', 'restartserver'];
-    if (adminCommands.includes(commandName)) {
-      if (!this.isAuthorized(interaction.user.id, interaction.member)) {
-        return interaction.reply({
-          content: '❌ **Access Denied**: You do not have permission to execute administrative panel commands.',
-          ephemeral: true
-        });
-      }
+    // Strict Admin Authorization Check: Bot is exclusively accessible by Discord Server Administrators
+    if (!this.isAuthorized(interaction.user.id, interaction.member, interaction.guild)) {
+      return interaction.reply({
+        content: '❌ **Access Denied**: This Eclipse Panel bot can only be accessed and managed by server administrators.',
+        ephemeral: true
+      });
     }
 
     if (commandName === 'servers') {
@@ -873,10 +884,10 @@ class DiscordBotService {
     const action = parts[1]; // start, stop, restart, kill, refresh, logs, info, del, confirmdel, cancel
     const appId = parts.slice(2).join('_'); // app_1234
 
-    // Check authorization
-    if (!this.isAuthorized(interaction.user.id, interaction.member)) {
+    // Strict Admin Authorization Check: Buttons exclusively operable by Discord Server Administrators
+    if (!this.isAuthorized(interaction.user.id, interaction.member, interaction.guild)) {
       return interaction.reply({
-        content: '❌ **Access Denied**: You do not have permission to manage servers via this Discord Bot.',
+        content: '❌ **Access Denied**: This Eclipse Panel bot can only be accessed and managed by server administrators.',
         ephemeral: true
       });
     }
