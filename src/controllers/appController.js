@@ -2,6 +2,7 @@ import dns from 'dns';
 import crypto from 'crypto';
 import path from 'path';
 import fs from 'fs';
+import { execSync } from 'child_process';
 import { db } from '../database/index.js';
 import { supervisor } from '../daemon/supervisor.js';
 import { logStreamer } from '../daemon/logStreamer.js';
@@ -464,8 +465,24 @@ if __name__ == '__main__':
         return res.status(403).json({ error: 'Forbidden' });
       }
 
-      // Stop process if running
-      await supervisor.stopApp(id);
+      // Force kill process and release TCP port
+      const appPort = app.port;
+      await supervisor.killApp(id);
+      if (appPort) {
+        try {
+          if (process.platform === 'win32') {
+            const out = execSync(`netstat -ano | findstr :${appPort}`).toString();
+            for (const line of out.split('\n')) {
+              const parts = line.trim().split(/\s+/);
+              const pid = parts[parts.length - 1];
+              if (pid && pid !== '0') execSync(`taskkill /pid ${pid} /F 2>nul`);
+            }
+          } else {
+            execSync(`fuser -k -9 ${appPort}/tcp 2>/dev/null || true`);
+            execSync(`kill -9 $(lsof -t -i:${appPort}) 2>/dev/null || true`);
+          }
+        } catch (e) {}
+      }
 
       // Clean directory from disk
       const appDir = supervisor.getAppDir(id);

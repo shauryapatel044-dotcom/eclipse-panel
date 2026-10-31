@@ -115,6 +115,7 @@ export class PythonRunner {
     const child = spawn(pythonPath, [entrypoint], {
       cwd: appDir,
       env,
+      detached: process.platform !== 'win32',
       stdio: ['pipe', 'pipe', 'pipe'],
     });
 

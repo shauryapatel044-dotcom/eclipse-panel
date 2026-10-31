@@ -123,6 +123,7 @@ class Supervisor {
         cwd: appDir,
         env,
         shell: true,
+        detached: process.platform !== 'win32',
         stdio: ['pipe', 'pipe', 'pipe'],
       });
     }

@@ -74,6 +74,7 @@ export class NodeRunner {
     const child = spawn(config.nodeBin, nodeArgs, {
       cwd: appDir,
       env,
+      detached: process.platform !== 'win32',
       stdio: ['pipe', 'pipe', 'pipe'],
     });
 
