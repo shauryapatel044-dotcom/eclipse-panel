@@ -187,20 +187,30 @@ if [ "$DEPLOY_MODE" == "node" ]; then
 
     # Setup directories
     NODE_INSTALL_DIR="/opt/eclipse-node"
-    mkdir -p "$NODE_INSTALL_DIR"
-    mkdir -p "$NODE_INSTALL_DIR/storage/apps"
-    mkdir -p "$NODE_INSTALL_DIR/storage/data"
 
     SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
     if [ "$SCRIPT_DIR" != "$NODE_INSTALL_DIR" ]; then
         if [ -f "$SCRIPT_DIR/package.json" ]; then
             print_step "Copying daemon files into ${NODE_INSTALL_DIR}..."
+            mkdir -p "$NODE_INSTALL_DIR"
             cp -r "$SCRIPT_DIR/"* "$NODE_INSTALL_DIR/"
+        elif [ -d "$NODE_INSTALL_DIR/.git" ]; then
+            print_step "Updating existing daemon repository in ${NODE_INSTALL_DIR}..."
+            cd "$NODE_INSTALL_DIR"
+            git fetch --all
+            git reset --hard origin/main
         else
             print_step "Cloning Eclipse Daemon into ${NODE_INSTALL_DIR}..."
-            git clone https://github.com/shauryapatel044-dotcom/eclipse-panel.git "$NODE_INSTALL_DIR" 2>/dev/null || true
+            rm -rf /tmp/eclipse-node-clone-tmp
+            git clone https://github.com/shauryapatel044-dotcom/eclipse-panel.git /tmp/eclipse-node-clone-tmp
+            mkdir -p "$NODE_INSTALL_DIR"
+            cp -rf /tmp/eclipse-node-clone-tmp/* /tmp/eclipse-node-clone-tmp/.* "$NODE_INSTALL_DIR/" 2>/dev/null || cp -rf /tmp/eclipse-node-clone-tmp/* "$NODE_INSTALL_DIR/"
+            rm -rf /tmp/eclipse-node-clone-tmp
         fi
     fi
+
+    mkdir -p "$NODE_INSTALL_DIR/storage/apps"
+    mkdir -p "$NODE_INSTALL_DIR/storage/data"
 
     cd "$NODE_INSTALL_DIR"
 
@@ -439,23 +449,32 @@ print_success "Python installed: $(python3 --version) | pip: $(pip3 --version 2>
 INSTALL_DIR="/opt/eclipse-panel"
 print_step "Setting up Eclipse Panel in ${INSTALL_DIR}..."
 
-mkdir -p "$INSTALL_DIR"
-mkdir -p "$INSTALL_DIR/storage/apps"
-mkdir -p "$INSTALL_DIR/storage/data"
-mkdir -p "$INSTALL_DIR/public"
-
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 if [ "$SCRIPT_DIR" != "$INSTALL_DIR" ]; then
     if [ -f "$SCRIPT_DIR/package.json" ]; then
         print_step "Copying panel source files into ${INSTALL_DIR}..."
+        mkdir -p "$INSTALL_DIR"
         cp -r "$SCRIPT_DIR/"* "$INSTALL_DIR/"
+    elif [ -d "$INSTALL_DIR/.git" ]; then
+        print_step "Updating existing repository in ${INSTALL_DIR}..."
+        cd "$INSTALL_DIR"
+        git fetch --all
+        git reset --hard origin/main
     else
         print_step "Cloning latest Eclipse Panel from repository..."
-        git clone https://github.com/shauryapatel044-dotcom/eclipse-panel.git "$INSTALL_DIR" 2>/dev/null || true
+        rm -rf /tmp/eclipse-panel-clone-tmp
+        git clone https://github.com/shauryapatel044-dotcom/eclipse-panel.git /tmp/eclipse-panel-clone-tmp
+        mkdir -p "$INSTALL_DIR"
+        cp -rf /tmp/eclipse-panel-clone-tmp/* /tmp/eclipse-panel-clone-tmp/.* "$INSTALL_DIR/" 2>/dev/null || cp -rf /tmp/eclipse-panel-clone-tmp/* "$INSTALL_DIR/"
+        rm -rf /tmp/eclipse-panel-clone-tmp
     fi
 else
     print_success "Working directly within ${INSTALL_DIR}."
 fi
+
+mkdir -p "$INSTALL_DIR/storage/apps"
+mkdir -p "$INSTALL_DIR/storage/data"
+mkdir -p "$INSTALL_DIR/public"
 
 cd "$INSTALL_DIR"
 
