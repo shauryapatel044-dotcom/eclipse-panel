@@ -240,6 +240,11 @@ class DiscordBotService {
           opt.setName('port')
             .setDescription('Custom TCP port (e.g. 3100, default: auto-assign)')
             .setRequired(false)
+        )
+        .addStringOption(opt =>
+          opt.setName('owner')
+            .setDescription('Recipient Gmail / email address or username on the panel')
+            .setRequired(false)
         ),
 
       new SlashCommandBuilder()
@@ -386,12 +391,49 @@ class DiscordBotService {
     const ram = interaction.options.getInteger('ram') || 1024;
     const cpu = interaction.options.getInteger('cpu') || 100;
     const customPort = interaction.options.getInteger('port');
+    const ownerInput = interaction.options.getString('owner')?.trim();
 
     await interaction.deferReply();
 
-    // Default admin owner
-    let owner = db.prepare("SELECT id FROM users WHERE role = 'admin' LIMIT 1").get();
-    if (!owner) owner = { id: 1 };
+    // Determine server recipient / owner
+    let owner = null;
+    let isNewUserCreated = false;
+    let generatedPassword = null;
+
+    if (ownerInput) {
+      const cleanInput = ownerInput.toLowerCase();
+      owner = db.prepare('SELECT id, username, email FROM users WHERE LOWER(email) = ? OR LOWER(username) = ?').get(cleanInput, cleanInput);
+
+      if (!owner) {
+        // Automatically create account for this Gmail/email
+        let username = cleanInput.includes('@') ? cleanInput.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '') : cleanInput;
+        if (!username || username.length < 3) username = `user_${Math.random().toString(36).substring(2, 7)}`;
+
+        let checkUser = db.prepare('SELECT id FROM users WHERE username = ?').get(username);
+        let counter = 1;
+        const baseUsername = username;
+        while (checkUser) {
+          username = `${baseUsername}${counter++}`;
+          checkUser = db.prepare('SELECT id FROM users WHERE username = ?').get(username);
+        }
+
+        const email = cleanInput.includes('@') ? cleanInput : `${cleanInput}@vexezor.bond`;
+        generatedPassword = crypto.randomBytes(6).toString('hex');
+        const hash = bcrypt.hashSync(generatedPassword, 10);
+
+        const result = db.prepare(`
+          INSERT INTO users (username, email, password_hash, role)
+          VALUES (?, ?, ?, 'user')
+        `).run(username, email, hash);
+
+        owner = { id: result.lastInsertRowid, username, email };
+        isNewUserCreated = true;
+      }
+    } else {
+      // Default to first admin if no owner provided
+      owner = db.prepare("SELECT id, username, email FROM users WHERE role = 'admin' LIMIT 1").get();
+      if (!owner) owner = { id: 1, username: 'admin', email: 'admin@eclipse.local' };
+    }
 
     // Port allocation
     let port = customPort;
@@ -425,8 +467,13 @@ class DiscordBotService {
     `).run(appId, name, type, owner.id, defaultEntry, port, ram, cpu);
 
     const newApp = db.prepare('SELECT * FROM apps WHERE id = ?').get(appId);
-    const embed = this.buildServerEmbed(newApp)
-      .setDescription(`✅ **Server Created Successfully!**\nUse the buttons below to power on your container:`);
+    let desc = `✅ **Server Created Successfully!**\nAllocated to: **${owner.email}** (@${owner.username})\n\nUse the buttons below to power on your container:`;
+
+    if (isNewUserCreated) {
+      desc = `✅ **Server & Account Created Successfully!**\nNew account provisioned for **${owner.email}**.\n\n👤 **Username:** \`${owner.username}\`\n🔑 **Temporary Password:** \`${generatedPassword}\`\n🌐 **Panel Login:** \`http://${config.vpsPublicIp || '20.219.198.128'}:8090/login\`\n\nUse the buttons below to power on the server:`;
+    }
+
+    const embed = this.buildServerEmbed(newApp).setDescription(desc);
     const buttons = this.buildServerButtons(appId, 'stopped');
 
     await interaction.editReply({ embeds: [embed], components: [buttons] });
@@ -567,6 +614,9 @@ class DiscordBotService {
     const serverAddress = app.domain ? `${app.domain}:${app.port}` : `${hostIp}:${app.port}`;
     const runtimeLabel = app.type === 'python' ? '🐍 Python 3' : '⚡ Node.js';
 
+    const owner = db.prepare('SELECT username, email FROM users WHERE id = ?').get(app.user_id);
+    const ownerText = owner ? `@${owner.username} (${owner.email})` : `User #${app.user_id}`;
+
     const embed = new EmbedBuilder()
       .setTitle(`🌑 ${app.name} (${app.id})`)
       .setColor(color)
@@ -574,6 +624,7 @@ class DiscordBotService {
       .addFields(
         { name: 'Runtime', value: runtimeLabel, inline: true },
         { name: 'Port', value: `\`${app.port || 'Auto'}\``, inline: true },
+        { name: 'Owner', value: `\`${ownerText}\``, inline: true },
         { name: 'RAM Limit', value: `\`${app.memory_limit || 1024} MB\``, inline: true },
         { name: 'CPU Quota', value: `\`${app.cpu_limit || 100}%\``, inline: true },
         { name: 'Entrypoint', value: `\`${app.entrypoint || (app.type === 'python' ? 'main.py' : 'index.js')}\``, inline: true },
