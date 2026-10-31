@@ -134,8 +134,9 @@ fi
 
 echo -e "${GREEN}[✔] Node modules and execution binaries ready.${NC}"
 
-# 4. Restart Background Daemon (Free port 8090 first)
+# 4. Restart Background Daemon (Kill old bot & free port 8090 first)
 echo -e "\n${BOLD_CYAN}[4/5] Restarting ${SERVICE_NAME} daemon...${NC}"
+pkill -9 -f "src/index.js" 2>/dev/null || true
 fuser -k -9 8090/tcp 2>/dev/null || true
 
 # Check if systemd service is installed

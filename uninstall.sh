@@ -56,17 +56,28 @@ fi
 cd /root || cd /tmp || cd /
 
 # 1. Kill background processes and stop PM2
-echo -e "\n${BOLD_RED}[1/7] Stopping and terminating all running daemons and containers...${NC}"
+echo -e "\n${BOLD_RED}[1/7] Stopping and terminating all running daemons, bots, and containers...${NC}"
+systemctl stop eclipse-panel 2>/dev/null || true
+systemctl stop eclipse-node 2>/dev/null || true
+systemctl disable eclipse-panel 2>/dev/null || true
+systemctl disable eclipse-node 2>/dev/null || true
+
 if command -v pm2 >/dev/null 2>&1; then
-    pm2 delete eclipse-panel 2>/dev/null || true
-    pm2 delete eclipse-node 2>/dev/null || true
-    pm2 save 2>/dev/null || true
+    pm2 kill 2>/dev/null || true
+    pm2 delete all 2>/dev/null || true
 fi
+
+# Terminate all Node.js processes running in background (kills Discord bot WebSocket instantly)
+pkill -9 -f "src/index.js" 2>/dev/null || true
+pkill -9 -f "eclipse-panel" 2>/dev/null || true
+pkill -9 -f "eclipse-node" 2>/dev/null || true
+killall -9 node 2>/dev/null || pkill -9 -f "node" 2>/dev/null || true
 
 # Kill any processes still binding on ports 8090, 80, and user app ports 3000-4000
 if command -v fuser >/dev/null 2>&1; then
     fuser -k -9 8090/tcp 2>/dev/null || true
-    for port in $(seq 3000 3105); do
+    fuser -k -9 80/tcp 2>/dev/null || true
+    for port in $(seq 3000 3110); do
         fuser -k -9 ${port}/tcp 2>/dev/null || true
     done
 fi

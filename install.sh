@@ -554,6 +554,10 @@ LimitNOFILE=65536
 WantedBy=multi-user.target
 EOF
 
+# Kill any lingering node instances to prevent duplicate bots or port collisions
+pkill -9 -f "src/index.js" 2>/dev/null || true
+fuser -k -9 8090/tcp 2>/dev/null || true
+
 systemctl daemon-reload
 systemctl enable eclipse-panel 2>/dev/null || true
 systemctl restart eclipse-panel 2>/dev/null || true
@@ -584,11 +588,11 @@ if ! command -v ts-node >/dev/null 2>&1; then
     npm install -g ts-node typescript 2>/dev/null || true
     [ -n "$(command -v ts-node 2>/dev/null)" ] && ln -sf "$(command -v ts-node)" /usr/local/bin/ts-node 2>/dev/null || true
 fi
-pm2 delete eclipse-panel 2>/dev/null || true
-pm2 start src/index.js --name "eclipse-panel" --time || node src/index.js &
-pm2 save 2>/dev/null || true
-pm2 startup systemd -u root --hp /root 2>/dev/null || pm2 startup 2>/dev/null || true
-print_success "PM2 process manager configured."
+# Clean up any duplicate PM2 instances (Systemd is the single master daemon manager)
+if command -v pm2 >/dev/null 2>&1; then
+    pm2 delete eclipse-panel 2>/dev/null || true
+    pm2 save 2>/dev/null || true
+fi
 
 # 13. Configure Nginx Reverse Proxy (Port 80 -> Port 8090)
 print_step "Configuring Nginx reverse proxy & WebSocket pipeline..."
