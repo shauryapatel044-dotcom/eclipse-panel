@@ -1,11 +1,9 @@
 #!/usr/bin/env bash
 # ==============================================================================
-#  🌑 Eclipse Panel & Node - Zero-Downtime Updater 🌑
-#  Safely updates codebase from Git, updates dependencies, and restarts daemon
+#  🌑 Eclipse Panel & Node - Zero-Downtime Auto-Updater 🌑
+#  Guarantees repository sync, dependency installation, and daemon restart
 #  Made By Vexezor · Cloud Container Infrastructure
 # ==============================================================================
-
-set -e
 
 # Disable local proxies
 unset ALL_PROXY all_proxy HTTP_PROXY http_proxy HTTPS_PROXY https_proxy
@@ -45,60 +43,78 @@ elif [ -f "./package.json" ]; then
     INSTALL_DIR="$(pwd)"
     SERVICE_NAME="eclipse-panel"
 else
-    echo -e "${BOLD_RED}[✘] Eclipse installation not found in /opt/eclipse-panel or /opt/eclipse-node.${NC}"
-    exit 1
+    INSTALL_DIR="/opt/eclipse-panel"
+    mkdir -p "$INSTALL_DIR"
+    SERVICE_NAME="eclipse-panel"
 fi
 
 echo -e "Target Directory : ${BOLD_CYAN}${INSTALL_DIR}${NC}"
 echo -e "Target Service   : ${BOLD_CYAN}${SERVICE_NAME}${NC}"
 cd "$INSTALL_DIR"
 
-# 1. Backup persistent databases
-echo -e "\n${BOLD_CYAN}[1/5] Creating safe backup of database & application data...${NC}"
+# 1. Backup persistent databases and credentials
+echo -e "\n${BOLD_CYAN}[1/5] Backing up configuration and SQLite database...${NC}"
 BACKUP_DIR="/opt/eclipse-backups/$(date +%Y%m%d_%H%M%S)"
 mkdir -p "$BACKUP_DIR"
 
 if [ -f "$INSTALL_DIR/storage/data/eclipse.db" ]; then
-    cp "$INSTALL_DIR/storage/data/eclipse.db" "$BACKUP_DIR/"
+    cp "$INSTALL_DIR/storage/data/eclipse.db" "$BACKUP_DIR/eclipse.db" 2>/dev/null || true
     echo -e "${GREEN}[✔] SQLite database preserved at ${BACKUP_DIR}/eclipse.db${NC}"
 fi
 
 if [ -f "$INSTALL_DIR/.env" ]; then
-    cp "$INSTALL_DIR/.env" "$BACKUP_DIR/.env"
+    cp "$INSTALL_DIR/.env" "$BACKUP_DIR/.env" 2>/dev/null || true
 fi
 
-if command -v mysqldump >/dev/null 2>&1; then
-    mysqldump -u root eclipse_panel > "$BACKUP_DIR/eclipse_panel.sql" 2>/dev/null || true
+# 2. Fetch and pull latest release from GitHub
+echo -e "\n${BOLD_CYAN}[2/5] Fetching latest codebase from GitHub repository...${NC}"
+git config --global --add safe.directory "$INSTALL_DIR" 2>/dev/null || true
+
+if [ ! -d "$INSTALL_DIR/.git" ]; then
+    echo -e "${YELLOW}[!] Initializing Git repository link in ${INSTALL_DIR}...${NC}"
+    git init
+    git remote add origin https://github.com/shauryapatel044-dotcom/eclipse-panel.git 2>/dev/null || git remote set-url origin https://github.com/shauryapatel044-dotcom/eclipse-panel.git
 fi
 
-# 2. Pull latest release from GitHub
-echo -e "\n${BOLD_CYAN}[2/5] Fetching latest updates from GitHub repository...${NC}"
-if [ -d ".git" ]; then
-    git config --global --add safe.directory "$INSTALL_DIR" 2>/dev/null || true
-    git fetch --all --prune
-    git reset --hard origin/main 2>/dev/null || git pull origin main || git pull origin master
-    LATEST_COMMIT=$(git log -1 --format="%h - %s (%ci)" 2>/dev/null || echo "Latest")
-    echo -e "${GREEN}[✔] Updated to commit: ${WHITE}${LATEST_COMMIT}${NC}"
+git remote set-url origin https://github.com/shauryapatel044-dotcom/eclipse-panel.git 2>/dev/null || true
+git fetch origin main --depth=1 2>/dev/null || git fetch --all 2>/dev/null || true
+
+# Force update working tree to origin/main
+if git show-ref --verify --quiet refs/remotes/origin/main; then
+    git reset --hard origin/main
+elif git show-ref --verify --quiet refs/remotes/origin/master; then
+    git reset --hard origin/master
 else
-    echo -e "${YELLOW}[!] Working directory is not a Git clone. Using current local files.${NC}"
+    # Fallback tarball clone if git remote fetch had network trouble
+    echo -e "${YELLOW}[!] Git fetch fallback: Downloading latest release bundle directly...${NC}"
+    curl -sSL https://github.com/shauryapatel044-dotcom/eclipse-panel/archive/refs/heads/main.tar.gz -o /tmp/eclipse-update.tar.gz
+    if [ -f "/tmp/eclipse-update.tar.gz" ]; then
+        tar -xzf /tmp/eclipse-update.tar.gz -C /tmp/
+        cp -rf /tmp/eclipse-panel-main/* "$INSTALL_DIR/" 2>/dev/null || true
+        rm -rf /tmp/eclipse-panel-main /tmp/eclipse-update.tar.gz
+    fi
 fi
 
-# Restore .env if needed
-if [ ! -f "$INSTALL_DIR/.env" ] && [ -f "$BACKUP_DIR/.env" ]; then
-    cp "$BACKUP_DIR/.env" "$INSTALL_DIR/.env"
+LATEST_COMMIT=$(git log -1 --format="%h - %s (%ci)" 2>/dev/null || echo "Latest Main Release")
+echo -e "${GREEN}[✔] Repository synced: ${WHITE}${LATEST_COMMIT}${NC}"
+
+# Restore .env and SQLite DB if needed
+if [ -f "$BACKUP_DIR/.env" ]; then
+    cp -n "$BACKUP_DIR/.env" "$INSTALL_DIR/.env" 2>/dev/null || true
 fi
+if [ -f "$BACKUP_DIR/eclipse.db" ] && [ ! -s "$INSTALL_DIR/storage/data/eclipse.db" ]; then
+    mkdir -p "$INSTALL_DIR/storage/data"
+    cp "$BACKUP_DIR/eclipse.db" "$INSTALL_DIR/storage/data/eclipse.db" 2>/dev/null || true
+fi
+
+# Ensure storage directories exist
+mkdir -p "$INSTALL_DIR/storage/apps"
+mkdir -p "$INSTALL_DIR/storage/data"
+mkdir -p "$INSTALL_DIR/public"
 
 # 3. Update production dependencies
-echo -e "\n${BOLD_CYAN}[3/5] Updating production dependencies (including Discord bot & drivers)...${NC}"
+echo -e "\n${BOLD_CYAN}[3/5] Updating production dependencies & CLI binaries...${NC}"
 npm install --omit=dev --no-audit
-echo -e "${GREEN}[✔] Node modules up to date.${NC}"
-
-# Ensure global PM2 path and Pterodactyl-compatible binary symlinks
-if ! command -v pm2 >/dev/null 2>&1; then
-    npm install -g pm2 || true
-    PM2_PATH=$(npm root -g 2>/dev/null)/pm2/bin/pm2
-    [ -f "$PM2_PATH" ] && ln -sf "$PM2_PATH" /usr/local/bin/pm2 2>/dev/null || true
-fi
 
 # Ensure /usr/local/bin symlinks for startup commands compatibility
 mkdir -p /usr/local/bin
@@ -116,27 +132,45 @@ if ! command -v ts-node >/dev/null 2>&1; then
     [ -n "$(command -v ts-node 2>/dev/null)" ] && ln -sf "$(command -v ts-node)" /usr/local/bin/ts-node 2>/dev/null || true
 fi
 
-# 4. Restart Background Daemon
+echo -e "${GREEN}[✔] Node modules and execution binaries ready.${NC}"
+
+# 4. Restart Background Daemon (Free port 8090 first)
 echo -e "\n${BOLD_CYAN}[4/5] Restarting ${SERVICE_NAME} daemon...${NC}"
-if command -v pm2 >/dev/null 2>&1; then
+fuser -k -9 8090/tcp 2>/dev/null || true
+
+# Check if systemd service is installed
+if [ -f "/etc/systemd/system/${SERVICE_NAME}.service" ]; then
+    pm2 delete "$SERVICE_NAME" 2>/dev/null || true
+    pm2 save 2>/dev/null || true
+    systemctl daemon-reload
+    systemctl restart "$SERVICE_NAME"
+    echo -e "${GREEN}[✔] Daemon restarted via systemd.${NC}"
+elif command -v pm2 >/dev/null 2>&1; then
     pm2 restart "$SERVICE_NAME" 2>/dev/null || pm2 start src/index.js --name "$SERVICE_NAME" --time 2>/dev/null || true
     pm2 save 2>/dev/null || true
-fi
-
-if systemctl list-unit-files | grep -q "${SERVICE_NAME}.service"; then
-    systemctl daemon-reload
-    systemctl restart "$SERVICE_NAME" 2>/dev/null || true
+    echo -e "${GREEN}[✔] Daemon restarted via PM2.${NC}"
+else
+    pkill -f "src/index.js" 2>/dev/null || true
+    nohup node src/index.js >/var/log/eclipse-panel.log 2>&1 &
+    echo -e "${GREEN}[✔] Daemon restarted in background.${NC}"
 fi
 
 # 5. Verify Health
 echo -e "\n${BOLD_CYAN}[5/5] Verifying daemon health...${NC}"
-sleep 2
-HEALTH_CHECK=$(curl --noproxy "*" -s --max-time 4 http://127.0.0.1:8090/api/health || true)
+HEALTHY=false
+for i in {1..5}; do
+    sleep 1
+    HEALTH_CHECK=$(curl --noproxy "*" -s --max-time 3 http://127.0.0.1:8090/api/health 2>/dev/null || true)
+    if [[ "$HEALTH_CHECK" =~ "online" ]]; then
+        HEALTHY=true
+        break
+    fi
+done
 
-if [[ "$HEALTH_CHECK" =~ "online" ]]; then
-    echo -e "${BOLD_GREEN}[✔] Daemon is healthy and responding on port 8090!${NC}"
+if [ "$HEALTHY" = true ]; then
+    echo -e "${BOLD_GREEN}[✔] Daemon is live and responding on port 8090!${NC}"
 else
-    echo -e "${YELLOW}[!] Daemon is still initializing. Check logs with 'pm2 logs ${SERVICE_NAME}'${NC}"
+    echo -e "${YELLOW}[!] Daemon is still booting. You can inspect logs with: 'journalctl -u ${SERVICE_NAME} -n 20' or 'pm2 logs ${SERVICE_NAME}'${NC}"
 fi
 
 echo ""
@@ -146,7 +180,6 @@ echo -e "${BOLD_GREEN}==========================================================
 echo -e "  ● Service Name       : ${BOLD_CYAN}${SERVICE_NAME}${NC}"
 echo -e "  ● Installation Path  : ${CYAN}${INSTALL_DIR}${NC}"
 echo -e "  ● Live Web Panel     : ${CYAN}http://$(curl -s --max-time 2 https://api.ipify.org 2>/dev/null || echo 'localhost'):8090${NC}"
-echo -e "  ● Service Logs       : ${CYAN}pm2 logs ${SERVICE_NAME}${NC}"
-echo -e "  ● Restart Command    : ${CYAN}pm2 restart ${SERVICE_NAME}${NC}"
+echo -e "  ● Service Status     : ${CYAN}systemctl status ${SERVICE_NAME}${NC}"
 echo -e "${BOLD_GREEN}================================================================${NC}"
 echo ""

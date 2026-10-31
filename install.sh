@@ -204,7 +204,7 @@ if [ "$DEPLOY_MODE" == "node" ]; then
             rm -rf /tmp/eclipse-node-clone-tmp
             git clone https://github.com/shauryapatel044-dotcom/eclipse-panel.git /tmp/eclipse-node-clone-tmp
             mkdir -p "$NODE_INSTALL_DIR"
-            cp -rf /tmp/eclipse-node-clone-tmp/* /tmp/eclipse-node-clone-tmp/.* "$NODE_INSTALL_DIR/" 2>/dev/null || cp -rf /tmp/eclipse-node-clone-tmp/* "$NODE_INSTALL_DIR/"
+            cp -a /tmp/eclipse-node-clone-tmp/. "$NODE_INSTALL_DIR/"
             rm -rf /tmp/eclipse-node-clone-tmp
         fi
     fi
@@ -469,7 +469,7 @@ if [ "$SCRIPT_DIR" != "$INSTALL_DIR" ]; then
         rm -rf /tmp/eclipse-panel-clone-tmp
         git clone https://github.com/shauryapatel044-dotcom/eclipse-panel.git /tmp/eclipse-panel-clone-tmp
         mkdir -p "$INSTALL_DIR"
-        cp -rf /tmp/eclipse-panel-clone-tmp/* /tmp/eclipse-panel-clone-tmp/.* "$INSTALL_DIR/" 2>/dev/null || cp -rf /tmp/eclipse-panel-clone-tmp/* "$INSTALL_DIR/"
+        cp -a /tmp/eclipse-panel-clone-tmp/. "$INSTALL_DIR/"
         rm -rf /tmp/eclipse-panel-clone-tmp
     fi
 else
