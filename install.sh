@@ -422,10 +422,14 @@ server {
 EOF
 
 rm -f /etc/nginx/sites-enabled/default
-ln -sf "$NGINX_CONF" /etc/nginx/sites-enabled/eclipse-panel
+rm -f /etc/nginx/conf.d/default.conf 2>/dev/null || true
+ln -sf "$NGINX_CONF" /etc/nginx/sites-enabled/eclipse-panel 2>/dev/null || true
+if [ -d /etc/nginx/conf.d ]; then
+    cp "$NGINX_CONF" /etc/nginx/conf.d/eclipse-panel.conf 2>/dev/null || true
+fi
 
-nginx -t && systemctl restart nginx
-print_success "Nginx reverse proxy active on port 80."
+nginx -t && systemctl restart nginx 2>/dev/null || true
+print_success "Nginx reverse proxy configured."
 
 # 14. Automated SSL via Let's Encrypt (if domain chosen)
 if [ "$SETUP_MODE" == "1" ] && [ -n "$PANEL_DOMAIN" ]; then
@@ -454,6 +458,15 @@ elif command -v firewall-cmd >/dev/null 2>&1; then
     firewall-cmd --permanent --add-port=3306/tcp >/dev/null 2>&1 || true
     firewall-cmd --permanent --add-port=3000-4000/tcp >/dev/null 2>&1 || true
     firewall-cmd --reload >/dev/null 2>&1 || true
+fi
+
+# Ensure Oracle Cloud / raw iptables allow incoming traffic
+if command -v iptables >/dev/null 2>&1; then
+    iptables -I INPUT -p tcp --dport 80 -j ACCEPT 2>/dev/null || true
+    iptables -I INPUT -p tcp --dport 443 -j ACCEPT 2>/dev/null || true
+    iptables -I INPUT -p tcp --dport 8090 -j ACCEPT 2>/dev/null || true
+    iptables -I INPUT -p tcp --dport 3306 -j ACCEPT 2>/dev/null || true
+    iptables -I INPUT -p tcp --dport 3000:4000 -j ACCEPT 2>/dev/null || true
 fi
 print_success "Firewall ports (80, 443, 8090, 3306, 3000-4000) allowed."
 

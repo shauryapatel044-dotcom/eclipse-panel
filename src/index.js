@@ -98,7 +98,7 @@ async function start() {
   try {
     initDatabase();
 
-    server.listen(config.port, () => {
+    server.listen(config.port, '0.0.0.0', () => {
       console.log(`=======================================================`);
       console.log(`  🌑 ECLIPSE PANEL DAEMON & API ENGINE ONLINE 🌑       `);
       console.log(`  Local URL : http://localhost:${config.port}          `);
