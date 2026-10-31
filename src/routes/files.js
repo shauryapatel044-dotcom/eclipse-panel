@@ -11,6 +11,7 @@ router.get('/:id/content', FileController.getFileContent);
 router.get('/:id/download', FileController.downloadFile);
 router.post('/:id/content', FileController.saveFileContent);
 router.post('/:id/upload', FileController.uploadFile);
+router.post('/:id/upload-stream', FileController.uploadStream);
 router.post('/:id/unarchive', FileController.unarchiveFile);
 router.post('/:id/create', FileController.createFile);
 router.post('/:id/mkdir', FileController.createFolder);

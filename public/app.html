@@ -405,6 +405,65 @@
       border-color: rgba(255, 255, 255, 0.1);
     }
 
+    /* Floating Real-Time Upload Progress Card */
+    .upload-progress-card {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 330px;
+      background: rgba(18, 20, 34, 0.96);
+      border: 1px solid rgba(6, 182, 212, 0.4);
+      border-radius: 14px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(6, 182, 212, 0.2);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      padding: 16px;
+      z-index: 999999;
+      font-family: var(--font-sans);
+      animation: nebulaPopIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .upload-progress-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .upload-progress-percent {
+      font-family: var(--font-mono);
+      font-weight: 800;
+      font-size: 13px;
+      color: #22D3EE;
+      background: rgba(6, 182, 212, 0.15);
+      padding: 2px 8px;
+      border-radius: 8px;
+      border: 1px solid rgba(6, 182, 212, 0.3);
+    }
+    .upload-progress-track {
+      width: 100%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 8px;
+      position: relative;
+    }
+    .upload-progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #06B6D4, #3B82F6, #10B981);
+      border-radius: 6px;
+      transition: width 0.15s ease-out;
+      box-shadow: 0 0 12px rgba(6, 182, 212, 0.6);
+    }
+    .upload-progress-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #94A3B8;
+      font-family: var(--font-mono);
+    }
+
   
     .modal-backdrop {
       display: none !important;
@@ -2657,50 +2716,130 @@
       if (uploader) uploader.click();
     }
 
+    function uploadFileStreamWithProgress(file, targetPath, onProgress) {
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        const url = `${API_BASE}/files/${currentAppId}/upload-stream?path=${encodeURIComponent(targetPath)}`;
+        xhr.open('POST', url, true);
+        if (token) {
+          xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+        }
+        xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+        xhr.setRequestHeader('X-File-Path', encodeURIComponent(targetPath));
+
+        let lastLoaded = 0;
+        let lastTime = performance.now();
+        let speedStr = 'Calculating...';
+
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable && e.total > 0) {
+            const percent = Math.min(100, Math.round((e.loaded / e.total) * 100));
+            const now = performance.now();
+            const timeDiff = (now - lastTime) / 1000;
+            if (timeDiff >= 0.25) {
+              const bytesDiff = e.loaded - lastLoaded;
+              const bps = bytesDiff / timeDiff;
+              speedStr = bps >= 1048576 
+                ? `${(bps / 1048576).toFixed(1)} MB/s` 
+                : `${Math.round(bps / 1024)} KB/s`;
+              lastLoaded = e.loaded;
+              lastTime = now;
+            }
+
+            onProgress({
+              percent,
+              loaded: e.loaded,
+              total: e.total,
+              speed: speedStr,
+              fileName: file.name
+            });
+          }
+        };
+
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve(JSON.parse(xhr.responseText || '{}'));
+          } else {
+            let errText = 'Upload failed';
+            try {
+              const d = JSON.parse(xhr.responseText);
+              errText = d.error || errText;
+            } catch (err) {
+              errText = `HTTP ${xhr.status}: ${xhr.statusText || 'Upload failed'}`;
+            }
+            reject(new Error(errText));
+          }
+        };
+
+        xhr.onerror = () => reject(new Error('Network connection error during file upload'));
+        xhr.send(file);
+      });
+    }
+
     async function handleFileUpload(event) {
       if (!currentAppId) return;
       const files = event.target.files;
       if (!files || files.length === 0) return;
 
+      const card = document.getElementById('upload-progress-card');
+      const titleEl = document.getElementById('upload-card-title');
+      const nameEl = document.getElementById('upload-card-filename');
+      const barEl = document.getElementById('upload-card-bar');
+      const percentEl = document.getElementById('upload-card-percent');
+      const sizeEl = document.getElementById('upload-card-size');
+      const speedEl = document.getElementById('upload-card-speed');
+
+      if (card) {
+        card.style.display = 'block';
+        barEl.style.width = '0%';
+        barEl.style.background = 'linear-gradient(90deg, #06B6D4, #3B82F6, #10B981)';
+      }
+
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         const targetPath = currentSubpath ? `${currentSubpath}/${file.name}` : file.name;
-        const reader = new FileReader();
-        const isBinary = !file.name.match(/\.(js|ts|py|txt|json|env|md|html|css|yaml|yml|sh|bash|xml|properties|ini)$/i);
-        const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
+        const totalMb = (file.size / (1024 * 1024)).toFixed(1);
 
-        notify(`Uploading "${file.name}" (${sizeMb} MB)...`, 'info');
+        if (card) {
+          titleEl.innerText = files.length > 1 ? `Uploading (${i + 1}/${files.length})` : 'Uploading File';
+          nameEl.innerText = file.name;
+          sizeEl.innerText = `0.0 MB / ${totalMb} MB`;
+          percentEl.innerText = '0%';
+          barEl.style.width = '0%';
+          speedEl.innerText = 'Starting...';
+        }
 
-        await new Promise((resolve) => {
-          reader.onload = async function() {
-            let content = reader.result;
-            let isBase64 = false;
-            if (isBinary) {
-              content = content.split(',')[1];
-              isBase64 = true;
+        try {
+          await uploadFileStreamWithProgress(file, targetPath, (p) => {
+            if (card) {
+              const loadedMb = (p.loaded / (1024 * 1024)).toFixed(1);
+              percentEl.innerText = `${p.percent}%`;
+              barEl.style.width = `${p.percent}%`;
+              sizeEl.innerText = `${loadedMb} MB / ${totalMb} MB`;
+              speedEl.innerText = p.speed;
             }
-            try {
-              const res = await fetch(`${API_BASE}/files/${currentAppId}/upload`, {
-                method: 'POST',
-                headers: getHeaders(),
-                body: JSON.stringify({ path: targetPath, content, isBase64 })
-              });
-              if (res.ok) {
-                notify(`Uploaded "${file.name}" (${sizeMb} MB) successfully!`, 'success');
-              } else {
-                const d = await res.json().catch(() => ({}));
-                notify(`Failed uploading "${file.name}": ${d.error || res.statusText || 'Error'}`, 'error');
-              }
-            } catch (err) {
-              notify(`Upload failed: ${err.message}`, 'error');
-            }
-            resolve();
-          };
+          });
 
-          if (isBinary) reader.readAsDataURL(file);
-          else reader.readAsText(file);
-        });
+          if (card) {
+            percentEl.innerText = '100%';
+            barEl.style.width = '100%';
+            barEl.style.background = '#10B981';
+            speedEl.innerText = '✓ Complete';
+          }
+          notify(`Uploaded "${file.name}" (${totalMb} MB) successfully!`, 'success');
+        } catch (err) {
+          if (card) {
+            percentEl.innerText = 'Error';
+            barEl.style.background = '#EF4444';
+            speedEl.innerText = '✘ Failed';
+          }
+          notify(`Failed uploading "${file.name}": ${err.message}`, 'error');
+        }
       }
+
+      setTimeout(() => {
+        if (card) card.style.display = 'none';
+      }, 1600);
 
       event.target.value = '';
       loadFiles(currentAppId, currentSubpath);
@@ -4161,6 +4300,28 @@
           <button type="button" class="btn-primary" onclick="submitPermissions()" style="border-radius: 20px; padding: 8px 22px; font-size: 12px;">Save</button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Floating Real-Time Upload Progress Card -->
+  <div id="upload-progress-card" class="upload-progress-card" style="display: none;">
+    <div class="upload-progress-header">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <i class="bi bi-cloud-arrow-up-fill" style="color: #06B6D4; font-size: 16px;"></i>
+        <span style="font-weight: 700; font-size: 13px; color: #FFF;" id="upload-card-title">Uploading File</span>
+      </div>
+      <span class="upload-progress-percent" id="upload-card-percent">0%</span>
+    </div>
+    <div style="font-size: 12px; color: #94A3B8; font-family: var(--font-mono); margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="upload-card-filename">
+      file.zip
+    </div>
+    <!-- Animated Progress Track -->
+    <div class="upload-progress-track">
+      <div class="upload-progress-bar" id="upload-card-bar" style="width: 0%;"></div>
+    </div>
+    <div class="upload-progress-footer">
+      <span id="upload-card-size">0.0 MB / 0.0 MB</span>
+      <span id="upload-card-speed" style="color: #10B981; font-weight: 600;">Starting...</span>
     </div>
   </div>
 

@@ -229,6 +229,99 @@ export class FileController {
     }
   }
 
+  static async uploadStream(req, res) {
+    try {
+      const { id } = req.params;
+      const filePath = req.query.path || req.headers['x-file-path'];
+      if (!filePath) {
+        return res.status(400).json({ error: 'Parameter "path" is required' });
+      }
+
+      const stmt = db.prepare('SELECT * FROM apps WHERE id = ?');
+      const app = stmt.get(id);
+      if (!app) return res.status(404).json({ error: 'App not found' });
+
+      if (!checkAppAccess(id, req.user, 'files')) {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
+
+      const appDir = supervisor.getAppDir(id);
+      const decodedPath = decodeURIComponent(filePath);
+      const fullPath = path.join(appDir, decodedPath);
+      if (!isSafePath(appDir, fullPath)) {
+        return res.status(400).json({ error: 'Invalid file path' });
+      }
+
+      const parentDir = path.dirname(fullPath);
+      if (!fs.existsSync(parentDir)) {
+        fs.mkdirSync(parentDir, { recursive: true });
+      }
+
+      const diskLimitMB = app.disk_limit || 5120;
+      const diskLimitBytes = diskLimitMB * 1024 * 1024;
+      const incomingBytes = parseInt(req.headers['content-length'] || '0', 10);
+
+      function getFolderSize(dir) {
+        let size = 0;
+        try {
+          const files = fs.readdirSync(dir);
+          for (const file of files) {
+            const p = path.join(dir, file);
+            try {
+              const stat = fs.statSync(p);
+              if (stat.isDirectory()) size += getFolderSize(p);
+              else size += stat.size;
+            } catch (e) {}
+          }
+        } catch (e) {}
+        return size;
+      }
+
+      const currentUsage = getFolderSize(appDir);
+      if (incomingBytes > 0 && currentUsage + incomingBytes > diskLimitBytes) {
+        const usedMB = (currentUsage / (1024 * 1024)).toFixed(1);
+        const incomingMB = (incomingBytes / (1024 * 1024)).toFixed(1);
+        return res.status(400).json({
+          error: `Disk quota exceeded: Container limit is ${diskLimitMB}MB. Current usage is ${usedMB}MB and this file is ${incomingMB}MB.`
+        });
+      }
+
+      const writeStream = fs.createWriteStream(fullPath);
+      let writtenBytes = 0;
+
+      req.on('data', (chunk) => {
+        writtenBytes += chunk.length;
+        if (currentUsage + writtenBytes > diskLimitBytes) {
+          writeStream.destroy();
+          try { fs.unlinkSync(fullPath); } catch (e) {}
+          if (!res.headersSent) {
+            return res.status(400).json({
+              error: `Disk quota exceeded: Container limit is ${diskLimitMB}MB.`
+            });
+          }
+        }
+      });
+
+      req.pipe(writeStream);
+
+      writeStream.on('finish', () => {
+        if (!res.headersSent) {
+          return res.json({ message: `Uploaded "${decodedPath}" successfully`, size: writtenBytes });
+        }
+      });
+
+      writeStream.on('error', (err) => {
+        if (!res.headersSent) {
+          return res.status(500).json({ error: 'Write error: ' + err.message });
+        }
+      });
+    } catch (err) {
+      if (!res.headersSent) {
+        return res.status(500).json({ error: err.message });
+      }
+    }
+  }
+
   static async unarchiveFile(req, res) {
     try {
       const { id } = req.params;
