@@ -932,6 +932,7 @@
           const data = await res.json();
           if (data && data.ip) window.detectedHostIp = data.ip;
           if (data && data.domain) window.configuredDomain = data.domain;
+          if (data && data.baseDomain) window.configuredBaseDomain = data.baseDomain;
           updateMetricsUI(data);
         }
       } catch (err) {
@@ -1185,8 +1186,8 @@
 
           const hostIp = (app.domain && app.domain.trim() !== '')
             ? app.domain.trim()
-            : (window.configuredDomain && window.configuredDomain.trim() !== '')
-            ? window.configuredDomain.trim()
+            : (app.name && window.configuredBaseDomain && window.configuredBaseDomain.trim() !== '')
+            ? `${app.name.toLowerCase().replace(/[^a-z0-9-]/g, '')}.${window.configuredBaseDomain.trim()}`
             : (app.primary_ip && app.primary_ip !== '0.0.0.0' && app.primary_ip !== '127.0.0.1')
             ? app.primary_ip
             : (window.detectedHostIp || (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? window.location.hostname : window.detectedHostIp || '127.0.0.1'));

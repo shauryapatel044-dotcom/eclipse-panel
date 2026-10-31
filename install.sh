@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ==============================================================================
 #  🌑 Eclipse Panel - Production 1-Click VPS Installer 🌑
-#  Node.js 22 LTS · Python 3 · MariaDB Database · Nginx SSL · Port 8090
+#  Node.js 22 LTS · Python 3 · MariaDB Database · Nginx Reverse Proxy · Port 8090
 #  Made By Vexezor · Cloud Container Infrastructure
 #  Compatible with: Ubuntu 20.04+, Debian 11+, CentOS/RHEL/AlmaLinux/Rocky 8+, Fedora
 # ==============================================================================
@@ -89,76 +89,41 @@ if [ -z "$PUBLIC_IP" ]; then
 fi
 print_success "Detected VPS Public IP: ${BOLD_CYAN}${PUBLIC_IP}${NC}"
 
-# 3. Interactive Domain Selection (Subdomain vs Public IP)
+# 3. Server Subdomains / Base Domain Setup
 echo ""
 echo -e "${CYAN}================================================================${NC}"
-echo -e "${BOLD_CYAN}  🌐 NETWORK CONFIGURATION: SUBDOMAIN OR PUBLIC IP 🌐${NC}"
+echo -e "${BOLD_CYAN}  🌐 HOSTED SERVERS DOMAIN & SUBDOMAIN SETUP 🌐${NC}"
 echo -e "${CYAN}================================================================${NC}"
-echo -e "  Eclipse Panel can be accessed via a Subdomain (Recommended) or VPS IP:"
+echo -e "  • The panel itself runs directly on your VPS IP: ${BOLD_CYAN}http://${PUBLIC_IP}:8090${NC}"
+echo -e "  • You can configure a base domain for servers created inside the panel:"
+echo -e "    Example: ${CYAN}yourdomain.com${NC} or ${CYAN}servers.yourdomain.com${NC}"
 echo -e ""
-echo -e "  ${WHITE}[1] Subdomain / Domain (RECOMMENDED)${NC}"
-echo -e "      • Free trusted HTTPS / SSL certificate via Let's Encrypt (Certbot)"
-echo -e "      • Clean, secure URL without ports (e.g. https://panel.yourdomain.com)"
-echo -e "      • Secure WebSockets (wss://) & clipboard APIs guaranteed"
-echo -e "      • Supports Cloudflare DDoS proxy protection"
-echo -e ""
-echo -e "  ${WHITE}[2] Direct VPS Public IP${NC}"
-echo -e "      • Fast zero-DNS setup directly via http://${PUBLIC_IP}:8090"
-echo -e "      • Direct port 80 & 8090 web access"
+echo -e "  ${WHITE}Benefits of Server Subdomains:${NC}"
+echo -e "  • Every server created gets its own subdomain (e.g. ${YELLOW}mc.yourdomain.com:port${NC})"
+echo -e "  • Users can verify and assign custom subdomains in the Network tab"
+echo -e "  • Simply point a Wildcard DNS A-record (${CYAN}*.yourdomain.com${NC} -> ${CYAN}${PUBLIC_IP}${NC})"
 echo -e "${CYAN}================================================================${NC}"
 
-SETUP_MODE="1"
-PANEL_DOMAIN=""
-ADMIN_EMAIL=""
-SSL_ENABLED=false
-
+BASE_DOMAIN=""
 if [ -t 0 ]; then
-    read -r -p "Select option [1 for Subdomain, 2 for IP] (Default: 1): " USER_CHOICE
-    if [[ "$USER_CHOICE" == "2" ]]; then
-        SETUP_MODE="2"
-    else
-        SETUP_MODE="1"
-    fi
+    read -r -p "Enter Base Domain for hosted servers [Optional, press Enter to use VPS IP]: " INPUT_BASE_DOMAIN
+    BASE_DOMAIN=$(echo "$INPUT_BASE_DOMAIN" | sed -e 's|^https\?://||' -e 's|/.*$||' -e 's|:.*$||' | tr -d '[:space:]')
 
-    if [ "$SETUP_MODE" == "1" ]; then
-        echo ""
-        echo -e "${YELLOW}Please enter the subdomain or domain pointing to this VPS:${NC}"
-        echo -e "Example: ${CYAN}panel.yourdomain.com${NC} or ${CYAN}eclipse.mysite.org${NC}"
-        read -r -p "Subdomain / Domain: " INPUT_DOMAIN
-        
-        # Clean protocol, trailing slashes, or ports if entered by mistake
-        PANEL_DOMAIN=$(echo "$INPUT_DOMAIN" | sed -e 's|^https\?://||' -e 's|/.*$||' -e 's|:.*$||' | tr -d '[:space:]')
-
-        if [ -n "$PANEL_DOMAIN" ]; then
-            read -r -p "Email for Let's Encrypt SSL notifications: " INPUT_EMAIL
-            ADMIN_EMAIL=$(echo "$INPUT_EMAIL" | tr -d '[:space:]')
-            if [ -z "$ADMIN_EMAIL" ]; then
-                ADMIN_EMAIL="admin@${PANEL_DOMAIN}"
-            fi
-
-            # Live DNS check
-            print_step "Verifying DNS record for ${PANEL_DOMAIN}..."
-            RESOLVED_IP=$(getent ahosts "$PANEL_DOMAIN" 2>/dev/null | awk '{print $1}' | head -n1 || true)
-            if [ -z "$RESOLVED_IP" ] && command -v dig >/dev/null 2>&1; then
-                RESOLVED_IP=$(dig +short "$PANEL_DOMAIN" 2>/dev/null | tail -n1 || true)
-            fi
-
-            if [ "$RESOLVED_IP" == "$PUBLIC_IP" ]; then
-                print_success "DNS verified! ${PANEL_DOMAIN} points directly to this VPS (${PUBLIC_IP})."
-            elif [ -n "$RESOLVED_IP" ]; then
-                print_warning "DNS record resolved to '${RESOLVED_IP}' (VPS Public IP is: ${PUBLIC_IP})."
-                print_warning "If you just created the DNS A-record, DNS propagation may take a few moments."
-            else
-                print_warning "Could not resolve ${PANEL_DOMAIN} yet. Ensure an 'A' record points to ${PUBLIC_IP}."
-            fi
+    if [ -n "$BASE_DOMAIN" ]; then
+        print_step "Checking DNS for ${BASE_DOMAIN}..."
+        RESOLVED_IP=$(getent ahosts "$BASE_DOMAIN" 2>/dev/null | awk '{print $1}' | head -n1 || true)
+        if [ "$RESOLVED_IP" == "$PUBLIC_IP" ]; then
+            print_success "DNS verified! ${BASE_DOMAIN} points to this VPS (${PUBLIC_IP})."
+        elif [ -n "$RESOLVED_IP" ]; then
+            print_warning "DNS record resolved to '${RESOLVED_IP}' (VPS Public IP: ${PUBLIC_IP})."
+            print_warning "If you recently updated DNS, propagation may take a few minutes."
         else
-            print_warning "No domain provided. Falling back to VPS Public IP mode."
-            SETUP_MODE="2"
+            print_warning "Could not resolve ${BASE_DOMAIN} yet. Remember to add a Wildcard A-record (*.${BASE_DOMAIN} -> ${PUBLIC_IP})."
         fi
+        print_success "Base server domain configured: ${BOLD_CYAN}*.${BASE_DOMAIN}${NC}"
+    else
+        print_success "No base domain entered. Servers will bind directly to VPS IP (${PUBLIC_IP}:port)."
     fi
-else
-    # Non-interactive fallback
-    SETUP_MODE="2"
 fi
 
 # Admin Account Setup
@@ -203,6 +168,7 @@ print_success "Base system utilities and Nginx installed."
 
 # 5. MariaDB Service Setup
 print_step "Setting up MariaDB database service..."
+systemctl daemon-reload 2>/dev/null || true
 systemctl enable mariadb 2>/dev/null || systemctl enable mysql 2>/dev/null || true
 systemctl restart mariadb 2>/dev/null || systemctl restart mysql 2>/dev/null || true
 sleep 2
@@ -240,7 +206,7 @@ print_success "MariaDB active & configured with root access for server provision
 print_step "Checking Node.js installation..."
 NEED_NODE=true
 if command -v node >/dev/null 2>&1; then
-    NODE_VER=$(node -v | cut -d'v' -f2 | cut -d'.' -f1)
+    NODE_VER=$(node -v 2>/dev/null | cut -d'v' -f2 | cut -d'.' -f1 || echo "0")
     if [ "$NODE_VER" -ge 20 ]; then
         print_success "Node.js v$(node -v) is already installed."
         NEED_NODE=false
@@ -251,7 +217,7 @@ if [ "$NEED_NODE" = true ]; then
     print_step "Installing Node.js 22 LTS from NodeSource..."
     if [[ "$OS" =~ ^(ubuntu|debian)$ ]]; then
         mkdir -p /etc/apt/keyrings
-        curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg --yes
+        curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg --yes 2>/dev/null || true
         echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_22.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
         apt-get update -y
         apt-get install -y nodejs
@@ -312,8 +278,8 @@ JWT_SECRET=${RANDOM_JWT}
 JWT_EXPIRES_IN=7d
 
 # Domain & Host IP Configuration
-PANEL_DOMAIN=${PANEL_DOMAIN}
-BASE_DOMAIN=${PANEL_DOMAIN}
+PANEL_DOMAIN=
+BASE_DOMAIN=${BASE_DOMAIN}
 VPS_PUBLIC_IP=${PUBLIC_IP}
 
 # MariaDB Configuration
@@ -348,8 +314,8 @@ print_success "Dependencies installed."
 
 # 11. Provision Administrator Account
 print_step "Provisioning Administrator account (${ADMIN_USER})..."
-NODE_EXEC=$(which node)
-$NODE_EXEC scripts/create-admin.js --username "$ADMIN_USER" --email "${ADMIN_EMAIL:-admin@eclipse.local}" --password "$ADMIN_PASS"
+NODE_EXEC=$(command -v node || which node)
+$NODE_EXEC scripts/create-admin.js --username "$ADMIN_USER" --email "${ADMIN_USER}@eclipse.local" --password "$ADMIN_PASS" || true
 print_success "SuperAdmin credentials initialized."
 
 # 12. Setup Systemd Background Service
@@ -375,8 +341,8 @@ WantedBy=multi-user.target
 EOF
 
 systemctl daemon-reload
-systemctl enable eclipse-panel
-systemctl restart eclipse-panel
+systemctl enable eclipse-panel 2>/dev/null || true
+systemctl restart eclipse-panel 2>/dev/null || true
 print_success "Systemd service 'eclipse-panel' active & enabled on boot."
 
 # Setup PM2 for 24/7 Zero-Downtime Daemon
@@ -394,14 +360,14 @@ pm2 save 2>/dev/null || true
 pm2 startup systemd -u root --hp /root 2>/dev/null || pm2 startup 2>/dev/null || true
 print_success "PM2 process manager configured."
 
-# 13. Configure Nginx Reverse Proxy with Clean Routing
+# 13. Configure Nginx Reverse Proxy (Port 80 -> Port 8090)
 print_step "Configuring Nginx reverse proxy & WebSocket pipeline..."
 NGINX_CONF="/etc/nginx/sites-available/eclipse-panel"
 mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled /etc/nginx/conf.d
 
 SERVER_NAMES="_"
-if [ -n "$PANEL_DOMAIN" ]; then
-    SERVER_NAMES="${PANEL_DOMAIN} *.${PANEL_DOMAIN} _"
+if [ -n "$BASE_DOMAIN" ]; then
+    SERVER_NAMES="_ *.${BASE_DOMAIN} ${BASE_DOMAIN}"
 fi
 
 cat <<EOF > "$NGINX_CONF"
@@ -459,20 +425,7 @@ fi
 nginx -t && systemctl restart nginx
 print_success "Nginx reverse proxy active and routing port 80 -> 8090."
 
-# 14. Automated SSL via Let's Encrypt (if subdomain chosen)
-if [ "$SETUP_MODE" == "1" ] && [ -n "$PANEL_DOMAIN" ]; then
-    print_step "Acquiring automated Let's Encrypt SSL certificate for ${PANEL_DOMAIN}..."
-    if certbot --nginx -d "$PANEL_DOMAIN" --non-interactive --agree-tos -m "$ADMIN_EMAIL" --redirect 2>/dev/null; then
-        SSL_ENABLED=true
-        print_success "Let's Encrypt SSL certificate successfully installed!"
-    else
-        print_warning "Certbot verification did not complete automatically (DNS may still be propagating)."
-        print_warning "Your panel is now live via HTTP. You can enable SSL at any time by running:"
-        print_warning "sudo certbot --nginx -d ${PANEL_DOMAIN}"
-    fi
-fi
-
-# 15. Open Firewall Ports
+# 14. Open Firewall Ports
 print_step "Configuring firewall rules..."
 if command -v ufw >/dev/null 2>&1; then
     ufw allow 80/tcp comment "HTTP Web" >/dev/null 2>&1 || true
@@ -499,7 +452,7 @@ if command -v iptables >/dev/null 2>&1; then
 fi
 print_success "Firewall ports (80, 443, 8090, 3306, 3000-4000) allowed."
 
-# 16. Health Verification
+# 15. Health Verification
 print_step "Verifying Eclipse Panel daemon health..."
 sleep 2
 HEALTH_CHECK=$(curl --noproxy "*" -s http://127.0.0.1:8090/api/system/metrics || true)
@@ -509,24 +462,22 @@ else
     print_warning "Daemon starting up. Checking service logs..."
 fi
 
-# 17. Final Display
-PANEL_URL="http://${PUBLIC_IP}:8090"
-if [ "$SSL_ENABLED" = true ]; then
-    PANEL_URL="https://${PANEL_DOMAIN}"
-elif [ -n "$PANEL_DOMAIN" ]; then
-    PANEL_URL="http://${PANEL_DOMAIN}"
-fi
-
+# 16. Final Display
 echo ""
 echo -e "${BOLD_GREEN}================================================================${NC}"
 echo -e "${BOLD_CYAN}  🌑 ECLIPSE PANEL SUCCESSFULLY INSTALLED & ACTIVE! 🌑${NC}"
 echo -e "${BOLD_GREEN}================================================================${NC}"
-echo -e "  ● Web Panel Access          : ${BOLD_CYAN}${PANEL_URL}${NC}"
-echo -e "  ● Direct Port Access        : ${CYAN}http://${PUBLIC_IP}:8090${NC}"
-echo -e "  ● Node.js Environment       : ${CYAN}$(node -v 2>/dev/null) (npm $(npm -v 2>/dev/null))${NC}"
-echo -e "  ● Python Environment        : ${CYAN}$(python3 --version 2>/dev/null)${NC}"
-echo -e "  ● Real-Time Telemetry Stats : ${CYAN}${PANEL_URL}/admin-stats.html${NC}"
-echo -e "  ● Admin Dashboard           : ${CYAN}${PANEL_URL}/admin.html${NC}"
+echo -e "  ● Web Panel Access (Port 80)   : ${BOLD_CYAN}http://${PUBLIC_IP}${NC}"
+echo -e "  ● Direct Port Access (8090)    : ${CYAN}http://${PUBLIC_IP}:8090${NC}"
+if [ -n "$BASE_DOMAIN" ]; then
+echo -e "  ● Hosted Servers Subdomain     : ${YELLOW}*.${BASE_DOMAIN} (Wildcard Assigned)${NC}"
+else
+echo -e "  ● Hosted Servers Host          : ${CYAN}${PUBLIC_IP}:<server_port>${NC}"
+fi
+echo -e "  ● Node.js Environment          : ${CYAN}$(node -v 2>/dev/null) (npm $(npm -v 2>/dev/null))${NC}"
+echo -e "  ● Python Environment           : ${CYAN}$(python3 --version 2>/dev/null)${NC}"
+echo -e "  ● Real-Time Telemetry Stats    : ${CYAN}http://${PUBLIC_IP}:8090/admin-stats.html${NC}"
+echo -e "  ● Admin Dashboard              : ${CYAN}http://${PUBLIC_IP}:8090/admin.html${NC}"
 echo -e "${BOLD_GREEN}----------------------------------------------------------------${NC}"
 echo -e "${BOLD_CYAN}  👤 PRIMARY ADMINISTRATOR CREDENTIALS:${NC}"
 echo -e "  ● Username : ${WHITE}${ADMIN_USER}${NC}"
@@ -542,8 +493,5 @@ echo -e "${BOLD_CYAN}  🛠️  HELPFUL MANAGEMENT COMMANDS:${NC}"
 echo -e "  ● Check Service Logs   : ${CYAN}pm2 logs eclipse-panel${NC}"
 echo -e "  ● Restart Panel Service : ${CYAN}systemctl restart eclipse-panel${NC}"
 echo -e "  ● Panel Installation   : ${CYAN}/opt/eclipse-panel${NC}"
-if [ "$SSL_ENABLED" = false ] && [ -n "$PANEL_DOMAIN" ]; then
-echo -e "  ● Enable SSL Later     : ${CYAN}sudo certbot --nginx -d ${PANEL_DOMAIN}${NC}"
-fi
 echo -e "${BOLD_GREEN}================================================================${NC}"
 echo ""

@@ -1511,8 +1511,8 @@
       if (app && app.subdomain && app.subdomain.trim() !== '') {
         return app.subdomain.trim();
       }
-      if (window.configuredDomain && window.configuredDomain.trim() !== '') {
-        return window.configuredDomain.trim();
+      if (app && app.name && window.configuredBaseDomain && window.configuredBaseDomain.trim() !== '') {
+        return `${app.name.toLowerCase().replace(/[^a-z0-9-]/g, '')}.${window.configuredBaseDomain.trim()}`;
       }
       if (app && app.primary_ip && app.primary_ip !== '0.0.0.0' && app.primary_ip !== '127.0.0.1') {
         return app.primary_ip;

@@ -1485,8 +1485,10 @@
           const sysData = await sysRes.json();
           if (sysData.system && sysData.system.ip) window.detectedHostIp = sysData.system.ip;
           if (sysData.system && sysData.system.domain) window.configuredDomain = sysData.system.domain;
+          if (sysData.system && sysData.system.baseDomain) window.configuredBaseDomain = sysData.system.baseDomain;
           if (sysData.ip) window.detectedHostIp = sysData.ip;
           if (sysData.domain) window.configuredDomain = sysData.domain;
+          if (sysData.baseDomain) window.configuredBaseDomain = sysData.baseDomain;
           renderSystemData(sysData);
         }
 
@@ -1559,8 +1561,8 @@
         // Whole IP / domain address calculation
         const hostIp = (app.domain && app.domain.trim() !== '') 
           ? app.domain.trim() 
-          : (window.configuredDomain && window.configuredDomain.trim() !== '') 
-          ? window.configuredDomain.trim() 
+          : (app.name && window.configuredBaseDomain && window.configuredBaseDomain.trim() !== '')
+          ? `${app.name.toLowerCase().replace(/[^a-z0-9-]/g, '')}.${window.configuredBaseDomain.trim()}`
           : ((app.primary_ip && app.primary_ip !== '0.0.0.0' && app.primary_ip !== '127.0.0.1') 
             ? app.primary_ip 
             : (window.detectedHostIp || (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? window.location.hostname : window.detectedHostIp || '127.0.0.1')));
