@@ -36,18 +36,23 @@ if [[ ! "$CONFIRM" =~ ^[yY]$ ]]; then
     exit 0
 fi
 
-echo -e "\n${BOLD_RED}[1/6] Stopping and disabling systemd service...${NC}"
+echo -e "\n${BOLD_RED}[1/6] Stopping and disabling systemd service and PM2...${NC}"
+if command -v pm2 >/dev/null 2>&1; then
+    pm2 delete eclipse-panel 2>/dev/null || true
+    pm2 save 2>/dev/null || true
+fi
 if systemctl is-active --quiet eclipse-panel 2>/dev/null; then
     systemctl stop eclipse-panel || true
 fi
 systemctl disable eclipse-panel 2>/dev/null || true
 rm -f /etc/systemd/system/eclipse-panel.service
 systemctl daemon-reload
-echo -e "${GREEN}[✔] Systemd service removed.${NC}"
+echo -e "${GREEN}[✔] Systemd and PM2 service removed.${NC}"
 
 echo -e "\n${BOLD_RED}[2/6] Removing Nginx reverse proxy configuration...${NC}"
 rm -f /etc/nginx/sites-available/eclipse-panel
 rm -f /etc/nginx/sites-enabled/eclipse-panel
+rm -f /etc/nginx/conf.d/eclipse-panel.conf
 if command -v nginx >/dev/null 2>&1; then
     nginx -t 2>/dev/null && systemctl restart nginx || true
 fi

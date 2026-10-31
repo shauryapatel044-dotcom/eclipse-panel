@@ -8,6 +8,10 @@
 
 set -e
 
+# Disable any local terminal SOCKS/HTTP proxy to prevent localhost connection errors
+unset ALL_PROXY all_proxy HTTP_PROXY http_proxy HTTPS_PROXY https_proxy
+export NO_PROXY="*"
+
 # Terminal ANSI Styling
 CYAN='\033[0;36m'
 BOLD_CYAN='\033[1;36m'
@@ -76,9 +80,9 @@ else
     exit 1
 fi
 
-# Detect Public VPS IP
+# Detect Public VPS IP (Bypassing any proxy)
 print_step "Detecting VPS public network address..."
-PUBLIC_IP=$(curl -s --max-time 4 https://api.ipify.org || curl -s --max-time 4 https://icanhazip.com || curl -s --max-time 4 https://ifconfig.me || hostname -I | awk '{print $1}')
+PUBLIC_IP=$(curl --noproxy "*" -s --max-time 4 https://api.ipify.org || curl --noproxy "*" -s --max-time 4 https://icanhazip.com || curl --noproxy "*" -s --max-time 4 https://ifconfig.me || hostname -I | awk '{print $1}')
 PUBLIC_IP=$(echo "$PUBLIC_IP" | tr -d '[:space:]')
 if [ -z "$PUBLIC_IP" ]; then
     PUBLIC_IP="127.0.0.1"
@@ -120,12 +124,14 @@ if [ -t 0 ]; then
         echo ""
         echo -e "${YELLOW}Please enter the subdomain or domain pointing to this VPS:${NC}"
         echo -e "Example: ${CYAN}panel.yourdomain.com${NC} or ${CYAN}eclipse.mysite.org${NC}"
-        read -r -p "Subdomain / Domain: " PANEL_DOMAIN
-        PANEL_DOMAIN=$(echo "$PANEL_DOMAIN" | tr -d '[:space:]')
+        read -r -p "Subdomain / Domain: " INPUT_DOMAIN
+        
+        # Clean protocol, trailing slashes, or ports if entered by mistake
+        PANEL_DOMAIN=$(echo "$INPUT_DOMAIN" | sed -e 's|^https\?://||' -e 's|/.*$||' -e 's|:.*$||' | tr -d '[:space:]')
 
         if [ -n "$PANEL_DOMAIN" ]; then
-            read -r -p "Email for Let's Encrypt SSL notifications: " ADMIN_EMAIL
-            ADMIN_EMAIL=$(echo "$ADMIN_EMAIL" | tr -d '[:space:]')
+            read -r -p "Email for Let's Encrypt SSL notifications: " INPUT_EMAIL
+            ADMIN_EMAIL=$(echo "$INPUT_EMAIL" | tr -d '[:space:]')
             if [ -z "$ADMIN_EMAIL" ]; then
                 ADMIN_EMAIL="admin@${PANEL_DOMAIN}"
             fi
@@ -186,6 +192,7 @@ if [[ "$OS" =~ ^(ubuntu|debian)$ ]]; then
     apt-get install -y curl wget git build-essential ca-certificates gnupg ufw lsof nginx certbot python3-certbot-nginx \
                        mariadb-server mariadb-client libmariadb-dev libmariadb-dev-compat dnsutils
 elif [[ "$OS" =~ ^(centos|rhel|almalinux|rocky|fedora)$ ]]; then
+    dnf -y install epel-release || yum -y install epel-release || true
     dnf -y update || yum -y update
     dnf -y install curl wget git gcc-c++ make ca-certificates gnupg2 tar firewalld lsof nginx certbot python3-certbot-nginx \
                    mariadb-server mariadb mariadb-devel bind-utils || \
@@ -196,14 +203,8 @@ print_success "Base system utilities and Nginx installed."
 
 # 5. MariaDB Service Setup
 print_step "Setting up MariaDB database service..."
-systemctl enable mariadb
-systemctl restart mariadb
-
-if ! systemctl is-active --quiet mariadb; then
-    print_warning "MariaDB did not respond immediately, attempting restart..."
-    sleep 2
-    systemctl restart mariadb
-fi
+systemctl enable mariadb 2>/dev/null || systemctl enable mysql 2>/dev/null || true
+systemctl restart mariadb 2>/dev/null || systemctl restart mysql 2>/dev/null || true
 
 # Generate secure random root and user database password
 DB_PASS=$(openssl rand -hex 16 2>/dev/null || tr -dc 'a-zA-Z0-9' </dev/urandom | head -c 24)
@@ -217,7 +218,12 @@ chmod 600 /root/.my.cnf
 
 # Provision user database engine
 print_step "Provisioning 'eclipse_panel' MariaDB database..."
-mysql <<EOF
+MYSQL_CMD="mysql"
+if ! command -v mysql >/dev/null 2>&1; then
+    MYSQL_CMD="mariadb"
+fi
+
+$MYSQL_CMD <<EOF
 CREATE DATABASE IF NOT EXISTS eclipse_panel CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE USER IF NOT EXISTS 'eclipse_user'@'localhost' IDENTIFIED BY '${DB_PASS}';
 ALTER USER 'eclipse_user'@'localhost' IDENTIFIED BY '${DB_PASS}';
@@ -338,7 +344,7 @@ print_success "Dependencies installed."
 # 11. Provision Administrator Account
 print_step "Provisioning Administrator account (${ADMIN_USER})..."
 NODE_EXEC=$(which node)
-$NODE_EXEC scripts/create-admin.js --username "$ADMIN_USER" --email "${ADMIN_USER}@${PANEL_DOMAIN:-eclipse.local}" --password "$ADMIN_PASS"
+$NODE_EXEC scripts/create-admin.js --username "$ADMIN_USER" --email "${ADMIN_EMAIL:-admin@eclipse.local}" --password "$ADMIN_PASS"
 print_success "SuperAdmin credentials initialized."
 
 # 12. Setup Systemd Background Service
@@ -378,10 +384,10 @@ pm2 save
 pm2 startup systemd -u root --hp /root 2>/dev/null || pm2 startup 2>/dev/null || true
 print_success "PM2 process manager configured."
 
-# 13. Configure Nginx Reverse Proxy with WebSocket Support
+# 13. Configure Nginx Reverse Proxy with Clean Routing
 print_step "Configuring Nginx reverse proxy & WebSocket pipeline..."
 NGINX_CONF="/etc/nginx/sites-available/eclipse-panel"
-mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled
+mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled /etc/nginx/conf.d
 
 SERVER_NAMES="_"
 if [ -n "$PANEL_DOMAIN" ]; then
@@ -427,25 +433,32 @@ if [ -f /etc/nginx/nginx.conf ]; then
     sed -i 's/listen       \[::\]:80 default_server;/listen       [::]:80;/g' /etc/nginx/nginx.conf 2>/dev/null || true
 fi
 
+# Clean default configs to prevent duplicate default server conflicts
 rm -f /etc/nginx/sites-enabled/default
-rm -f /etc/nginx/conf.d/default.conf 2>/dev/null || true
-ln -sf "$NGINX_CONF" /etc/nginx/sites-enabled/eclipse-panel 2>/dev/null || true
-if [ -d /etc/nginx/conf.d ]; then
-    cp "$NGINX_CONF" /etc/nginx/conf.d/eclipse-panel.conf 2>/dev/null || true
+rm -f /etc/nginx/sites-available/default
+rm -f /etc/nginx/conf.d/default.conf
+rm -f /etc/nginx/conf.d/eclipse-panel.conf 2>/dev/null || true
+
+# Enable Eclipse Panel based on Linux distribution
+if [ -d /etc/nginx/sites-enabled ]; then
+    ln -sf "$NGINX_CONF" /etc/nginx/sites-enabled/eclipse-panel
+else
+    cp -f "$NGINX_CONF" /etc/nginx/conf.d/eclipse-panel.conf
 fi
 
-nginx -t && systemctl restart nginx 2>/dev/null || true
-print_success "Nginx reverse proxy configured."
+nginx -t && systemctl restart nginx
+print_success "Nginx reverse proxy active and routing port 80 -> 8090."
 
-# 14. Automated SSL via Let's Encrypt (if domain chosen)
+# 14. Automated SSL via Let's Encrypt (if subdomain chosen)
 if [ "$SETUP_MODE" == "1" ] && [ -n "$PANEL_DOMAIN" ]; then
     print_step "Acquiring automated Let's Encrypt SSL certificate for ${PANEL_DOMAIN}..."
     if certbot --nginx -d "$PANEL_DOMAIN" --non-interactive --agree-tos -m "$ADMIN_EMAIL" --redirect 2>/dev/null; then
         SSL_ENABLED=true
         print_success "Let's Encrypt SSL certificate successfully installed!"
     else
-        print_warning "Certbot automatic verification could not complete (DNS may still be propagating)."
-        print_warning "You can run 'certbot --nginx -d ${PANEL_DOMAIN}' at any time once DNS finishes propagation."
+        print_warning "Certbot verification did not complete automatically (DNS may still be propagating)."
+        print_warning "Your panel is now live via HTTP. You can enable SSL at any time by running:"
+        print_warning "sudo certbot --nginx -d ${PANEL_DOMAIN}"
     fi
 fi
 
@@ -479,7 +492,7 @@ print_success "Firewall ports (80, 443, 8090, 3306, 3000-4000) allowed."
 # 16. Health Verification
 print_step "Verifying Eclipse Panel daemon health..."
 sleep 2
-HEALTH_CHECK=$(curl -s http://127.0.0.1:8090/api/system/metrics || true)
+HEALTH_CHECK=$(curl --noproxy "*" -s http://127.0.0.1:8090/api/system/metrics || true)
 if [[ "$HEALTH_CHECK" =~ "cpu" ]]; then
     print_success "Eclipse Panel daemon responded healthy on port 8090!"
 else
@@ -520,7 +533,7 @@ echo -e "  ● Check Service Logs   : ${CYAN}pm2 logs eclipse-panel${NC}"
 echo -e "  ● Restart Panel Service : ${CYAN}systemctl restart eclipse-panel${NC}"
 echo -e "  ● Panel Installation   : ${CYAN}/opt/eclipse-panel${NC}"
 if [ "$SSL_ENABLED" = false ] && [ -n "$PANEL_DOMAIN" ]; then
-echo -e "  ● Enable SSL Later     : ${CYAN}certbot --nginx -d ${PANEL_DOMAIN}${NC}"
+echo -e "  ● Enable SSL Later     : ${CYAN}sudo certbot --nginx -d ${PANEL_DOMAIN}${NC}"
 fi
 echo -e "${BOLD_GREEN}================================================================${NC}"
 echo ""
