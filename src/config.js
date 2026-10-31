@@ -42,6 +42,7 @@ export const config = {
   npmBin: process.env.NPM_BIN || (isWindows ? 'npm.cmd' : 'npm'),
   maxLogLines: parseInt(process.env.MAX_LOG_LINES || '1000', 10),
   corsOrigin: process.env.CORS_ORIGIN || '*',
+  clusterSecret: process.env.CLUSTER_SECRET || '',
   autoStartOnBoot: process.env.AUTO_START_ON_BOOT !== 'false',
   systemStatsIntervalMs: 2000,
 };

@@ -11,4 +11,9 @@ router.get('/me', requireAuth, AuthController.getMe);
 router.put('/profile', requireAuth, AuthController.updateProfile);
 router.put('/password', requireAuth, AuthController.updatePassword);
 
+// Programmatic API Access Keys
+router.get('/api-keys', requireAuth, AuthController.listApiKeys);
+router.post('/api-keys', requireAuth, AuthController.createApiKey);
+router.delete('/api-keys/:id', requireAuth, AuthController.deleteApiKey);
+
 export default router;

@@ -226,6 +226,10 @@
               <svg style="width: 16px; height: 16px; fill: currentColor;" viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/></svg>
               <span>Incident Webhooks</span>
             </button>
+            <button class="admin-tab-btn" id="tab-btn-discord" onclick="switchAdminTab('discord')">
+              <svg style="width: 16px; height: 16px; fill: #5865F2;" viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+              <span>Discord Bot</span>
+            </button>
           </div>
 
           <!-- PANE 1: ALL SERVERS MANAGEMENT -->
@@ -439,6 +443,113 @@
               <div style="display: flex; gap: 12px;">
                 <button class="btn-primary framer-spring" onclick="saveAlertSettings()">Save Alert Configuration</button>
                 <button class="btn-secondary framer-spring" onclick="testAlertNotification()">Send Test Incident Alert</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- PANE 6: DISCORD BOT INTEGRATION -->
+          <div id="pane-admin-discord" style="display: none;">
+            <div class="section-header">
+              <div class="section-title-wrap">
+                <h2>
+                  <svg style="width: 20px; height: 20px; fill: #5865F2;" viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+                  <span>Eclipse Discord Bot Integration</span>
+                </h2>
+                <p>Manage servers using interactive Discord buttons (Start, Stop, Restart), create servers, and register users directly from your Discord server.</p>
+              </div>
+              <div id="discord-bot-badge" style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; background: rgba(100,116,139,0.15); color: #94A3B8; border: 1px solid rgba(255,255,255,0.08);">
+                <span class="statusOrb stopped"></span>
+                <span>Bot Offline</span>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px;">
+              <!-- Configuration Form -->
+              <div style="display: flex; flex-direction: column; gap: 16px;">
+                <div class="feature-card">
+                  <div class="feature-card-title">
+                    <span style="color: #5865F2;">🤖</span> Bot Credentials & Setup
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Discord Bot Token</label>
+                    <div style="display: flex; gap: 8px;">
+                      <input type="password" id="discord-bot-token" class="form-control" placeholder="MTAx...paste bot token from Discord Developer Portal">
+                      <button type="button" class="btn-secondary" onclick="toggleTokenVisibility('discord-bot-token')" style="padding: 0 12px;">👁️</button>
+                    </div>
+                    <div style="font-size: 11px; color: #64748B; margin-top: 4px;">Never share your bot token with anyone. Eclipse stores it securely.</div>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">Target Discord Server / Guild ID (Optional)</label>
+                    <input type="text" id="discord-bot-guild" class="form-control" placeholder="e.g. 112233445566778899 (Leaves blank for global commands)">
+                    <div style="font-size: 11px; color: #64748B; margin-top: 4px;">If specified, slash commands register instantly to this server without waiting for global cache.</div>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">Authorized Operator Discord User IDs (Optional)</label>
+                    <input type="text" id="discord-bot-admins" class="form-control" placeholder="e.g. 293847291827364512, 987654321098765432">
+                    <div style="font-size: 11px; color: #64748B; margin-top: 4px;">Comma-separated user IDs. If left blank, anyone with Discord Administrator permission can manage servers.</div>
+                  </div>
+
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                      <input type="checkbox" id="discord-bot-enabled" checked>
+                      <span style="font-size: 13px; font-weight: 700; color: #FFF;">Enable Discord Bot Connection</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div style="display: flex; gap: 12px;">
+                  <button class="btn-primary framer-spring" onclick="saveDiscordBotSettings()">Save & Connect Bot</button>
+                  <button class="btn-secondary framer-spring" onclick="restartDiscordBot()">Reconnect / Restart Bot</button>
+                </div>
+              </div>
+
+              <!-- Command Reference & Instructions -->
+              <div style="display: flex; flex-direction: column; gap: 16px;">
+                <div class="feature-card">
+                  <div class="feature-card-title">
+                    <span style="color: #10B981;">⚡</span> Interactive Slash Commands
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 10px; font-size: 12px;">
+                    <div style="background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                      <code style="color: #06B6D4; font-weight: 700;">/server &lt;id or name&gt;</code>
+                      <div style="color: #94A3B8; margin-top: 2px;">Shows server card with interactive buttons: <strong>[▶️ Start] [⏹️ Stop] [🔄 Restart] [⚡ Kill]</strong></div>
+                    </div>
+
+                    <div style="background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                      <code style="color: #06B6D4; font-weight: 700;">/servers</code>
+                      <div style="color: #94A3B8; margin-top: 2px;">Lists all active servers, ports, and memory stats.</div>
+                    </div>
+
+                    <div style="background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                      <code style="color: #06B6D4; font-weight: 700;">/createserver</code>
+                      <div style="color: #94A3B8; margin-top: 2px;">Deploys a Node.js or Python server container directly from Discord!</div>
+                    </div>
+
+                    <div style="background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                      <code style="color: #06B6D4; font-weight: 700;">/createuser</code>
+                      <div style="color: #94A3B8; margin-top: 2px;">Creates a new panel user account with specified roles.</div>
+                    </div>
+
+                    <div style="background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                      <code style="color: #06B6D4; font-weight: 700;">/panel</code>
+                      <div style="color: #94A3B8; margin-top: 2px;">Displays live VPS CPU, RAM, uptime, and cluster telemetry.</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="feature-card" style="border-color: rgba(88, 101, 242, 0.3);">
+                  <div class="feature-card-title">
+                    <span style="color: #5865F2;">📖</span> Quick Discord Bot Setup
+                  </div>
+                  <ol style="font-size: 11.5px; color: #94A3B8; margin: 0; padding-left: 18px; line-height: 1.7;">
+                    <li>Open <a href="https://discord.com/developers/applications" target="_blank" style="color: #5865F2; text-decoration: underline;">Discord Developer Portal</a> and click <strong>New Application</strong>.</li>
+                    <li>Go to the <strong>Bot</strong> tab $\rightarrow$ click <strong>Reset Token</strong> $\rightarrow$ Copy the token and paste it here.</li>
+                    <li>Under Privileged Gateway Intents, turn on <strong>Message Content Intent</strong>.</li>
+                    <li>Go to <strong>OAuth2 $\rightarrow$ URL Generator</strong>, check <code>bot</code> and <code>applications.commands</code>, then select Administrator permissions and open the generated invite link.</li>
+                  </ol>
+                </div>
               </div>
             </div>
           </div>
@@ -996,7 +1107,7 @@
     }
 
     function switchAdminTab(tab) {
-      const tabs = ['servers', 'users', 'nodes', 'security', 'alerts'];
+      const tabs = ['servers', 'users', 'nodes', 'security', 'alerts', 'discord'];
       tabs.forEach(t => {
         const pane = document.getElementById('pane-admin-' + t);
         const btn = document.getElementById('tab-btn-' + t);
@@ -1007,6 +1118,100 @@
       if (tab === 'nodes') loadNodes();
       if (tab === 'security') { loadAuditLogs(); loadSSLStatus(); }
       if (tab === 'alerts') loadAlertSettings();
+      if (tab === 'discord') loadDiscordBot();
+    }
+
+    function toggleTokenVisibility(inputId) {
+      const input = document.getElementById(inputId);
+      if (input) {
+        input.type = input.type === 'password' ? 'text' : 'password';
+      }
+    }
+
+    async function loadDiscordBot() {
+      try {
+        const res = await fetch(API_BASE + '/admin/discord-bot', { headers: getHeaders() });
+        if (!res.ok) return;
+        const data = await res.json();
+
+        const badge = document.getElementById('discord-bot-badge');
+        const tokenInput = document.getElementById('discord-bot-token');
+        const guildInput = document.getElementById('discord-bot-guild');
+        const adminsInput = document.getElementById('discord-bot-admins');
+        const enabledCheck = document.getElementById('discord-bot-enabled');
+
+        if (tokenInput && data.tokenPrefix && !tokenInput.value) {
+          tokenInput.placeholder = data.tokenPrefix + ' (Configured)';
+        }
+        if (guildInput) guildInput.value = data.guildId || '';
+        if (adminsInput) adminsInput.value = (data.adminUserIds || []).join(', ');
+        if (enabledCheck) enabledCheck.checked = Boolean(data.enabled);
+
+        if (badge) {
+          if (data.status === 'online' && data.botUser) {
+            badge.innerHTML = `<span class="statusOrb online"></span><span>Connected: @${escapeHtml(data.botUser.tag)}</span>`;
+            badge.style.background = 'rgba(16, 185, 129, 0.15)';
+            badge.style.color = '#10B981';
+            badge.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+          } else if (data.status === 'connecting') {
+            badge.innerHTML = `<span class="statusOrb starting"></span><span>Connecting...</span>`;
+            badge.style.background = 'rgba(245, 158, 11, 0.15)';
+            badge.style.color = '#F59E0B';
+            badge.style.borderColor = 'rgba(245, 158, 11, 0.3)';
+          } else if (data.status === 'error') {
+            badge.innerHTML = `<span class="statusOrb stopped"></span><span>Error: ${escapeHtml(data.lastError || 'Failed')}</span>`;
+            badge.style.background = 'rgba(239, 68, 68, 0.15)';
+            badge.style.color = '#EF4444';
+            badge.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+          } else {
+            badge.innerHTML = `<span class="statusOrb stopped"></span><span>Bot Offline</span>`;
+            badge.style.background = 'rgba(100, 116, 139, 0.15)';
+            badge.style.color = '#94A3B8';
+            badge.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+          }
+        }
+      } catch (err) {
+        console.error('loadDiscordBot error:', err);
+      }
+    }
+
+    async function saveDiscordBotSettings() {
+      const token = document.getElementById('discord-bot-token').value.trim();
+      const guildId = document.getElementById('discord-bot-guild').value.trim();
+      const adminsStr = document.getElementById('discord-bot-admins').value.trim();
+      const enabled = document.getElementById('discord-bot-enabled').checked;
+
+      const payload = { enabled, guildId, adminUserIds: adminsStr };
+      if (token) payload.token = token;
+
+      try {
+        const res = await fetch(API_BASE + '/admin/discord-bot', {
+          method: 'PUT',
+          headers: getHeaders(),
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to save bot settings');
+        notify(data.message || 'Discord Bot settings saved!', 'success');
+        loadDiscordBot();
+      } catch (err) {
+        notify(err.message, 'error');
+      }
+    }
+
+    async function restartDiscordBot() {
+      try {
+        const res = await fetch(API_BASE + '/admin/discord-bot/restart', {
+          method: 'POST',
+          headers: getHeaders()
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.message || 'Failed to restart bot');
+        notify(data.message || 'Discord Bot reconnected!', 'success');
+        loadDiscordBot();
+      } catch (err) {
+        notify(err.message, 'error');
+      }
     }
 
     function openCreateNodeModal() { document.getElementById('modal-create-node').classList.add('open'); }

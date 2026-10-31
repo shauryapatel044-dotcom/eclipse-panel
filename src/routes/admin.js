@@ -8,6 +8,7 @@ router.use(requireAdmin);
 
 router.get('/system', AdminController.getSystemInfo);
 router.get('/users', AdminController.getUsers);
+router.post('/users', AdminController.createUser);
 router.put('/users/:id', AdminController.updateUser);
 router.put('/users/:id/role', AdminController.updateUserRole);
 router.delete('/users/:id', AdminController.deleteUser);
@@ -18,6 +19,11 @@ router.get('/audit-logs', AdminController.getAuditLogs);
 // SSL Management
 router.get('/ssl/status', AdminController.getSSLStatus);
 router.post('/ssl/issue', AdminController.issueSSL);
+
+// Discord Bot Management
+router.get('/discord-bot', AdminController.getDiscordBot);
+router.put('/discord-bot', AdminController.updateDiscordBot);
+router.post('/discord-bot/restart', AdminController.restartDiscordBot);
 
 // Incident Alerts (Discord / Telegram)
 router.get('/alerts', AdminController.getAlertSettings);

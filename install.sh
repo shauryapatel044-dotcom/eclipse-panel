@@ -89,7 +89,194 @@ if [ -z "$PUBLIC_IP" ]; then
 fi
 print_success "Detected VPS Public IP: ${BOLD_CYAN}${PUBLIC_IP}${NC}"
 
-# 3. Server Subdomains / Base Domain Setup
+# 3. Infrastructure Deployment Mode Selection
+echo ""
+echo -e "${CYAN}================================================================${NC}"
+echo -e "${BOLD_CYAN}  🌑 ECLIPSE CLOUD INFRASTRUCTURE DEPLOYMENT MODE 🌑${NC}"
+echo -e "${CYAN}================================================================${NC}"
+echo -e "  Select deployment target for this machine:"
+echo -e "  ${WHITE}[1] Eclipse Panel${NC}  - Master Controller & Web Dashboard (Port 8090/80)"
+echo -e "  ${WHITE}[2] Eclipse Node${NC}   - Remote Daemon Runner for Distributed Server Clusters"
+echo -e "${CYAN}================================================================${NC}"
+
+DEPLOY_MODE="panel"
+if [ -t 0 ]; then
+    read -r -p "Select option [1 for Panel, 2 for Node] (Default: 1): " INPUT_DEPLOY_MODE
+    if [ "$INPUT_DEPLOY_MODE" == "2" ] || [ "$INPUT_DEPLOY_MODE" == "node" ]; then
+        DEPLOY_MODE="node"
+    fi
+fi
+
+if [ "$DEPLOY_MODE" == "node" ]; then
+    print_success "Selected Deployment Mode: Eclipse Node Daemon"
+
+    # Node Server Subdomain Setup
+    echo ""
+    echo -e "${CYAN}================================================================${NC}"
+    echo -e "${BOLD_CYAN}  🌐 REMOTE NODE DOMAIN & SUBDOMAIN SETUP 🌐${NC}"
+    echo -e "${CYAN}================================================================${NC}"
+    echo -e "  • Point a Subdomain or Wildcard A-Record to this Node's IP: ${BOLD_CYAN}${PUBLIC_IP}${NC}"
+    echo -e "    Example: ${CYAN}node1.servers.vexezor.bond${NC} or ${CYAN}*.node1.vexezor.bond${NC}"
+    echo -e "${CYAN}================================================================${NC}"
+
+    NODE_SUBDOMAIN=""
+    if [ -t 0 ]; then
+        read -r -p "Enter Server Subdomain for this Node [Optional, press Enter to use VPS IP]: " INPUT_NODE_DOMAIN
+        NODE_SUBDOMAIN=$(echo "$INPUT_NODE_DOMAIN" | sed -e 's|^https\?://||' -e 's|/.*$||' -e 's|:.*$||' | tr -d '[:space:]')
+    fi
+
+    # Cluster Secret Token
+    echo ""
+    echo -e "${CYAN}================================================================${NC}"
+    echo -e "${BOLD_CYAN}  🔐 CLUSTER SECRET TOKEN (NODE AUTHENTICATION) 🔐${NC}"
+    echo -e "${CYAN}================================================================${NC}"
+    echo -e "  • The Cluster Secret authenticates this remote Node with your Master Panel."
+    echo -e "  • You can specify your own secret or let the installer auto-generate one."
+    echo -e "${CYAN}================================================================${NC}"
+
+    CLUSTER_SECRET=""
+    if [ -t 0 ]; then
+        read -r -p "Enter Cluster Secret Token [Press Enter to auto-generate]: " INPUT_SECRET
+        if [ -n "$INPUT_SECRET" ]; then
+            CLUSTER_SECRET=$(echo "$INPUT_SECRET" | tr -d '[:space:]')
+        fi
+    fi
+
+    if [ -z "$CLUSTER_SECRET" ]; then
+        CLUSTER_SECRET="ecl_node_sec_$(openssl rand -hex 24 2>/dev/null || tr -dc 'a-zA-Z0-9' </dev/urandom | head -c 48)"
+    fi
+    print_success "Cluster Secret Configured: ${BOLD_CYAN}${CLUSTER_SECRET}${NC}"
+
+    # Install base dependencies for node
+    print_step "Updating system packages and installing prerequisites for Node Daemon..."
+    if [[ "$OS" =~ ^(ubuntu|debian)$ ]]; then
+        export DEBIAN_FRONTEND=noninteractive
+        apt-get update -y
+        apt-get install -y curl wget git build-essential ca-certificates gnupg ufw lsof dnsutils
+    elif [[ "$OS" =~ ^(centos|rhel|almalinux|rocky|fedora)$ ]]; then
+        dnf -y install epel-release || yum -y install epel-release || true
+        dnf -y install curl wget git gcc-c++ make ca-certificates gnupg2 tar firewalld lsof bind-utils || true
+    fi
+
+    # Install Node.js 22 LTS if needed
+    if ! command -v node >/dev/null 2>&1 || [ "$(node -v | cut -d'v' -f2 | cut -d'.' -f1)" -lt 20 ]; then
+        print_step "Installing Node.js 22 LTS..."
+        if [[ "$OS" =~ ^(ubuntu|debian)$ ]]; then
+            mkdir -p /etc/apt/keyrings
+            curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg --yes 2>/dev/null || true
+            echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_22.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
+            apt-get update -y && apt-get install -y nodejs
+        elif [[ "$OS" =~ ^(centos|rhel|almalinux|rocky|fedora)$ ]]; then
+            curl -fsSL https://rpm.nodesource.com/setup_22.x | bash -
+            dnf -y install nodejs || yum -y install nodejs
+        fi
+    fi
+
+    # Install Python 3
+    if [[ "$OS" =~ ^(ubuntu|debian)$ ]]; then
+        apt-get install -y python3 python3-pip python3-venv python3-dev
+    elif [[ "$OS" =~ ^(centos|rhel|almalinux|rocky|fedora)$ ]]; then
+        dnf -y install python3 python3-pip python3-devel || yum -y install python3 python3-pip python3-devel
+    fi
+
+    # Symlink binaries
+    [ ! -f /usr/local/bin/python ] && ln -sf "$(command -v python3 || command -v python)" /usr/local/bin/python 2>/dev/null || true
+    [ ! -f /usr/local/bin/pip ] && ln -sf "$(command -v pip3 || command -v pip)" /usr/local/bin/pip 2>/dev/null || true
+    [ ! -f /usr/local/bin/node ] && ln -sf "$(command -v node)" /usr/local/bin/node 2>/dev/null || true
+    [ ! -f /usr/local/bin/npm ] && ln -sf "$(command -v npm)" /usr/local/bin/npm 2>/dev/null || true
+
+    # Setup directories
+    NODE_INSTALL_DIR="/opt/eclipse-node"
+    mkdir -p "$NODE_INSTALL_DIR"
+    mkdir -p "$NODE_INSTALL_DIR/storage/apps"
+    mkdir -p "$NODE_INSTALL_DIR/storage/data"
+
+    SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+    if [ "$SCRIPT_DIR" != "$NODE_INSTALL_DIR" ]; then
+        if [ -f "$SCRIPT_DIR/package.json" ]; then
+            print_step "Copying daemon files into ${NODE_INSTALL_DIR}..."
+            cp -r "$SCRIPT_DIR/"* "$NODE_INSTALL_DIR/"
+        else
+            print_step "Cloning Eclipse Daemon into ${NODE_INSTALL_DIR}..."
+            git clone https://github.com/shauryapatel044-dotcom/eclipse-panel.git "$NODE_INSTALL_DIR" 2>/dev/null || true
+        fi
+    fi
+
+    cd "$NODE_INSTALL_DIR"
+
+    # Configure Node .env
+    cat <<EOF > "$NODE_INSTALL_DIR/.env"
+PORT=8090
+IS_REMOTE_NODE=true
+CLUSTER_SECRET=${CLUSTER_SECRET}
+BASE_DOMAIN=${NODE_SUBDOMAIN}
+PANEL_DOMAIN=${NODE_SUBDOMAIN}
+VPS_PUBLIC_IP=${PUBLIC_IP}
+STORAGE_DIR=${NODE_INSTALL_DIR}/storage
+DATA_DIR=${NODE_INSTALL_DIR}/storage/data
+APPS_DIR=${NODE_INSTALL_DIR}/storage/apps
+DB_PATH=${NODE_INSTALL_DIR}/storage/data/eclipse.db
+PYTHON_BIN=/usr/bin/python3
+NODE_BIN=/usr/bin/node
+NPM_BIN=/usr/bin/npm
+CORS_ORIGIN=*
+MAX_LOG_LINES=1000
+AUTO_START_ON_BOOT=true
+EOF
+
+    npm install --omit=dev --no-audit
+
+    # PM2 for Node daemon
+    if ! command -v pm2 >/dev/null 2>&1; then
+        npm install -g pm2 || true
+        PM2_PATH=$(npm root -g 2>/dev/null)/pm2/bin/pm2
+        [ -f "$PM2_PATH" ] && ln -sf "$PM2_PATH" /usr/local/bin/pm2 2>/dev/null || true
+    fi
+    pm2 delete eclipse-node 2>/dev/null || true
+    pm2 start src/index.js --name "eclipse-node" --time || node src/index.js &
+    pm2 save 2>/dev/null || true
+    pm2 startup systemd -u root --hp /root 2>/dev/null || pm2 startup 2>/dev/null || true
+
+    # Open firewall
+    if command -v ufw >/dev/null 2>&1; then
+        ufw allow 8090/tcp comment "Eclipse Node Daemon" >/dev/null 2>&1 || true
+        ufw allow 3000:4000/tcp comment "Hosted Apps Port Range" >/dev/null 2>&1 || true
+    elif command -v firewall-cmd >/dev/null 2>&1; then
+        firewall-cmd --permanent --add-port=8090/tcp >/dev/null 2>&1 || true
+        firewall-cmd --permanent --add-port=3000-4000/tcp >/dev/null 2>&1 || true
+        firewall-cmd --reload >/dev/null 2>&1 || true
+    fi
+
+    NODE_HOST_ADDR="${PUBLIC_IP}"
+    if [ -n "$NODE_SUBDOMAIN" ]; then
+        NODE_HOST_ADDR="${NODE_SUBDOMAIN}"
+    fi
+
+    echo ""
+    echo -e "${BOLD_GREEN}================================================================${NC}"
+    echo -e "${BOLD_CYAN}  🌑 ECLIPSE NODE RUNNER SUCCESSFULLY INSTALLED & ACTIVE! 🌑${NC}"
+    echo -e "${BOLD_GREEN}================================================================${NC}"
+    echo -e "  ● Node Daemon Host      : ${BOLD_CYAN}http://${NODE_HOST_ADDR}:8090${NC}"
+    echo -e "  ● Node Public IP        : ${CYAN}${PUBLIC_IP}${NC}"
+    echo -e "  ● Node Daemon Port      : ${CYAN}8090${NC}"
+    echo -e "  ● Cluster Secret Token  : ${BOLD_CYAN}${CLUSTER_SECRET}${NC}"
+    if [ -n "$NODE_SUBDOMAIN" ]; then
+    echo -e "  ● Node Server Subdomain : ${YELLOW}*.${NODE_SUBDOMAIN}${NC}"
+    fi
+    echo -e "${BOLD_GREEN}----------------------------------------------------------------${NC}"
+    echo -e "${BOLD_CYAN}  🔗 HOW TO PAIR THIS NODE WITH YOUR MASTER PANEL:${NC}"
+    echo -e "  1. Log in to your Eclipse Master Panel (${CYAN}http://<master_ip>:8090/admin.html${NC})"
+    echo -e "  2. Go to the ${WHITE}Multi-Node Cluster${NC} tab ➔ click ${WHITE}+ Create Node${NC}"
+    echo -e "  3. Host / IP: ${BOLD_CYAN}${NODE_HOST_ADDR}${NC}"
+    echo -e "  4. Port: ${CYAN}8090${NC}"
+    echo -e "  5. Secret Token: ${BOLD_CYAN}${CLUSTER_SECRET}${NC}"
+    echo -e "  6. Click Save! The Node is immediately ready to host distributed apps."
+    echo -e "${BOLD_GREEN}================================================================${NC}"
+    echo ""
+    exit 0
+fi
+
+# 4. Panel Server Subdomains / Base Domain Setup
 echo ""
 echo -e "${CYAN}================================================================${NC}"
 echo -e "${BOLD_CYAN}  🌐 HOSTED SERVERS DOMAIN & SUBDOMAIN SETUP 🌐${NC}"

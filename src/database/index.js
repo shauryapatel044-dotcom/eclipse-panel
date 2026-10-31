@@ -127,6 +127,16 @@ export function initDatabase() {
       FOREIGN KEY (app_id) REFERENCES apps(id) ON DELETE CASCADE,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
+
+    CREATE TABLE IF NOT EXISTS api_keys (
+      id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL,
+      name TEXT NOT NULL,
+      key_token TEXT UNIQUE NOT NULL,
+      last_used TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
   `);
 
   // Migrate columns if needed

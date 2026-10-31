@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { db } from '../database/index.js';
@@ -147,6 +148,59 @@ export class AuthController {
       updateStmt.run(newHash, userId);
 
       return res.json({ message: 'Password updated successfully' });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
+  // API Access Key Management
+  static async listApiKeys(req, res) {
+    try {
+      const keys = db.prepare(`
+        SELECT id, name, SUBSTR(key_token, 1, 12) || '...' as prefix, last_used, created_at
+        FROM api_keys
+        WHERE user_id = ?
+        ORDER BY created_at DESC
+      `).all(req.user.id);
+      return res.json({ keys });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
+  static async createApiKey(req, res) {
+    try {
+      const { name } = req.body;
+      const keyName = (name && name.trim()) || 'API Access Token';
+      const keyId = `key_${crypto.randomBytes(4).toString('hex')}`;
+      const rawToken = `ecl_live_${crypto.randomBytes(24).toString('hex')}`;
+
+      db.prepare(`
+        INSERT INTO api_keys (id, user_id, name, key_token)
+        VALUES (?, ?, ?, ?)
+      `).run(keyId, req.user.id, keyName, rawToken);
+
+      return res.status(201).json({
+        success: true,
+        message: 'API Key generated successfully! Store it safely, it cannot be shown again.',
+        key: rawToken,
+        api_key: {
+          id: keyId,
+          name: keyName,
+          prefix: `${rawToken.substring(0, 12)}...`,
+          created_at: new Date().toISOString()
+        }
+      });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
+  static async deleteApiKey(req, res) {
+    try {
+      const { id } = req.params;
+      db.prepare('DELETE FROM api_keys WHERE id = ? AND user_id = ?').run(id, req.user.id);
+      return res.json({ success: true, message: 'API Key revoked successfully' });
     } catch (err) {
       return res.status(500).json({ error: err.message });
     }

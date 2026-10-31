@@ -226,6 +226,10 @@
             API Endpoint: /api/apps, /api/system/metrics
           </div>
 
+          <div id="api-keys-list" style="margin-top: 10px; max-height: 120px; overflow-y: auto;">
+            <!-- Rendered dynamically -->
+          </div>
+
           <button type="button" class="btn-secondary" onclick="generateApiKeyPrompt()" style="margin-top: auto;">
             + Create API Key
           </button>
@@ -366,15 +370,60 @@
       }
     }
 
-    function generateApiKeyPrompt() {
-      const desc = prompt('Enter a description for this API key:');
-      if (desc) {
-        const key = 'ecl_' + Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
-        prompt('Your generated API key (copy and store securely):', key);
+    async function loadApiKeys() {
+      try {
+        const res = await safeApi('/api/auth/api-keys');
+        const container = document.getElementById('api-keys-list');
+        if (!container) return;
+        if (!res.data || !res.data.keys || res.data.keys.length === 0) {
+          container.innerHTML = '<div style="font-size: 11px; color: #64748B;">No API keys generated yet.</div>';
+          return;
+        }
+        container.innerHTML = res.data.keys.map(k => `
+          <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 6px 10px; border-radius: 6px; margin-bottom: 6px;">
+            <div>
+              <div style="font-size: 12px; font-weight: 700; color: #FFF;">${escapeHtml(k.name)}</div>
+              <div style="font-size: 10px; font-family: var(--font-mono); color: #06B6D4;">${k.prefix}</div>
+            </div>
+            <button type="button" class="btn-secondary" style="padding: 3px 8px; font-size: 11px; color: #EF4444;" onclick="deleteApiKey('${k.id}')">Revoke</button>
+          </div>
+        `).join('');
+      } catch (e) {}
+    }
+
+    async function generateApiKeyPrompt() {
+      const name = prompt('Enter a label/name for this API key:');
+      if (!name) return;
+      try {
+        const res = await safeApi('/api/auth/api-keys', {
+          method: 'POST',
+          body: JSON.stringify({ name })
+        });
+        if (!res.ok) throw new Error(res.data.error || 'Failed to create key');
+        prompt('Your generated Eclipse API Key (copy and save securely!):', res.data.key);
+        notify('API Key created successfully!', 'success');
+        loadApiKeys();
+      } catch (err) {
+        notify(err.message, 'error');
       }
     }
 
-    document.addEventListener('DOMContentLoaded', loadAccount);
+    async function deleteApiKey(keyId) {
+      if (!confirm('Are you sure you want to revoke this API key? Any bots or scripts using it will lose access.')) return;
+      try {
+        const res = await safeApi(`/api/auth/api-keys/${keyId}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error(res.data.error || 'Failed to revoke key');
+        notify('API key revoked', 'success');
+        loadApiKeys();
+      } catch (e) {
+        notify(e.message, 'error');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadAccount();
+      loadApiKeys();
+    });
   </script>
 </body>
 </html>

@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs';
 import { db } from '../database/index.js';
 import { getSystemStats } from '../daemon/metrics.js';
 import { supervisor } from '../daemon/supervisor.js';
+import { discordBotService } from '../services/discordBot.js';
 
 export class AdminController {
   static async getSystemInfo(req, res) {
@@ -316,6 +317,84 @@ export class AdminController {
       db.prepare("INSERT OR REPLACE INTO panel_settings (key, value) VALUES ('designer_theme_config', ?)")
         .run(JSON.stringify(themeConfig));
       return res.json({ success: true, message: 'Designer theme settings updated successfully!' });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
+  // Create User via API
+  static async createUser(req, res) {
+    try {
+      const { username, email, password, role } = req.body;
+      if (!username || !email || !password) {
+        return res.status(400).json({ error: 'Username, email, and password are required' });
+      }
+
+      const cleanUser = username.trim().toLowerCase();
+      const cleanEmail = email.trim().toLowerCase();
+      const userRole = role === 'admin' ? 'admin' : 'user';
+
+      const existing = db.prepare('SELECT id FROM users WHERE username = ? OR email = ?').get(cleanUser, cleanEmail);
+      if (existing) {
+        return res.status(400).json({ error: 'A user with that username or email already exists' });
+      }
+
+      const salt = bcrypt.genSaltSync(10);
+      const hash = bcrypt.hashSync(password, salt);
+
+      const result = db.prepare(`
+        INSERT INTO users (username, email, password_hash, role)
+        VALUES (?, ?, ?, ?)
+      `).run(cleanUser, cleanEmail, hash, userRole);
+
+      return res.status(201).json({
+        success: true,
+        message: `User @${cleanUser} created successfully`,
+        user: { id: result.lastInsertRowid, username: cleanUser, email: cleanEmail, role: userRole }
+      });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
+  // Discord Bot Management Endpoints
+  static async getDiscordBot(req, res) {
+    try {
+      return res.json(discordBotService.getStatus());
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
+  static async updateDiscordBot(req, res) {
+    try {
+      const { token, enabled, guildId, adminUserIds } = req.body;
+      discordBotService.saveSettings({ token, enabled, guildId, adminUserIds });
+
+      if (enabled && token) {
+        await discordBotService.start();
+      } else {
+        await discordBotService.stop();
+      }
+
+      return res.json({
+        success: true,
+        message: 'Discord Bot configuration saved successfully',
+        status: discordBotService.getStatus()
+      });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
+  static async restartDiscordBot(req, res) {
+    try {
+      const result = await discordBotService.start();
+      return res.json({
+        success: result.success,
+        message: result.success ? 'Discord Bot reconnected successfully' : result.error,
+        status: discordBotService.getStatus()
+      });
     } catch (err) {
       return res.status(500).json({ error: err.message });
     }

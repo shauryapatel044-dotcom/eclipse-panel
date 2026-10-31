@@ -8,6 +8,7 @@ import { initDatabase } from './database/index.js';
 import { supervisor } from './daemon/supervisor.js';
 import { setupWebSocket } from './websocket/wsServer.js';
 import { getSystemStats } from './daemon/metrics.js';
+import { discordBotService } from './services/discordBot.js';
 
 // Route handlers
 import authRoutes from './routes/auth.js';
@@ -110,6 +111,7 @@ async function start() {
       console.log(`=======================================================`);
 
       supervisor.bootAllAutoStartApps();
+      discordBotService.init().catch(e => console.error('[DiscordBot] Startup error:', e.message));
     });
   } catch (err) {
     console.error('Fatal initialization error:', err);
@@ -127,6 +129,7 @@ process.on('unhandledRejection', (reason, promise) => {
 
 async function shutdown(signal) {
   console.log(`\n[Shutdown] Received ${signal}. Stopping running apps...`);
+  try { await discordBotService.stop(); } catch (e) {}
   for (const [appId] of supervisor.managedProcesses) {
     try {
       await supervisor.stopApp(appId);
