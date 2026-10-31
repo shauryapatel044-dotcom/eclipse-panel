@@ -65,14 +65,10 @@ class Supervisor {
     const nodeArgs = app.node_args || '';
     const reqFile = app.requirements_file || 'requirements.txt';
 
-    // Ensure the entrypoint file exists in appDir if missing
+    // Check if the entrypoint file exists in appDir
     const entryPath = path.join(appDir, mainFile);
     if (!fs.existsSync(entryPath)) {
-      if (app.type === 'python') {
-        fs.writeFileSync(entryPath, `# Starter Python Application - Eclipse Panel\nimport os, sys\nfrom http.server import HTTPServer, BaseHTTPRequestHandler\n\nPORT = int(os.environ.get('PORT', 3000))\n\nclass SimpleHandler(BaseHTTPRequestHandler):\n    def do_GET(self):\n        self.send_response(200)\n        self.send_header('Content-type', 'application/json')\n        self.end_headers()\n        self.wfile.write(b'{"status":"online","server":"Eclipse Panel Python"}\\n')\n    def log_message(self, format, *args):\n        sys.stdout.write(f"[%s] %s\\n" % (self.log_date_time_string(), format%args))\n        sys.stdout.flush()\n\nprint(f"[Python] Server listening on port {PORT}...")\nsys.stdout.flush()\nserver = HTTPServer(('0.0.0.0', PORT), SimpleHandler)\nserver.serve_forever()\n`);
-      } else {
-        fs.writeFileSync(entryPath, `// Starter Node.js Application - Eclipse Panel\nimport http from 'http';\n\nconst PORT = process.env.PORT || 3000;\nconst server = http.createServer((req, res) => {\n  res.writeHead(200, { 'Content-Type': 'application/json' });\n  res.end(JSON.stringify({ status: 'online', server: 'Eclipse Panel Node.js' }) + '\\n');\n});\n\nserver.listen(PORT, '0.0.0.0', () => {\n  console.log(\`[Node.js] Server listening on port \\\${PORT}...\`);\n});\n`);
-      }
+      logStreamer.append(app.id, 'stderr', `\n[Supervisor Notice] Entrypoint "${mainFile}" not found in server directory. Upload your files to start your app.\n`);
     }
 
     const env = {

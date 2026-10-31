@@ -16,8 +16,37 @@ import fs from 'fs';
 import path from 'path';
 import { db } from '../database/index.js';
 import { supervisor } from '../daemon/supervisor.js';
+import { logStreamer } from '../daemon/logStreamer.js';
 import { getSystemStats } from '../daemon/metrics.js';
 import { config } from '../config.js';
+
+function getDirectoryStats(dirPath) {
+  let totalBytes = 0;
+  let fileCount = 0;
+  if (!fs.existsSync(dirPath)) return { sizeMb: '0.00', fileCount: 0 };
+
+  function traverse(current) {
+    try {
+      const items = fs.readdirSync(current, { withFileTypes: true });
+      for (const item of items) {
+        const full = path.join(current, item.name);
+        if (item.isDirectory()) {
+          traverse(full);
+        } else if (item.isFile()) {
+          fileCount++;
+          try {
+            totalBytes += fs.statSync(full).size;
+          } catch (e) {}
+        }
+      }
+    } catch (e) {}
+  }
+  traverse(dirPath);
+  return {
+    sizeMb: (totalBytes / (1024 * 1024)).toFixed(2),
+    fileCount
+  };
+}
 
 class DiscordBotService {
   constructor() {
@@ -86,16 +115,13 @@ class DiscordBotService {
 
   // Check if a Discord user is authorized to perform actions
   isAuthorized(userId, member = null) {
-    // If specific admin user IDs are configured, check them
     if (this.adminUserIds.length > 0) {
       if (this.adminUserIds.includes(userId)) return true;
     }
-    // If user has Discord Administrator permission in the guild
     if (member && member.permissions) {
       if (member.permissions.has(PermissionFlagsBits.Administrator)) return true;
       if (member.permissions.has(PermissionFlagsBits.ManageGuild)) return true;
     }
-    // If no admin user IDs are configured, allow guild admins
     if (this.adminUserIds.length === 0 && member && member.permissions) {
       return member.permissions.has(PermissionFlagsBits.Administrator);
     }
@@ -121,7 +147,6 @@ class DiscordBotService {
       return { success: false, error: this.lastError };
     }
 
-    // Stop existing client if running
     if (this.client) {
       try {
         await this.client.destroy();
@@ -157,7 +182,6 @@ class DiscordBotService {
         this.lastError = err.message;
       });
 
-      // Handle Interactions (Slash commands & Buttons)
       this.client.on('interactionCreate', async (interaction) => {
         try {
           if (interaction.isChatInputCommand()) {
@@ -168,9 +192,9 @@ class DiscordBotService {
         } catch (err) {
           console.error('[DiscordBot] Interaction error:', err);
           if (interaction.replied || interaction.deferred) {
-            await interaction.followUp({ content: `⚠️ Error executing interaction: ${err.message}`, ephemeral: true }).catch(() => {});
+            await interaction.followUp({ content: `⚠️ Error: ${err.message}`, ephemeral: true }).catch(() => {});
           } else {
-            await interaction.reply({ content: `⚠️ Error executing interaction: ${err.message}`, ephemeral: true }).catch(() => {});
+            await interaction.reply({ content: `⚠️ Error: ${err.message}`, ephemeral: true }).catch(() => {});
           }
         }
       });
@@ -199,7 +223,7 @@ class DiscordBotService {
     return { success: true };
   }
 
-  // Register Slash Commands
+  // Register All Slash Commands
   async registerSlashCommands() {
     if (!this.client || !this.client.user) return;
 
@@ -256,6 +280,79 @@ class DiscordBotService {
         ),
 
       new SlashCommandBuilder()
+        .setName('deleteserver')
+        .setDescription('Permanently delete a server container and release its port')
+        .addStringOption(opt =>
+          opt.setName('identifier')
+            .setDescription('Server name or ID to delete')
+            .setRequired(true)
+        ),
+
+      new SlashCommandBuilder()
+        .setName('startserver')
+        .setDescription('Power on a server container')
+        .addStringOption(opt =>
+          opt.setName('identifier')
+            .setDescription('Server name or ID')
+            .setRequired(true)
+        ),
+
+      new SlashCommandBuilder()
+        .setName('stopserver')
+        .setDescription('Stop a running server container')
+        .addStringOption(opt =>
+          opt.setName('identifier')
+            .setDescription('Server name or ID')
+            .setRequired(true)
+        ),
+
+      new SlashCommandBuilder()
+        .setName('restartserver')
+        .setDescription('Restart a server container')
+        .addStringOption(opt =>
+          opt.setName('identifier')
+            .setDescription('Server name or ID')
+            .setRequired(true)
+        ),
+
+      new SlashCommandBuilder()
+        .setName('cmd')
+        .setDescription('Send a command directly to a server console')
+        .addStringOption(opt =>
+          opt.setName('identifier')
+            .setDescription('Server name or ID')
+            .setRequired(true)
+        )
+        .addStringOption(opt =>
+          opt.setName('command')
+            .setDescription('Command line string to execute')
+            .setRequired(true)
+        ),
+
+      new SlashCommandBuilder()
+        .setName('logs')
+        .setDescription('View the latest live console output of a server')
+        .addStringOption(opt =>
+          opt.setName('identifier')
+            .setDescription('Server name or ID')
+            .setRequired(true)
+        )
+        .addIntegerOption(opt =>
+          opt.setName('lines')
+            .setDescription('Number of lines to retrieve (default: 25)')
+            .setRequired(false)
+        ),
+
+      new SlashCommandBuilder()
+        .setName('serverinfo')
+        .setDescription('Inspect detailed server specifications, storage size, and files count')
+        .addStringOption(opt =>
+          opt.setName('identifier')
+            .setDescription('Server name or ID')
+            .setRequired(true)
+        ),
+
+      new SlashCommandBuilder()
         .setName('createuser')
         .setDescription('Create a new user account on Eclipse Panel')
         .addStringOption(opt =>
@@ -284,8 +381,16 @@ class DiscordBotService {
         ),
 
       new SlashCommandBuilder()
+        .setName('users')
+        .setDescription('List all registered panel operators, roles, and server counts'),
+
+      new SlashCommandBuilder()
         .setName('panel')
-        .setDescription('View live VPS telemetry, CPU, RAM, and infrastructure health')
+        .setDescription('View live VPS telemetry, CPU, RAM, and infrastructure health'),
+
+      new SlashCommandBuilder()
+        .setName('help')
+        .setDescription('View documentation and command reference for Eclipse Discord Bot')
     ].map(cmd => cmd.toJSON());
 
     const rest = new REST({ version: '10' }).setToken(this.token);
@@ -314,7 +419,8 @@ class DiscordBotService {
     const { commandName } = interaction;
 
     // Check authorization for management commands
-    if (['createserver', 'createuser'].includes(commandName)) {
+    const adminCommands = ['createserver', 'deleteserver', 'createuser', 'cmd', 'startserver', 'stopserver', 'restartserver'];
+    if (adminCommands.includes(commandName)) {
       if (!this.isAuthorized(interaction.user.id, interaction.member)) {
         return interaction.reply({
           content: '❌ **Access Denied**: You do not have permission to execute administrative panel commands.',
@@ -329,10 +435,28 @@ class DiscordBotService {
       await this.cmdGetServer(interaction);
     } else if (commandName === 'createserver') {
       await this.cmdCreateServer(interaction);
+    } else if (commandName === 'deleteserver') {
+      await this.cmdDeleteServer(interaction);
+    } else if (commandName === 'startserver') {
+      await this.cmdQuickPower(interaction, 'start');
+    } else if (commandName === 'stopserver') {
+      await this.cmdQuickPower(interaction, 'stop');
+    } else if (commandName === 'restartserver') {
+      await this.cmdQuickPower(interaction, 'restart');
+    } else if (commandName === 'cmd') {
+      await this.cmdConsole(interaction);
+    } else if (commandName === 'logs') {
+      await this.cmdLogs(interaction);
+    } else if (commandName === 'serverinfo') {
+      await this.cmdServerInfo(interaction);
     } else if (commandName === 'createuser') {
       await this.cmdCreateUser(interaction);
+    } else if (commandName === 'users') {
+      await this.cmdListUsers(interaction);
     } else if (commandName === 'panel') {
       await this.cmdPanelStats(interaction);
+    } else if (commandName === 'help') {
+      await this.cmdHelp(interaction);
     }
   }
 
@@ -394,12 +518,12 @@ class DiscordBotService {
     }
 
     const embed = this.buildServerEmbed(app);
-    const buttons = this.buildServerButtons(app.id, app.status);
+    const buttonRows = this.buildServerButtons(app.id, app.status);
 
-    await interaction.reply({ embeds: [embed], components: [buttons] });
+    await interaction.reply({ embeds: [embed], components: buttonRows });
   }
 
-  // 3. /createserver command
+  // 3. /createserver command (Clean slate, zero files by default)
   async cmdCreateServer(interaction) {
     const name = interaction.options.getString('name').trim();
     const type = interaction.options.getString('type').toLowerCase();
@@ -445,7 +569,6 @@ class DiscordBotService {
         isNewUserCreated = true;
       }
     } else {
-      // Default to first admin if no owner provided
       owner = db.prepare("SELECT id, username, email FROM users WHERE role = 'admin' LIMIT 1").get();
       if (!owner) owner = { id: 1, username: 'admin', email: 'admin@eclipse.local' };
     }
@@ -462,18 +585,9 @@ class DiscordBotService {
     const defaultEntry = type === 'python' ? 'main.py' : 'index.js';
     const appDir = path.join(config.appsDir, appId);
 
+    // Create empty app directory without any boilerplate files
     if (!fs.existsSync(appDir)) {
       fs.mkdirSync(appDir, { recursive: true });
-    }
-
-    // Starter code
-    if (type === 'python') {
-      const pythonCode = `from http.server import HTTPServer, BaseHTTPRequestHandler\n\nclass Handler(BaseHTTPRequestHandler):\n    def do_GET(self):\n        self.send_response(200)\n        self.send_header('Content-type', 'text/html')\n        self.end_headers()\n        self.wfile.write(b"<h1>Eclipse Server Online</h1><p>Created via Discord Bot!</p>")\n\nif __name__ == '__main__':\n    server = HTTPServer(('0.0.0.0', ${port}), Handler)\n    print(f"Server online on port ${port}")\n    server.serve_forever()\n`;
-      fs.writeFileSync(path.join(appDir, defaultEntry), pythonCode);
-    } else {
-      const nodeCode = `import http from 'http';\n\nconst server = http.createServer((req, res) => {\n  res.writeHead(200, { 'Content-Type': 'text/html' });\n  res.end('<h1>Eclipse Server Online</h1><p>Created via Discord Bot!</p>');\n});\n\nserver.listen(${port}, '0.0.0.0', () => {\n  console.log('Server online on port ${port}');\n});\n`;
-      fs.writeFileSync(path.join(appDir, defaultEntry), nodeCode);
-      fs.writeFileSync(path.join(appDir, 'package.json'), JSON.stringify({ name: appId, version: '1.0.0', type: 'module', main: defaultEntry }, null, 2));
     }
 
     const baseDomain = this.getBaseDomain();
@@ -486,19 +600,138 @@ class DiscordBotService {
     `).run(appId, name, type, owner.id, defaultEntry, port, ram, cpu, serverDomain);
 
     const newApp = db.prepare('SELECT * FROM apps WHERE id = ?').get(appId);
-    let desc = `✅ **Server Created Successfully!**\nAllocated to: **${owner.email}** (@${owner.username})\n\nUse the buttons below to power on your container:`;
+    let desc = `✅ **Server Created Successfully!**\nAllocated to: **${owner.email}** (@${owner.username})\n\nContainer is clean and empty. Upload your project files or use the buttons below:`;
 
     if (isNewUserCreated) {
-      desc = `✅ **Server & Account Created Successfully!**\nNew account provisioned for **${owner.email}**.\n\n👤 **Username:** \`${owner.username}\`\n🔑 **Temporary Password:** \`${generatedPassword}\`\n🌐 **Panel Login:** \`http://${config.vpsPublicIp || '20.219.198.128'}:8090/login\`\n\nUse the buttons below to power on the server:`;
+      desc = `✅ **Server & Account Created Successfully!**\nNew account provisioned for **${owner.email}**.\n\n👤 **Username:** \`${owner.username}\`\n🔑 **Temporary Password:** \`${generatedPassword}\`\n🌐 **Panel Login:** \`http://${config.vpsPublicIp || '20.219.198.128'}:8090/login\`\n\nUse the buttons below to control your container:`;
     }
 
     const embed = this.buildServerEmbed(newApp).setDescription(desc);
-    const buttons = this.buildServerButtons(appId, 'stopped');
+    const buttonRows = this.buildServerButtons(appId, 'stopped');
 
-    await interaction.editReply({ embeds: [embed], components: [buttons] });
+    await interaction.editReply({ embeds: [embed], components: buttonRows });
   }
 
-  // 4. /createuser command
+  // 4. /deleteserver command
+  async cmdDeleteServer(interaction) {
+    const query = interaction.options.getString('identifier').trim();
+    const app = db.prepare('SELECT * FROM apps WHERE id = ? OR LOWER(name) = LOWER(?)').get(query, query);
+
+    if (!app) {
+      return interaction.reply({ content: `❌ Server matching "${query}" was not found.`, ephemeral: true });
+    }
+
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId(`btn_confirmdel_${app.id}`).setLabel('Yes, Permanently Delete').setStyle(ButtonStyle.Danger).setEmoji('🗑️'),
+      new ButtonBuilder().setCustomId(`btn_cancel_${app.id}`).setLabel('Cancel').setStyle(ButtonStyle.Secondary)
+    );
+
+    await interaction.reply({
+      content: `⚠️ **Confirm Permanent Deletion**\nAre you sure you want to permanently delete **${app.name}** (\`${app.id}\`)? All server files, databases, and assigned ports will be released immediately.`,
+      components: [row]
+    });
+  }
+
+  // 5. Quick power commands (/startserver, /stopserver, /restartserver)
+  async cmdQuickPower(interaction, action) {
+    const query = interaction.options.getString('identifier').trim();
+    const app = db.prepare('SELECT * FROM apps WHERE id = ? OR LOWER(name) = LOWER(?)').get(query, query);
+
+    if (!app) {
+      return interaction.reply({ content: `❌ Server matching "${query}" was not found.`, ephemeral: true });
+    }
+
+    await interaction.deferReply();
+
+    try {
+      if (action === 'start') await supervisor.startApp(app.id);
+      else if (action === 'stop') await supervisor.stopApp(app.id);
+      else if (action === 'restart') await supervisor.restartApp(app.id);
+
+      await new Promise(r => setTimeout(r, 700));
+      const updated = db.prepare('SELECT * FROM apps WHERE id = ?').get(app.id);
+      const embed = this.buildServerEmbed(updated);
+      const rows = this.buildServerButtons(app.id, updated.status);
+
+      await interaction.editReply({ embeds: [embed], components: rows });
+    } catch (err) {
+      await interaction.editReply({ content: `⚠️ Failed to ${action} server: ${err.message}` });
+    }
+  }
+
+  // 6. /cmd command (Terminal console execution)
+  async cmdConsole(interaction) {
+    const query = interaction.options.getString('identifier').trim();
+    const command = interaction.options.getString('command').trim();
+
+    const app = db.prepare('SELECT * FROM apps WHERE id = ? OR LOWER(name) = LOWER(?)').get(query, query);
+    if (!app) {
+      return interaction.reply({ content: `❌ Server matching "${query}" was not found.`, ephemeral: true });
+    }
+
+    await interaction.deferReply();
+
+    try {
+      const result = await supervisor.sendCommand(app.id, command);
+      await new Promise(r => setTimeout(r, 600));
+
+      const logs = logStreamer.getLogs(app.id, 15);
+      const snippet = logs.map(l => l.data).join('').trim().slice(-1400) || 'Command sent to process stdin.';
+
+      const embed = new EmbedBuilder()
+        .setTitle(`💻 Console Output · ${app.name}`)
+        .setColor(0x06B6D4)
+        .setDescription(`**Executed:** \`${command}\`\n\`\`\`ansi\n${snippet}\n\`\`\``)
+        .setFooter({ text: `App ID: ${app.id}` })
+        .setTimestamp();
+
+      await interaction.editReply({ embeds: [embed] });
+    } catch (err) {
+      await interaction.editReply({ content: `⚠️ Command execution failed: ${err.message}` });
+    }
+  }
+
+  // 7. /logs command
+  async cmdLogs(interaction) {
+    const query = interaction.options.getString('identifier').trim();
+    const linesCount = interaction.options.getInteger('lines') || 25;
+
+    const app = db.prepare('SELECT * FROM apps WHERE id = ? OR LOWER(name) = LOWER(?)').get(query, query);
+    if (!app) {
+      return interaction.reply({ content: `❌ Server matching "${query}" was not found.`, ephemeral: true });
+    }
+
+    const logs = logStreamer.getLogs(app.id, linesCount);
+    const rawLogs = logs.map(l => l.data).join('').trim() || 'No logs recorded for this server yet.';
+    const snippet = rawLogs.length > 1850 ? rawLogs.slice(-1850) : rawLogs;
+
+    const embed = new EmbedBuilder()
+      .setTitle(`📜 Live Logs · ${app.name} (${app.id})`)
+      .setColor(0x10B981)
+      .setDescription(`\`\`\`ansi\n${snippet}\n\`\`\``)
+      .setFooter({ text: `Showing last ${linesCount} lines · Eclipse LogStreamer` })
+      .setTimestamp();
+
+    await interaction.reply({ embeds: [embed] });
+  }
+
+  // 8. /serverinfo command (Deep inspection)
+  async cmdServerInfo(interaction) {
+    const query = interaction.options.getString('identifier').trim();
+    const app = db.prepare('SELECT a.*, u.username as owner_username, u.email as owner_email FROM apps a LEFT JOIN users u ON a.user_id = u.id WHERE a.id = ? OR LOWER(a.name) = LOWER(?)').get(query, query);
+
+    if (!app) {
+      return interaction.reply({ content: `❌ Server matching "${query}" was not found.`, ephemeral: true });
+    }
+
+    const appDir = path.join(config.appsDir, app.id);
+    const stats = getDirectoryStats(appDir);
+    const embed = this.buildServerInfoEmbed(app, stats);
+
+    await interaction.reply({ embeds: [embed] });
+  }
+
+  // 9. /createuser command
   async cmdCreateUser(interaction) {
     const username = interaction.options.getString('username').trim().toLowerCase();
     const email = interaction.options.getString('email').trim().toLowerCase();
@@ -537,7 +770,31 @@ class DiscordBotService {
     await interaction.editReply({ embeds: [embed] });
   }
 
-  // 5. /panel command
+  // 10. /users command
+  async cmdListUsers(interaction) {
+    const users = db.prepare(`
+      SELECT u.id, u.username, u.email, u.role, u.created_at,
+             (SELECT COUNT(*) FROM apps a WHERE a.user_id = u.id) as server_count
+      FROM users u
+      ORDER BY u.role DESC, u.created_at ASC
+    `).all();
+
+    const lines = users.map(u => {
+      const roleBadge = u.role === 'admin' ? '👑 Admin' : '👤 User';
+      return `**@${u.username}** (${u.email}) — ${roleBadge} | **${u.server_count}** servers`;
+    });
+
+    const embed = new EmbedBuilder()
+      .setTitle(`👥 Eclipse Panel Operators (${users.length})`)
+      .setColor(0x06B6D4)
+      .setDescription(lines.join('\n\n'))
+      .setFooter({ text: 'Use /createuser to register new accounts' })
+      .setTimestamp();
+
+    await interaction.reply({ embeds: [embed] });
+  }
+
+  // 11. /panel command
   async cmdPanelStats(interaction) {
     const stats = getSystemStats();
     const totalApps = db.prepare('SELECT COUNT(*) as count FROM apps').get().count;
@@ -564,11 +821,56 @@ class DiscordBotService {
     await interaction.reply({ embeds: [embed] });
   }
 
-  // Handle Interactive Button Clicks (Start, Stop, Restart, Kill, Refresh)
+  // 12. /help command
+  async cmdHelp(interaction) {
+    const embed = new EmbedBuilder()
+      .setTitle('🌑 Eclipse Panel Discord Bot · Command Manual')
+      .setColor(0x5865F2)
+      .setDescription('Complete reference for all interactive Discord commands and power tools:')
+      .addFields(
+        {
+          name: '🚀 Server Lifecycle Management',
+          value: '• `/servers` — List all servers with status, port, subdomain, and RAM\n• `/server <identifier>` — Control card with interactive power buttons\n• `/createserver <name> <type> [ram] [cpu] [port] [owner]` — Deploy server (empty container)\n• `/deleteserver <identifier>` — Permanently delete server and release port'
+        },
+        {
+          name: '⚡ Power & Terminal Controls',
+          value: '• `/startserver <identifier>` — Power on server\n• `/stopserver <identifier>` — Gracefully stop server\n• `/restartserver <identifier>` — Restart server process\n• `/cmd <identifier> <command>` — Send terminal command to server console\n• `/logs <identifier> [lines]` — View live stdout/stderr console logs'
+        },
+        {
+          name: '📊 Inspection & Monitoring',
+          value: '• `/serverinfo <identifier>` — View disk usage, files count, port, subdomain, and owner\n• `/panel` — View live VPS CPU load, RAM usage, disk, and telemetry'
+        },
+        {
+          name: '👥 User & Account Administration',
+          value: '• `/createuser <username> <email> <password> [role]` — Register new panel user\n• `/users` — List all registered users, roles, and server counts'
+        }
+      )
+      .setFooter({ text: 'Eclipse Panel · Made by Vexezor' })
+      .setTimestamp();
+
+    await interaction.reply({ embeds: [embed] });
+  }
+
+  // Delete server internal helper
+  async deleteServerInternal(appId) {
+    const app = db.prepare('SELECT * FROM apps WHERE id = ?').get(appId);
+    if (!app) return;
+
+    await supervisor.killApp(appId);
+    const appDir = path.join(config.appsDir, appId);
+    if (fs.existsSync(appDir)) {
+      try {
+        fs.rmSync(appDir, { recursive: true, force: true });
+      } catch (e) {}
+    }
+    db.prepare('DELETE FROM apps WHERE id = ?').run(appId);
+  }
+
+  // Handle Interactive Button Clicks (Start, Stop, Restart, Kill, Refresh, Logs, Info, Delete)
   async handleButton(interaction) {
     const customId = interaction.customId; // e.g. btn_start_app_1234
     const parts = customId.split('_');
-    const action = parts[1]; // start, stop, restart, kill, refresh
+    const action = parts[1]; // start, stop, restart, kill, refresh, logs, info, del, confirmdel, cancel
     const appId = parts.slice(2).join('_'); // app_1234
 
     // Check authorization
@@ -580,8 +882,50 @@ class DiscordBotService {
     }
 
     const app = db.prepare('SELECT * FROM apps WHERE id = ?').get(appId);
+
+    // Cancel deletion
+    if (action === 'cancel') {
+      return interaction.update({ content: '✅ Action cancelled.', components: [] });
+    }
+
+    // Confirm deletion
+    if (action === 'confirmdel') {
+      await this.deleteServerInternal(appId);
+      return interaction.update({ content: `🗑️ **Server \`${app ? app.name : appId}\` has been permanently deleted.**`, components: [] });
+    }
+
     if (!app) {
       return interaction.reply({ content: `❌ Server \`${appId}\` not found in panel database.`, ephemeral: true });
+    }
+
+    // Quick logs button
+    if (action === 'logs') {
+      const logs = logStreamer.getLogs(appId, 25);
+      const snippet = logs.map(l => l.data).join('').trim().slice(-1850) || 'No logs recorded yet.';
+      return interaction.reply({
+        content: `📜 **Live Console Logs · ${app.name} (${appId}):**\n\`\`\`ansi\n${snippet}\n\`\`\``,
+        ephemeral: true
+      });
+    }
+
+    // Quick info button
+    if (action === 'info') {
+      const stats = getDirectoryStats(path.join(config.appsDir, appId));
+      const embed = this.buildServerInfoEmbed(app, stats);
+      return interaction.reply({ embeds: [embed], ephemeral: true });
+    }
+
+    // Delete prompt button
+    if (action === 'del') {
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId(`btn_confirmdel_${appId}`).setLabel('Confirm Permanent Deletion').setStyle(ButtonStyle.Danger).setEmoji('⚠️'),
+        new ButtonBuilder().setCustomId(`btn_cancel_${appId}`).setLabel('Cancel').setStyle(ButtonStyle.Secondary)
+      );
+      return interaction.reply({
+        content: `⚠️ **Confirm Permanent Deletion**\nAre you sure you want to permanently delete **${app.name}** (\`${appId}\`)? All server files, databases, and assigned ports will be released immediately.`,
+        components: [row],
+        ephemeral: true
+      });
     }
 
     await interaction.deferUpdate();
@@ -597,14 +941,13 @@ class DiscordBotService {
         await supervisor.killApp(appId);
       }
 
-      // Wait 700ms for supervisor process state to update
       await new Promise(r => setTimeout(r, 700));
 
       const updatedApp = db.prepare('SELECT * FROM apps WHERE id = ?').get(appId);
       const embed = this.buildServerEmbed(updatedApp);
-      const buttons = this.buildServerButtons(appId, updatedApp.status);
+      const buttonRows = this.buildServerButtons(appId, updatedApp.status);
 
-      await interaction.editReply({ embeds: [embed], components: [buttons] });
+      await interaction.editReply({ embeds: [embed], components: buttonRows });
     } catch (err) {
       await interaction.followUp({ content: `⚠️ Failed to execute ${action}: ${err.message}`, ephemeral: true });
     }
@@ -617,16 +960,16 @@ class DiscordBotService {
     const isCrashed = app.status === 'crashed' || app.status === 'error';
 
     let statusEmoji = '⏹️ Offline';
-    let color = 0x64748B; // Slate grey
+    let color = 0x64748B;
     if (isRunning) {
       statusEmoji = '🟢 Running';
-      color = 0x10B981; // Emerald green
+      color = 0x10B981;
     } else if (isStarting) {
       statusEmoji = '🔄 Starting...';
-      color = 0xF59E0B; // Amber
+      color = 0xF59E0B;
     } else if (isCrashed) {
       statusEmoji = '⚠️ Crashed / Error';
-      color = 0xEF4444; // Red
+      color = 0xEF4444;
     }
 
     const baseDomain = this.getBaseDomain();
@@ -666,44 +1009,96 @@ class DiscordBotService {
     return embed;
   }
 
-  // Helper: Build Interactive Action Buttons
+  // Helper: Build Detailed Technical Server Info Embed
+  buildServerInfoEmbed(app, stats) {
+    const isRunning = app.status === 'running' || app.status === 'online';
+    const baseDomain = this.getBaseDomain();
+    const hostIp = config.vpsPublicIp || '20.219.198.128';
+    const serverAddress = app.domain ? `${app.domain}:${app.port}` : `${hostIp}:${app.port}`;
+    const owner = db.prepare('SELECT username, email FROM users WHERE id = ?').get(app.user_id);
+
+    return new EmbedBuilder()
+      .setTitle(`ℹ️ Detailed Specifications · ${app.name}`)
+      .setColor(0x06B6D4)
+      .setDescription(`**Instance ID:** \`${app.id}\`\n**Dedicated Address:** \`${serverAddress}\``)
+      .addFields(
+        { name: 'Runtime Engine', value: `${app.type === 'python' ? '🐍 Python 3' : '⚡ Node.js'} (v${app.runtime_version || 'Default'})`, inline: true },
+        { name: 'Status', value: isRunning ? '🟢 Running' : '⏹️ Stopped', inline: true },
+        { name: 'TCP Port', value: `\`${app.port || 3000}\``, inline: true },
+        { name: 'Owner Account', value: owner ? `@${owner.username} (${owner.email})` : `User #${app.user_id}`, inline: true },
+        { name: 'Memory Limit', value: `\`${app.memory_limit} MB\``, inline: true },
+        { name: 'CPU Limit', value: `\`${app.cpu_limit}%\``, inline: true },
+        { name: 'Disk Limit', value: `\`${app.disk_limit} MB\``, inline: true },
+        { name: 'Actual Disk Used', value: `\`${stats.sizeMb} MB\` (${stats.fileCount} files)`, inline: true },
+        { name: 'Entrypoint File', value: `\`${app.entrypoint || 'index.js'}\``, inline: true },
+        { name: 'Auto-Restart on Crash', value: app.auto_restart ? '✅ Yes' : '❌ No', inline: true },
+        { name: 'Created At', value: `\`${app.created_at || 'N/A'}\``, inline: true },
+        { name: 'Custom Subdomain', value: `\`${app.domain || 'Auto Wildcard'}\``, inline: true }
+      )
+      .setFooter({ text: 'Eclipse Panel · Container Telemetry' })
+      .setTimestamp();
+  }
+
+  // Helper: Build Interactive Action Buttons (Two Rows)
   buildServerButtons(appId, currentStatus) {
     const isRunning = currentStatus === 'running' || currentStatus === 'online';
 
-    const startBtn = new ButtonBuilder()
-      .setCustomId(`btn_start_${appId}`)
-      .setLabel('Start')
-      .setEmoji('▶️')
-      .setStyle(ButtonStyle.Success)
-      .setDisabled(isRunning);
+    const row1 = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`btn_start_${appId}`)
+        .setLabel('Start')
+        .setEmoji('▶️')
+        .setStyle(ButtonStyle.Success)
+        .setDisabled(isRunning),
 
-    const stopBtn = new ButtonBuilder()
-      .setCustomId(`btn_stop_${appId}`)
-      .setLabel('Stop')
-      .setEmoji('⏹️')
-      .setStyle(ButtonStyle.Danger)
-      .setDisabled(!isRunning);
+      new ButtonBuilder()
+        .setCustomId(`btn_stop_${appId}`)
+        .setLabel('Stop')
+        .setEmoji('⏹️')
+        .setStyle(ButtonStyle.Danger)
+        .setDisabled(!isRunning),
 
-    const restartBtn = new ButtonBuilder()
-      .setCustomId(`btn_restart_${appId}`)
-      .setLabel('Restart')
-      .setEmoji('🔄')
-      .setStyle(ButtonStyle.Primary);
+      new ButtonBuilder()
+        .setCustomId(`btn_restart_${appId}`)
+        .setLabel('Restart')
+        .setEmoji('🔄')
+        .setStyle(ButtonStyle.Primary),
 
-    const killBtn = new ButtonBuilder()
-      .setCustomId(`btn_kill_${appId}`)
-      .setLabel('Force Kill')
-      .setEmoji('⚡')
-      .setStyle(ButtonStyle.Secondary)
-      .setDisabled(!isRunning);
+      new ButtonBuilder()
+        .setCustomId(`btn_kill_${appId}`)
+        .setLabel('Force Kill')
+        .setEmoji('⚡')
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(!isRunning),
 
-    const refreshBtn = new ButtonBuilder()
-      .setCustomId(`btn_refresh_${appId}`)
-      .setLabel('Refresh')
-      .setEmoji('📊')
-      .setStyle(ButtonStyle.Secondary);
+      new ButtonBuilder()
+        .setCustomId(`btn_refresh_${appId}`)
+        .setLabel('Refresh')
+        .setEmoji('📊')
+        .setStyle(ButtonStyle.Secondary)
+    );
 
-    return new ActionRowBuilder().addComponents(startBtn, stopBtn, restartBtn, killBtn, refreshBtn);
+    const row2 = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`btn_logs_${appId}`)
+        .setLabel('Logs')
+        .setEmoji('📜')
+        .setStyle(ButtonStyle.Secondary),
+
+      new ButtonBuilder()
+        .setCustomId(`btn_info_${appId}`)
+        .setLabel('Specs')
+        .setEmoji('ℹ️')
+        .setStyle(ButtonStyle.Secondary),
+
+      new ButtonBuilder()
+        .setCustomId(`btn_del_${appId}`)
+        .setLabel('Delete')
+        .setEmoji('🗑️')
+        .setStyle(ButtonStyle.Danger)
+    );
+
+    return [row1, row2];
   }
 
   // Get status for API / Admin UI

@@ -184,14 +184,14 @@ export class AppController {
       const nPackages = node_packages || '';
       const nArgs = node_args || '';
 
-      // Insert into database
+      // Insert into database with initial status 'stopped'
       const insertStmt = db.prepare(`
         INSERT INTO apps (
           id, name, type, user_id, entrypoint, port, env_vars, auto_restart, 
           memory_limit, cpu_limit, disk_limit, primary_ip, domain, runtime_version, 
           startup_cmd, main_file, node_packages, node_args, requirements_file, status
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'installing')
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'stopped')
       `);
       insertStmt.run(
         appId, name.trim(), normalizedType, req.user.id, defaultEntry, appPort, envJson, autoRestartVal,
@@ -199,92 +199,26 @@ export class AppController {
         startCmd, defaultEntry, nPackages, nArgs, reqFile
       );
 
-      // Create app directory and starter template
+      // Create clean, empty app directory (no default files)
       const appDir = supervisor.getAppDir(appId);
-      
-      if (normalizedType === 'nodejs') {
-        const starterIndex = `// CrimsonPanel Node.js Application Starter
-import http from 'http';
-
-const PORT = process.env.PORT || 3000;
-
-const server = http.createServer((req, res) => {
-  res.writeHead(200, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify({
-    status: 'online',
-    app: '${name.trim()}',
-    time: new Date().toISOString(),
-    message: 'Hello from CrimsonPanel Node.js Server!'
-  }));
-});
-
-server.listen(PORT, () => {
-  console.log(\`Server is live and listening on port \${PORT}\`);
-});
-`;
-        const starterPackage = {
-          name: name.toLowerCase().replace(/[^a-z0-9_-]/g, '-'),
-          version: '1.0.0',
-          type: 'module',
-          main: defaultEntry,
-          scripts: {
-            start: `node ${defaultEntry}`,
-          },
-        };
-
-        fs.writeFileSync(path.join(appDir, defaultEntry), starterIndex, 'utf8');
-        fs.writeFileSync(path.join(appDir, 'package.json'), JSON.stringify(starterPackage, null, 2), 'utf8');
-      } else if (normalizedType === 'python') {
-        const starterPy = `# CrimsonPanel Python Application Starter
-import os
-import sys
-import time
-from http.server import HTTPServer, BaseHTTPRequestHandler
-import json
-
-PORT = int(os.environ.get("PORT", 8000))
-
-class SimpleHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.send_header('Content-Type', 'application/json')
-        self.end_headers()
-        payload = {
-            "status": "online",
-            "app": "${name.trim()}",
-            "python_version": sys.version,
-            "message": "Hello from CrimsonPanel Python Service!"
-        }
-        self.wfile.write(json.dumps(payload).encode('utf-8'))
-
-if __name__ == '__main__':
-    print(f"Starting CrimsonPanel Python Server on port {PORT}...")
-    server = HTTPServer(('0.0.0.0', PORT), SimpleHandler)
-    server.serve_forever()
-`;
-        const starterReq = `# List your Python dependencies here (e.g. fastapi, uvicorn, requests)\nrequests\n`;
-
-        fs.writeFileSync(path.join(appDir, defaultEntry), starterPy, 'utf8');
-        fs.writeFileSync(path.join(appDir, 'requirements.txt'), starterReq, 'utf8');
-      }
-
-      logStreamer.append(appId, 'system', `[Eclipse Daemon] Provisioning container files for "${name.trim()}"...`);
-      logStreamer.append(appId, 'system', `[Supervisor] Installing initial package dependencies (npm install / pip install)...`);
-      supervisor.installDependencies(appId)
-        .then(() => {
-          logStreamer.append(appId, 'system', '[Supervisor] Initial packages and environment ready.');
-          supervisor.updateAppStatus(appId, 'stopped');
-        })
-        .catch((err) => {
-          logStreamer.append(appId, 'system', `[Supervisor] Dependency setup notice: ${err.message}`);
-          supervisor.updateAppStatus(appId, 'stopped');
-        });
+      logStreamer.append(appId, 'system', `[Eclipse Daemon] Container directory initialized (clean empty directory). Upload your project files or connect Git to begin.`);
 
       return res.status(201).json({
         message: 'Application created successfully',
         appId,
-        name,
-        type: normalizedType,
+        app: {
+          id: appId,
+          name: name.trim(),
+          type: normalizedType,
+          port: appPort,
+          status: 'stopped',
+          memory_limit: memLimit,
+          cpu_limit: cpLimit,
+          disk_limit: diskLimit,
+          primary_ip: serverIp,
+          domain: serverDomain,
+          entrypoint: defaultEntry
+        }
       });
     } catch (err) {
       return res.status(500).json({ error: err.message });
