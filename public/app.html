@@ -1353,6 +1353,20 @@
                     Reinstall Server
                   </button>
                 </div>
+
+                <!-- Danger Zone: Transfer Ownership -->
+                <div style="background: #121422; border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 14px; padding: 22px 24px;">
+                  <h3 style="font-size: 15px; font-weight: 700; color: #F59E0B; margin: 0 0 8px 0;"><i class="bi bi-person-fill-gear"></i> Transfer Server Ownership</h3>
+                  <p style="font-size: 12px; color: #94A3B8; margin: 0 0 14px 0; line-height: 1.5;">
+                    Permanently transfer ownership of this server to another user. You will yield owner administrative control.
+                  </p>
+                  <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <input type="text" id="transfer-target-user" class="form-control" placeholder="Recipient username or email" style="font-size: 13px;">
+                    <button type="button" class="btn-secondary" style="background: rgba(245, 158, 11, 0.15); border-color: #F59E0B; color: #F59E0B; font-weight: 700; border-radius: 20px; padding: 8px 18px; font-size: 12px; white-space: nowrap;" onclick="transferOwnershipPrompt()">
+                      Transfer
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -2020,6 +2034,29 @@
     async function reinstallServerPrompt() {
       if (!confirm('Are you sure you want to reinstall this server? This will restart the server and provision clean starter templates.')) return;
       execAction('install');
+    }
+
+    async function transferOwnershipPrompt() {
+      const targetUser = document.getElementById('transfer-target-user')?.value.trim();
+      if (!targetUser) return notify('Please enter the recipient username or email address', 'error');
+
+      if (!confirm(`Are you sure you want to permanently transfer ownership of this server to "${targetUser}"? This cannot be undone.`)) {
+        return;
+      }
+
+      try {
+        const res = await safeApi(`${API_BASE}/apps/${currentAppId}/transfer`, {
+          method: 'POST',
+          body: JSON.stringify({ target_user: targetUser })
+        });
+        if (!res.ok) throw new Error(res.data.error || 'Failed to transfer ownership');
+        notify(res.data.message || 'Server successfully transferred!', 'success');
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 1200);
+      } catch (err) {
+        notify(err.message, 'error');
+      }
     }
 
     async function submitServerSettings() {

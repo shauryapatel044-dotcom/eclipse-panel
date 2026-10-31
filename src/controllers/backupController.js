@@ -1,3 +1,4 @@
+import { checkAppAccess } from '../utils/permissions.js';
 import crypto from 'crypto';
 import path from 'path';
 import fs from 'fs';
@@ -40,7 +41,7 @@ export class BackupController {
       if (!app) return res.status(404).json({ error: 'Application not found' });
 
       // Check permission
-      if (req.user.role !== 'admin' && app.user_id !== req.user.id) {
+      if (!checkAppAccess(id, req.user, 'backups')) {
         return res.status(403).json({ error: 'Forbidden' });
       }
 
@@ -109,7 +110,7 @@ export class BackupController {
       const app = db.prepare('SELECT * FROM apps WHERE id = ?').get(id);
       if (!app) return res.status(404).json({ error: 'Application not found' });
 
-      if (req.user.role !== 'admin' && app.user_id !== req.user.id) {
+      if (!checkAppAccess(id, req.user, 'backups')) {
         return res.status(403).json({ error: 'Forbidden' });
       }
 

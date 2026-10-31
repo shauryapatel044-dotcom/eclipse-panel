@@ -1,3 +1,4 @@
+import { checkAppAccess } from '../utils/permissions.js';
 import crypto from 'crypto';
 import { db } from '../database/index.js';
 import { supervisor } from '../daemon/supervisor.js';
@@ -30,7 +31,7 @@ export class DatabaseController {
       if (!app) return res.status(404).json({ error: 'Application not found' });
 
       // Check permission
-      if (req.user.role !== 'admin' && app.user_id !== req.user.id) {
+      if (!checkAppAccess(id, req.user, 'database')) {
         return res.status(403).json({ error: 'Forbidden' });
       }
 

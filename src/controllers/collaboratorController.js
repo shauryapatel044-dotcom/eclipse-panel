@@ -29,18 +29,19 @@ export class CollaboratorController {
   static async addCollaborator(req, res) {
     try {
       const { id } = req.params;
-      const { username_or_email, permissions } = req.body;
+      const { username_or_email, username, email, permissions } = req.body;
+      const lookup = (username_or_email || username || email || '').trim().toLowerCase();
 
-      if (!username_or_email) {
-        return res.status(400).json({ error: 'Username or Gmail address is required' });
+      if (!lookup) {
+        return res.status(400).json({ error: 'Username or email address is required' });
       }
 
       // Find user
       const targetUser = db.prepare('SELECT id, username, email FROM users WHERE username = ? OR email = ?')
-        .get(username_or_email.trim().toLowerCase(), username_or_email.trim().toLowerCase());
+        .get(lookup, lookup);
 
       if (!targetUser) {
-        return res.status(404).json({ error: `User "${username_or_email}" not found in system directory` });
+        return res.status(404).json({ error: `User "${lookup}" not found in system directory` });
       }
 
       // Check if already collaborator
@@ -50,7 +51,7 @@ export class CollaboratorController {
         return res.status(400).json({ error: `User is already a collaborator on this server` });
       }
 
-      const permArray = Array.isArray(permissions) ? permissions : ['console', 'files', 'power'];
+      const permArray = Array.isArray(permissions) ? permissions : ['console', 'files', 'control', 'power'];
       const collabId = `collab_${crypto.randomBytes(4).toString('hex')}`;
 
       db.prepare(`

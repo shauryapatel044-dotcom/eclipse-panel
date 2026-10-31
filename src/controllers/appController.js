@@ -7,6 +7,7 @@ import { db } from '../database/index.js';
 import { supervisor } from '../daemon/supervisor.js';
 import { logStreamer } from '../daemon/logStreamer.js';
 import { getHostIp } from '../daemon/metrics.js';
+import { checkAppAccess } from '../utils/permissions.js';
 
 export class AppController {
   static async getApps(req, res) {
@@ -22,11 +23,16 @@ export class AppController {
         apps = stmt.all();
       } else {
         const stmt = db.prepare(`
-          SELECT * FROM apps
-          WHERE user_id = ?
-          ORDER BY created_at DESC
+          SELECT DISTINCT a.*, u.username as owner_username, u.email as owner_email,
+                 CASE WHEN a.user_id = ? THEN 1 ELSE 0 END as is_owner,
+                 c.permissions as collaborator_permissions
+          FROM apps a
+          JOIN users u ON a.user_id = u.id
+          LEFT JOIN app_collaborators c ON a.id = c.app_id AND c.user_id = ?
+          WHERE a.user_id = ? OR c.user_id = ?
+          ORDER BY a.created_at DESC
         `);
-        apps = stmt.all(req.user.id);
+        apps = stmt.all(req.user.id, req.user.id, req.user.id, req.user.id);
       }
 
       // Augment each app with live runtime metrics
@@ -67,8 +73,8 @@ export class AppController {
         return res.status(404).json({ error: 'Application not found' });
       }
 
-      // Check ownership
-      if (req.user.role !== 'admin' && app.user_id !== req.user.id) {
+      // Check ownership or collaborator access
+      if (!checkAppAccess(id, req.user)) {
         return res.status(403).json({ error: 'Forbidden: Access denied to this application' });
       }
 
@@ -293,8 +299,8 @@ if __name__ == '__main__':
       const app = stmt.get(id);
       if (!app) return res.status(404).json({ error: 'App not found' });
 
-      if (req.user.role !== 'admin' && app.user_id !== req.user.id) {
-        return res.status(403).json({ error: 'Forbidden' });
+      if (!checkAppAccess(id, req.user, 'power') && !checkAppAccess(id, req.user, 'console')) {
+        return res.status(403).json({ error: 'Forbidden: Insufficient permissions to perform server actions' });
       }
 
       // Role check: Regular users cannot modify hardware specs (RAM, CPU, Disk, Port, IP)
@@ -359,8 +365,8 @@ if __name__ == '__main__':
       const app = stmt.get(id);
       if (!app) return res.status(404).json({ error: 'App not found' });
 
-      if (req.user.role !== 'admin' && app.user_id !== req.user.id) {
-        return res.status(403).json({ error: 'Forbidden' });
+      if (!checkAppAccess(id, req.user, 'power') && !checkAppAccess(id, req.user, 'console')) {
+        return res.status(403).json({ error: 'Forbidden: Insufficient permissions to perform server actions' });
       }
 
       const defaultNodeStartup = `if [[ -d .git ]] && [[ 0 == "1" ]]; then git pull; fi; if [[ ! -z "\${NODE_PACKAGES}" ]]; then npm install \${NODE_PACKAGES}; fi; if [[ ! -z "\${UNNODE_PACKAGES}" ]]; then npm uninstall \${UNNODE_PACKAGES}; fi; if [ -f package.json ]; then npm install; fi; if [[ "\${MAIN_FILE##*.}" == "js" ]]; then node "\${MAIN_FILE}" \${NODE_ARGS}; else ts-node --esm "\${MAIN_FILE}" \${NODE_ARGS}; fi`;
@@ -405,8 +411,8 @@ if __name__ == '__main__':
       const app = stmt.get(id);
       if (!app) return res.status(404).json({ error: 'App not found' });
 
-      if (req.user.role !== 'admin' && app.user_id !== req.user.id) {
-        return res.status(403).json({ error: 'Forbidden' });
+      if (!checkAppAccess(id, req.user, 'power') && !checkAppAccess(id, req.user, 'console')) {
+        return res.status(403).json({ error: 'Forbidden: Insufficient permissions to perform server actions' });
       }
 
       const newType = type ? type.trim().toLowerCase() : app.type;
@@ -443,8 +449,8 @@ if __name__ == '__main__':
       const app = stmt.get(id);
       if (!app) return res.status(404).json({ error: 'Server not found' });
 
-      if (req.user.role !== 'admin' && app.user_id !== req.user.id) {
-        return res.status(403).json({ error: 'Forbidden' });
+      if (!checkAppAccess(id, req.user, 'power') && !checkAppAccess(id, req.user, 'console')) {
+        return res.status(403).json({ error: 'Forbidden: Insufficient permissions to perform server actions' });
       }
 
       const result = await supervisor.sendCommand(id, command);
@@ -461,8 +467,8 @@ if __name__ == '__main__':
       const app = stmt.get(id);
       if (!app) return res.status(404).json({ error: 'App not found' });
 
-      if (req.user.role !== 'admin' && app.user_id !== req.user.id) {
-        return res.status(403).json({ error: 'Forbidden' });
+      if (!checkAppAccess(id, req.user, 'power') && !checkAppAccess(id, req.user, 'console')) {
+        return res.status(403).json({ error: 'Forbidden: Insufficient permissions to perform server actions' });
       }
 
       // Force kill process and release TCP port
@@ -511,8 +517,8 @@ if __name__ == '__main__':
       const app = stmt.get(id);
       if (!app) return res.status(404).json({ error: 'App not found' });
 
-      if (req.user.role !== 'admin' && app.user_id !== req.user.id) {
-        return res.status(403).json({ error: 'Forbidden' });
+      if (!checkAppAccess(id, req.user, 'power') && !checkAppAccess(id, req.user, 'console')) {
+        return res.status(403).json({ error: 'Forbidden: Insufficient permissions to perform server actions' });
       }
 
       switch (action.toLowerCase()) {
@@ -632,4 +638,49 @@ if __name__ == '__main__':
     }
   }
 
+  static async transferOwnership(req, res) {
+    try {
+      const { id } = req.params;
+      const { target_user } = req.body;
+
+      if (!target_user) {
+        return res.status(400).json({ error: 'Target username or email is required' });
+      }
+
+      const stmt = db.prepare('SELECT * FROM apps WHERE id = ?');
+      const app = stmt.get(id);
+      if (!app) return res.status(404).json({ error: 'Application not found' });
+
+      if (req.user.role !== 'admin' && app.user_id !== req.user.id) {
+        return res.status(403).json({ error: 'Only current owner or administrator can transfer server ownership' });
+      }
+
+      const target = db.prepare('SELECT id, username, email FROM users WHERE username = ? OR email = ?')
+        .get(target_user.trim().toLowerCase(), target_user.trim().toLowerCase());
+
+      if (!target) {
+        return res.status(404).json({ error: `User "${target_user}" not found in system` });
+      }
+
+      if (target.id === app.user_id) {
+        return res.status(400).json({ error: 'This user is already the owner of this server' });
+      }
+
+      db.prepare('UPDATE apps SET user_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(target.id, id);
+
+      try {
+        db.prepare('DELETE FROM app_collaborators WHERE app_id = ? AND user_id = ?').run(id, target.id);
+      } catch (e) {}
+
+      logStreamer.append(id, 'system', `[Ownership Transferred] Server ownership transferred from User #${app.user_id} to @${target.username} (ID: ${target.id}) by @${req.user.username || 'admin'}`);
+
+      return res.json({
+        success: true,
+        message: `Server successfully transferred to @${target.username}!`,
+        new_owner: { id: target.id, username: target.username, email: target.email }
+      });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
 }

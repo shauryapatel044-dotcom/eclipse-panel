@@ -2,6 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import { db } from '../database/index.js';
 import { supervisor } from '../daemon/supervisor.js';
+import { checkAppAccess } from '../utils/permissions.js';
 
 function isSafePath(baseDir, targetPath) {
   const resolved = path.resolve(baseDir, targetPath);
@@ -16,7 +17,7 @@ export class FileController {
       const app = stmt.get(id);
       if (!app) return res.status(404).json({ error: 'App not found' });
 
-      if (req.user.role !== 'admin' && app.user_id !== req.user.id) {
+      if (!checkAppAccess(id, req.user, 'files')) {
         return res.status(403).json({ error: 'Forbidden' });
       }
 
@@ -64,7 +65,7 @@ export class FileController {
       const app = stmt.get(id);
       if (!app) return res.status(404).json({ error: 'App not found' });
 
-      if (req.user.role !== 'admin' && app.user_id !== req.user.id) {
+      if (!checkAppAccess(id, req.user, 'files')) {
         return res.status(403).json({ error: 'Forbidden' });
       }
 
@@ -100,7 +101,7 @@ export class FileController {
       const app = stmt.get(id);
       if (!app) return res.status(404).json({ error: 'App not found' });
 
-      if (req.user.role !== 'admin' && app.user_id !== req.user.id) {
+      if (!checkAppAccess(id, req.user, 'files')) {
         return res.status(403).json({ error: 'Forbidden' });
       }
 
@@ -134,7 +135,7 @@ export class FileController {
       const app = stmt.get(id);
       if (!app) return res.status(404).json({ error: 'App not found' });
 
-      if (req.user.role !== 'admin' && app.user_id !== req.user.id) {
+      if (!checkAppAccess(id, req.user, 'files')) {
         return res.status(403).json({ error: 'Forbidden' });
       }
 
@@ -170,7 +171,7 @@ export class FileController {
       const app = stmt.get(id);
       if (!app) return res.status(404).json({ error: 'App not found' });
 
-      if (req.user.role !== 'admin' && app.user_id !== req.user.id) {
+      if (!checkAppAccess(id, req.user, 'files')) {
         return res.status(403).json({ error: 'Forbidden' });
       }
 
@@ -208,7 +209,7 @@ export class FileController {
       const app = stmt.get(id);
       if (!app) return res.status(404).json({ error: 'App not found' });
 
-      if (req.user.role !== 'admin' && app.user_id !== req.user.id) {
+      if (!checkAppAccess(id, req.user, 'files')) {
         return res.status(403).json({ error: 'Forbidden' });
       }
 
@@ -240,7 +241,7 @@ export class FileController {
       const app = stmt.get(id);
       if (!app) return res.status(404).json({ error: 'App not found' });
 
-      if (req.user.role !== 'admin' && app.user_id !== req.user.id) {
+      if (!checkAppAccess(id, req.user, 'files')) {
         return res.status(403).json({ error: 'Forbidden' });
       }
 
@@ -269,7 +270,7 @@ export class FileController {
       const app = stmt.get(id);
       if (!app) return res.status(404).json({ error: 'App not found' });
 
-      if (req.user.role !== 'admin' && app.user_id !== req.user.id) {
+      if (!checkAppAccess(id, req.user, 'files')) {
         return res.status(403).json({ error: 'Forbidden' });
       }
 
@@ -302,7 +303,7 @@ export class FileController {
       const app = stmt.get(id);
       if (!app) return res.status(404).json({ error: 'App not found' });
 
-      if (req.user.role !== 'admin' && app.user_id !== req.user.id) {
+      if (!checkAppAccess(id, req.user, 'files')) {
         return res.status(403).json({ error: 'Forbidden' });
       }
 
@@ -331,7 +332,7 @@ export class FileController {
       const app = stmt.get(id);
       if (!app) return res.status(404).json({ error: 'App not found' });
 
-      if (req.user.role !== 'admin' && app.user_id !== req.user.id) {
+      if (!checkAppAccess(id, req.user, 'files')) {
         return res.status(403).json({ error: 'Forbidden' });
       }
 
@@ -365,7 +366,7 @@ export class FileController {
       const app = stmt.get(id);
       if (!app) return res.status(404).json({ error: 'App not found' });
 
-      if (req.user.role !== 'admin' && app.user_id !== req.user.id) {
+      if (!checkAppAccess(id, req.user, 'files')) {
         return res.status(403).json({ error: 'Forbidden' });
       }
 
@@ -399,7 +400,7 @@ export class FileController {
       const app = stmt.get(id);
       if (!app) return res.status(404).json({ error: 'App not found' });
 
-      if (req.user.role !== 'admin' && app.user_id !== req.user.id) {
+      if (!checkAppAccess(id, req.user, 'files')) {
         return res.status(403).json({ error: 'Forbidden' });
       }
 
@@ -429,7 +430,7 @@ export class FileController {
       const app = stmt.get(id);
       if (!app) return res.status(404).json({ error: 'App not found' });
 
-      if (req.user.role !== 'admin' && app.user_id !== req.user.id) {
+      if (!checkAppAccess(id, req.user, 'files')) {
         return res.status(403).json({ error: 'Forbidden' });
       }
 

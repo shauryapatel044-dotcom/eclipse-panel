@@ -59,4 +59,7 @@ router.get('/:id/collaborators', CollaboratorController.listCollaborators);
 router.post('/:id/collaborators', CollaboratorController.addCollaborator);
 router.delete('/:id/collaborators/:collabId', CollaboratorController.removeCollaborator);
 
+// Transfer Server Ownership
+router.post('/:id/transfer', AppController.transferOwnership);
+
 export default router;
