@@ -4,7 +4,7 @@ import fs from 'fs';
 import express from 'express';
 import cors from 'cors';
 import { config } from './config.js';
-import { initDatabase } from './database/index.js';
+import { initDatabase, db } from './database/index.js';
 import { supervisor } from './daemon/supervisor.js';
 import { setupWebSocket } from './websocket/wsServer.js';
 import { getSystemStats } from './daemon/metrics.js';
@@ -25,6 +25,110 @@ const PUBLIC_DIR = path.join(config.rootDir, 'public');
 if (!fs.existsSync(PUBLIC_DIR)) {
   fs.mkdirSync(PUBLIC_DIR, { recursive: true });
 }
+
+// Reverse Proxy Middleware for Attached Custom Domains
+app.use((req, res, next) => {
+  const rawHost = (req.headers.host || '').split(':')[0].toLowerCase();
+  
+  if (!rawHost || rawHost === 'localhost' || rawHost === '127.0.0.1') {
+    return next();
+  }
+
+  const panelDomain = (config.panelDomain || '').toLowerCase();
+  if (rawHost === panelDomain) {
+    return next();
+  }
+
+  // Check if host matches an attached app custom domain
+  try {
+    const matchedApp = db.prepare('SELECT id, name, port, status FROM apps WHERE LOWER(domain) = ?').get(rawHost);
+    if (matchedApp && matchedApp.port) {
+      if (matchedApp.status !== 'online') {
+        return res.status(503).send(`
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>${matchedApp.name} · Offline</title>
+            <style>
+              body { background: #0A0B10; color: #E2E8F0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+              .card { background: #121422; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 32px; max-width: 440px; text-align: center; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5); }
+              .badge { display: inline-block; background: rgba(239, 68, 68, 0.15); color: #EF4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 700; text-transform: uppercase; margin-bottom: 16px; }
+              h1 { font-size: 20px; margin: 0 0 10px 0; color: #FFF; }
+              p { color: #94A3B8; font-size: 13px; line-height: 1.5; margin: 0 0 20px 0; }
+              .brand { font-size: 11px; color: #64748B; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+            </style>
+          </head>
+          <body>
+            <div class="card">
+              <span class="badge">Application ${matchedApp.status}</span>
+              <h1>${matchedApp.name}</h1>
+              <p>This application is currently not running. Please start the container from your Eclipse Panel dashboard.</p>
+              <div class="brand">Eclipse Panel · Reverse Proxy</div>
+            </div>
+          </body>
+          </html>
+        `);
+      }
+
+      // Proxy request directly to the container internal port
+      const proxyReq = http.request({
+        hostname: '127.0.0.1',
+        port: matchedApp.port,
+        path: req.url,
+        method: req.method,
+        headers: {
+          ...req.headers,
+          'x-forwarded-for': req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+          'x-forwarded-host': rawHost,
+          'x-forwarded-proto': req.headers['x-forwarded-proto'] || (req.secure ? 'https' : 'http'),
+        },
+      }, (proxyRes) => {
+        res.writeHead(proxyRes.statusCode, proxyRes.headers);
+        proxyRes.pipe(res);
+      });
+
+      proxyReq.on('error', (err) => {
+        if (!res.headersSent) {
+          res.status(502).send(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1">
+              <title>502 Bad Gateway · ${matchedApp.name}</title>
+              <style>
+                body { background: #0A0B10; color: #E2E8F0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+                .card { background: #121422; border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 16px; padding: 32px; max-width: 460px; text-align: center; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5); }
+                .badge { display: inline-block; background: rgba(239, 68, 68, 0.15); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.3); padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 700; margin-bottom: 16px; }
+                h1 { font-size: 20px; margin: 0 0 10px 0; color: #FFF; }
+                p { color: #94A3B8; font-size: 13px; line-height: 1.5; margin: 0 0 20px 0; }
+                .brand { font-size: 11px; color: #64748B; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+              </style>
+            </head>
+            <body>
+              <div class="card">
+                <span class="badge">502 Bad Gateway</span>
+                <h1>${matchedApp.name} is not responding</h1>
+                <p>The container is running, but no HTTP server is listening on port <strong>${matchedApp.port}</strong>. Make sure your application binds to <code>0.0.0.0:${matchedApp.port}</code>.</p>
+                <div class="brand">Eclipse Panel · Reverse Proxy</div>
+              </div>
+            </body>
+            </html>
+          `);
+        }
+      });
+
+      req.pipe(proxyReq);
+      return;
+    }
+  } catch (e) {
+    console.error('Domain proxy lookup error:', e);
+  }
+
+  next();
+});
 
 // Middleware
 app.use(cors({

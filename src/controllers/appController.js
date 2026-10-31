@@ -545,6 +545,10 @@ export class AppController {
       const { id } = req.params;
       const { domain } = req.body;
       const cleanDomain = (domain || '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+      const panelDomain = (config.panelDomain || '').toLowerCase();
+      if (cleanDomain && (cleanDomain === panelDomain || cleanDomain === 'localhost' || cleanDomain === '127.0.0.1')) {
+        return res.status(400).json({ error: 'Cannot attach system panel domain to individual applications' });
+      }
       db.prepare('UPDATE apps SET domain = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(cleanDomain, id);
       return res.json({ success: true, domain: cleanDomain, message: 'Custom domain saved' });
     } catch (err) {
