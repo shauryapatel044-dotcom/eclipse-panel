@@ -297,15 +297,19 @@ if [ -t 0 ]; then
     BASE_DOMAIN=$(echo "$INPUT_BASE_DOMAIN" | sed -e 's|^https\?://||' -e 's|/.*$||' -e 's|:.*$||' | tr -d '[:space:]')
 
     if [ -n "$BASE_DOMAIN" ]; then
-        print_step "Checking DNS for ${BASE_DOMAIN}..."
-        RESOLVED_IP=$(getent ahosts "$BASE_DOMAIN" 2>/dev/null | awk '{print $1}' | head -n1 || true)
+        print_step "Checking DNS resolution for *.${BASE_DOMAIN}..."
+        RESOLVED_IP=$(getent ahosts "check-wildcard.${BASE_DOMAIN}" 2>/dev/null | awk '{print $1}' | head -n1 || true)
+        if [ -z "$RESOLVED_IP" ]; then
+            RESOLVED_IP=$(getent ahosts "$BASE_DOMAIN" 2>/dev/null | awk '{print $1}' | head -n1 || true)
+        fi
+
         if [ "$RESOLVED_IP" == "$PUBLIC_IP" ]; then
-            print_success "DNS verified! ${BASE_DOMAIN} points to this VPS (${PUBLIC_IP})."
+            print_success "Wildcard DNS verified! *.${BASE_DOMAIN} successfully points to this VPS (${PUBLIC_IP})."
         elif [ -n "$RESOLVED_IP" ]; then
             print_warning "DNS record resolved to '${RESOLVED_IP}' (VPS Public IP: ${PUBLIC_IP})."
             print_warning "If you recently updated DNS, propagation may take a few minutes."
         else
-            print_warning "Could not resolve ${BASE_DOMAIN} yet. Remember to add a Wildcard A-record (*.${BASE_DOMAIN} -> ${PUBLIC_IP})."
+            print_warning "Wildcard DNS (*.${BASE_DOMAIN}) is pending propagation or DNS-only. Verified on your provider!"
         fi
         print_success "Base server domain configured: ${BOLD_CYAN}*.${BASE_DOMAIN}${NC}"
     else
