@@ -43,7 +43,7 @@ app.use((req, res, next) => {
   try {
     const matchedApp = db.prepare('SELECT id, name, port, status FROM apps WHERE LOWER(domain) = ?').get(rawHost);
     if (matchedApp && matchedApp.port) {
-      if (matchedApp.status !== 'online') {
+      if (matchedApp.status !== 'online' && matchedApp.status !== 'running') {
         return res.status(503).send(`
           <!DOCTYPE html>
           <html>
