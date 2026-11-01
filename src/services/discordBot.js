@@ -103,6 +103,7 @@ class DiscordBotService {
     this.guildId = null;
     this.adminUserIds = [];
     this.initialized = false;
+    this.liveConsoleSessions = new Map();
   }
 
   getBaseDomain() {
@@ -554,6 +555,26 @@ class DiscordBotService {
         ),
 
       new SlashCommandBuilder()
+        .setName('liveconsole')
+        .setDescription('Open a live updating terminal console session with real-time stream & stdin controls')
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+        .addStringOption(opt =>
+          opt.setName('identifier')
+            .setDescription('Server name or ID')
+            .setRequired(true)
+        ),
+
+      new SlashCommandBuilder()
+        .setName('console')
+        .setDescription('Open a live updating terminal console session (alias for /liveconsole)')
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+        .addStringOption(opt =>
+          opt.setName('identifier')
+            .setDescription('Server name or ID')
+            .setRequired(true)
+        ),
+
+      new SlashCommandBuilder()
         .setName('help')
         .setDescription('View documentation and command reference for Eclipse Discord Bot')
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
@@ -608,6 +629,8 @@ class DiscordBotService {
       await this.cmdQuickPower(interaction, 'restart');
     } else if (commandName === 'cmd') {
       await this.cmdConsole(interaction);
+    } else if (commandName === 'liveconsole' || commandName === 'console') {
+      await this.cmdLiveConsole(interaction);
     } else if (commandName === 'logs') {
       await this.cmdLogs(interaction);
     } else if (commandName === 'files') {
@@ -864,6 +887,81 @@ class DiscordBotService {
     }
   }
 
+  // 6B. /liveconsole command (Interactive real-time live streaming terminal)
+  async cmdLiveConsole(interaction, passedAppId = null) {
+    const query = passedAppId || interaction.options.getString('identifier').trim();
+    const app = db.prepare('SELECT * FROM apps WHERE id = ? OR LOWER(name) = LOWER(?)').get(query, query);
+    if (!app) {
+      if (interaction.deferred || interaction.replied) {
+        return interaction.editReply({ content: `❌ Server matching "${query}" was not found.` });
+      }
+      return interaction.reply({ content: `❌ Server matching "${query}" was not found.`, ephemeral: true });
+    }
+
+    if (!interaction.deferred && !interaction.replied) {
+      await interaction.deferReply();
+    }
+
+    const sessionId = crypto.randomBytes(4).toString('hex');
+    const isRunning = app.status === 'running' || app.status === 'online';
+
+    const embed = this.buildLiveConsoleEmbed(app, sessionId, false, false);
+    const rows = this.buildLiveConsoleButtons(app.id, sessionId, false, isRunning);
+
+    const replyMsg = await interaction.editReply({ embeds: [embed], components: rows });
+
+    const session = {
+      sessionId,
+      appId: app.id,
+      interaction,
+      messageId: replyMsg.id,
+      isPaused: false,
+      cleared: false,
+      lastSnippet: '',
+      startTime: Date.now(),
+      timer: null
+    };
+
+    session.timer = setInterval(async () => {
+      try {
+        // Auto-terminate session after 10 minutes of operation
+        if (Date.now() - session.startTime > 10 * 60 * 1000) {
+          clearInterval(session.timer);
+          this.liveConsoleSessions.delete(sessionId);
+          const expired = this.buildLiveConsoleEmbed(app, sessionId, false, true);
+          await interaction.editReply({ embeds: [expired], components: [] }).catch(() => {});
+          return;
+        }
+
+        if (session.isPaused) return;
+
+        const currentApp = db.prepare('SELECT * FROM apps WHERE id = ?').get(app.id);
+        const isAppRunning = currentApp && (currentApp.status === 'running' || currentApp.status === 'online');
+
+        const logs = session.cleared ? [] : logStreamer.getLogs(app.id, 25);
+        const snippet = logs.map(l => l.data || l.message || '').join('').trim().slice(-1600);
+
+        if (snippet === session.lastSnippet) return;
+        session.lastSnippet = snippet;
+
+        const updatedEmbed = this.buildLiveConsoleEmbed(currentApp || app, sessionId, false, false, snippet);
+        const updatedRows = this.buildLiveConsoleButtons(app.id, sessionId, false, isAppRunning);
+
+        await interaction.editReply({ embeds: [updatedEmbed], components: updatedRows }).catch(err => {
+          if (err.code === 10008 || err.code === 40060) {
+            clearInterval(session.timer);
+            this.liveConsoleSessions.delete(sessionId);
+          }
+        });
+      } catch (err) {
+        clearInterval(session.timer);
+        this.liveConsoleSessions.delete(sessionId);
+      }
+    }, 2500);
+
+    this.liveConsoleSessions.set(sessionId, session);
+  }
+
   // 7. /logs command
   async cmdLogs(interaction) {
     const query = interaction.options.getString('identifier').trim();
@@ -1084,7 +1182,30 @@ class DiscordBotService {
 
     const customId = interaction.customId;
 
-    if (customId.startsWith('modal_cmd_')) {
+    if (customId.startsWith('modal_livecmd_')) {
+      const sessionId = customId.replace('modal_livecmd_', '');
+      const session = this.liveConsoleSessions.get(sessionId);
+      if (!session) {
+        return interaction.reply({ content: '⚠️ Live Console session expired.', ephemeral: true });
+      }
+      const command = interaction.fields.getTextInputValue('livecmd_input').trim();
+      const app = db.prepare('SELECT * FROM apps WHERE id = ?').get(session.appId);
+      if (!app) return interaction.reply({ content: '❌ Server not found.', ephemeral: true });
+
+      try {
+        await supervisor.sendCommand(session.appId, command);
+        session.lastSnippet = '';
+        await interaction.reply({
+          content: `⚡ **Sent to console stdin:** \`${command}\``,
+          ephemeral: true
+        });
+      } catch (err) {
+        await interaction.reply({
+          content: `⚠️ Failed to send command: ${err.message}`,
+          ephemeral: true
+        });
+      }
+    } else if (customId.startsWith('modal_cmd_')) {
       const appId = customId.replace('modal_cmd_', '');
       const command = interaction.fields.getTextInputValue('cmd_input').trim();
       const app = db.prepare('SELECT * FROM apps WHERE id = ?').get(appId);
@@ -1265,7 +1386,7 @@ class DiscordBotService {
         },
         {
           name: '⚡ Power & Console Controls',
-          value: '• `/startserver <identifier>` — Power on server\n• `/stopserver <identifier>` — Gracefully stop server\n• `/restartserver <identifier>` — Restart server process\n• `/cmd <identifier> <command>` — Send terminal command to server console (or click `💬 Send Cmd`)\n• `/logs <identifier> [lines]` — View live stdout/stderr console logs'
+          value: '• `/liveconsole <identifier>` (or `/console`) — Interactive real-time live terminal console with streaming stdio\n• `/startserver <identifier>` — Power on server\n• `/stopserver <identifier>` — Gracefully stop server\n• `/restartserver <identifier>` — Restart server process\n• `/cmd <identifier> <command>` — Send terminal command to server console (or click `💬 Send Cmd`)\n• `/logs <identifier> [lines]` — View live stdout/stderr console logs'
         },
         {
           name: '📁 Files & Server Storage',
@@ -1320,7 +1441,97 @@ class DiscordBotService {
       });
     }
 
+    // Live Console Controls
+    if (action === 'livecmd') {
+      const sessionId = parts[2];
+      const session = this.liveConsoleSessions.get(sessionId);
+      const targetApp = session ? db.prepare('SELECT * FROM apps WHERE id = ?').get(session.appId) : null;
+      if (!session || !targetApp) {
+        return interaction.reply({ content: '⚠️ Live console session expired. Run `/liveconsole` to start a new one.', ephemeral: true });
+      }
+
+      const modal = new ModalBuilder()
+        .setCustomId(`modal_livecmd_${sessionId}`)
+        .setTitle(`Terminal Input · ${targetApp.name.slice(0, 20)}`);
+
+      const cmdInput = new TextInputBuilder()
+        .setCustomId('livecmd_input')
+        .setLabel('Command to send to stdin')
+        .setStyle(TextInputStyle.Short)
+        .setPlaceholder('e.g. status, help, npm test, say Hello')
+        .setRequired(true);
+
+      modal.addComponents(new ActionRowBuilder().addComponents(cmdInput));
+      return interaction.showModal(modal);
+    }
+
+    if (action === 'livepause') {
+      const sessionId = parts[2];
+      const session = this.liveConsoleSessions.get(sessionId);
+      if (!session) return interaction.reply({ content: '⚠️ Session expired.', ephemeral: true });
+
+      session.isPaused = !session.isPaused;
+      const targetApp = db.prepare('SELECT * FROM apps WHERE id = ?').get(session.appId);
+      const isRunning = targetApp && (targetApp.status === 'running' || targetApp.status === 'online');
+
+      const embed = this.buildLiveConsoleEmbed(targetApp, sessionId, session.isPaused, false, session.lastSnippet);
+      const rows = this.buildLiveConsoleButtons(session.appId, sessionId, session.isPaused, isRunning);
+
+      return interaction.update({ embeds: [embed], components: rows });
+    }
+
+    if (action === 'liverefresh') {
+      const sessionId = parts[2];
+      const session = this.liveConsoleSessions.get(sessionId);
+      if (!session) return interaction.reply({ content: '⚠️ Session expired.', ephemeral: true });
+
+      const targetApp = db.prepare('SELECT * FROM apps WHERE id = ?').get(session.appId);
+      const isRunning = targetApp && (targetApp.status === 'running' || targetApp.status === 'online');
+      const logs = logStreamer.getLogs(session.appId, 25);
+      const snippet = logs.map(l => l.data || l.message || '').join('').trim().slice(-1600);
+      session.lastSnippet = snippet;
+
+      const embed = this.buildLiveConsoleEmbed(targetApp, sessionId, session.isPaused, false, snippet);
+      const rows = this.buildLiveConsoleButtons(session.appId, sessionId, session.isPaused, isRunning);
+
+      return interaction.update({ embeds: [embed], components: rows });
+    }
+
+    if (action === 'liveclear') {
+      const sessionId = parts[2];
+      const session = this.liveConsoleSessions.get(sessionId);
+      if (!session) return interaction.reply({ content: '⚠️ Session expired.', ephemeral: true });
+
+      session.cleared = true;
+      session.lastSnippet = '';
+      const targetApp = db.prepare('SELECT * FROM apps WHERE id = ?').get(session.appId);
+      const isRunning = targetApp && (targetApp.status === 'running' || targetApp.status === 'online');
+
+      const embed = this.buildLiveConsoleEmbed(targetApp, sessionId, session.isPaused, false, '[Console display cleared by operator]');
+      const rows = this.buildLiveConsoleButtons(session.appId, sessionId, session.isPaused, isRunning);
+
+      return interaction.update({ embeds: [embed], components: rows });
+    }
+
+    if (action === 'livestop') {
+      const sessionId = parts[2];
+      const session = this.liveConsoleSessions.get(sessionId);
+      if (session) {
+        clearInterval(session.timer);
+        this.liveConsoleSessions.delete(sessionId);
+        const targetApp = db.prepare('SELECT * FROM apps WHERE id = ?').get(session.appId);
+        const embed = this.buildLiveConsoleEmbed(targetApp, sessionId, false, true, session.lastSnippet);
+        return interaction.update({ embeds: [embed], components: [] });
+      }
+      return interaction.update({ content: '⏹️ Live Console session ended.', components: [] });
+    }
+
     const app = db.prepare('SELECT * FROM apps WHERE id = ?').get(appId);
+
+    // Open Live Console from Server Card button
+    if (action === 'openliveconsole') {
+      return this.cmdLiveConsole(interaction, appId);
+    }
 
     // Cancel deletion
     if (action === 'cancel') {
@@ -1728,17 +1939,17 @@ class DiscordBotService {
 
     const row2 = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
+        .setCustomId(`btn_openliveconsole_${appId}`)
+        .setLabel('Live Console')
+        .setEmoji('🔴')
+        .setStyle(ButtonStyle.Success),
+
+      new ButtonBuilder()
         .setCustomId(`btn_cmdmodal_${appId}`)
         .setLabel('Send Cmd')
         .setEmoji('💬')
         .setStyle(ButtonStyle.Primary)
         .setDisabled(!isRunning),
-
-      new ButtonBuilder()
-        .setCustomId(`btn_logs_${appId}`)
-        .setLabel('Logs')
-        .setEmoji('📜')
-        .setStyle(ButtonStyle.Secondary),
 
       new ButtonBuilder()
         .setCustomId(`btn_files_${appId}`)
@@ -1761,6 +1972,12 @@ class DiscordBotService {
 
     const row3 = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
+        .setCustomId(`btn_logs_${appId}`)
+        .setLabel('Logs')
+        .setEmoji('📜')
+        .setStyle(ButtonStyle.Secondary),
+
+      new ButtonBuilder()
         .setCustomId(`btn_info_${appId}`)
         .setLabel('Specs')
         .setEmoji('ℹ️')
@@ -1774,6 +1991,113 @@ class DiscordBotService {
     );
 
     return [row1, row2, row3];
+  }
+
+  // Helper: Build Live Console Embed
+  buildLiveConsoleEmbed(app, sessionId, isPaused = false, isStopped = false, customSnippet = null) {
+    const isRunning = app && (app.status === 'running' || app.status === 'online');
+    const hostIp = (app && app.primary_ip && app.primary_ip !== '0.0.0.0') ? app.primary_ip : (config.vpsPublicIp || '20.219.198.128');
+    const address = app && app.domain ? `${app.domain}:${app.port}` : `${hostIp}:${app ? app.port : '3000'}`;
+
+    let statusText = '🟢 STREAMING LIVE (2.5s)';
+    let color = 0x06B6D4;
+    if (isStopped) {
+      statusText = '⏹️ SESSION ENDED';
+      color = 0x64748B;
+    } else if (isPaused) {
+      statusText = '⏸️ STREAM PAUSED';
+      color = 0xF59E0B;
+    } else if (!isRunning) {
+      statusText = '🔴 CONTAINER OFFLINE';
+      color = 0xEF4444;
+    }
+
+    let logsText = customSnippet;
+    if (logsText === null || logsText === undefined) {
+      const logs = app ? logStreamer.getLogs(app.id, 25) : [];
+      logsText = logs.map(l => l.data || l.message || '').join('').trim().slice(-1600);
+    }
+    if (!logsText) logsText = 'No logs recorded yet. Waiting for container stdio stream...';
+
+    const embed = new EmbedBuilder()
+      .setTitle(`🖥️ Live Terminal Console · ${app ? app.name : 'Server'}`)
+      .setColor(color)
+      .setDescription(
+        `**Instance:** \`${app ? app.id : 'N/A'}\` &nbsp;|&nbsp; **Port:** \`${address}\`\n` +
+        `**Status:** \`${statusText}\` &nbsp;|&nbsp; **Runtime:** \`${app ? (app.type === 'python' ? 'Python 3' : 'Node.js') : 'N/A'}\`\n\n` +
+        `\`\`\`ansi\n${logsText}\n\`\`\``
+      )
+      .setFooter({ text: `Eclipse Panel Live Terminal · Session #${sessionId} · Made by Vexezor` })
+      .setTimestamp();
+
+    return embed;
+  }
+
+  // Helper: Build Live Console Action Buttons
+  buildLiveConsoleButtons(appId, sessionId, isPaused, isRunning) {
+    const row1 = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`btn_livecmd_${sessionId}`)
+        .setLabel('Send Cmd')
+        .setEmoji('💬')
+        .setStyle(ButtonStyle.Primary)
+        .setDisabled(!isRunning),
+
+      new ButtonBuilder()
+        .setCustomId(`btn_livepause_${sessionId}`)
+        .setLabel(isPaused ? 'Resume' : 'Pause')
+        .setEmoji(isPaused ? '▶️' : '⏸️')
+        .setStyle(isPaused ? ButtonStyle.Success : ButtonStyle.Secondary),
+
+      new ButtonBuilder()
+        .setCustomId(`btn_liverefresh_${sessionId}`)
+        .setLabel('Refresh')
+        .setEmoji('🔄')
+        .setStyle(ButtonStyle.Secondary),
+
+      new ButtonBuilder()
+        .setCustomId(`btn_liveclear_${sessionId}`)
+        .setLabel('Clear')
+        .setEmoji('🧹')
+        .setStyle(ButtonStyle.Secondary),
+
+      new ButtonBuilder()
+        .setCustomId(`btn_livestop_${sessionId}`)
+        .setLabel('End')
+        .setEmoji('⏹️')
+        .setStyle(ButtonStyle.Danger)
+    );
+
+    const row2 = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`btn_start_${appId}`)
+        .setLabel('Start')
+        .setEmoji('▶️')
+        .setStyle(ButtonStyle.Success)
+        .setDisabled(isRunning),
+
+      new ButtonBuilder()
+        .setCustomId(`btn_stop_${appId}`)
+        .setLabel('Stop')
+        .setEmoji('⏹️')
+        .setStyle(ButtonStyle.Danger)
+        .setDisabled(!isRunning),
+
+      new ButtonBuilder()
+        .setCustomId(`btn_restart_${appId}`)
+        .setLabel('Restart')
+        .setEmoji('🔄')
+        .setStyle(ButtonStyle.Primary),
+
+      new ButtonBuilder()
+        .setCustomId(`btn_kill_${appId}`)
+        .setLabel('Force Kill')
+        .setEmoji('⚡')
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(!isRunning)
+    );
+
+    return [row1, row2];
   }
 
   // Get status for API / Admin UI

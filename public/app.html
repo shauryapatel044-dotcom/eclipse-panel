@@ -3099,44 +3099,122 @@
       navigator.clipboard.writeText(text).then(() => notify('Console log stream copied to clipboard!', 'success'));
     }
 
+    function ansiToHtml(str) {
+      if (!str) return '';
+      const ansiColors = {
+        '30': '#4B5563', '31': '#EF4444', '32': '#10B981', '33': '#F59E0B',
+        '34': '#3B82F6', '35': '#8B5CF6', '36': '#06B6D4', '37': '#F3F4F6',
+        '90': '#6B7280', '91': '#F87171', '92': '#34D399', '93': '#FBBF24',
+        '94': '#60A5FA', '95': '#A78BFA', '96': '#22D3EE', '97': '#FFFFFF'
+      };
+      let html = escapeHtml(str);
+      html = html.replace(/\x1b\[0?m/g, '</span>');
+      html = html.replace(/\x1b\[(\d+)m/g, (match, code) => {
+        if (ansiColors[code]) return `<span style="color: ${ansiColors[code]};">`;
+        return '';
+      });
+      html = html.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, '');
+      return html;
+    }
+
     function renderTerminalLogs(logs) {
       const out = document.getElementById('terminal-output');
-      out.innerHTML = logs.map(l => `<div class="terminal-line ${l.type}">${escapeHtml(l.message)}</div>`).join('');
+      if (!out) return;
+      out.innerHTML = logs.map(l => {
+        const streamType = l.stream || l.type || 'stdout';
+        const rawMsg = l.message || l.data || '';
+        return `<div class="terminal-line ${streamType}">${ansiToHtml(rawMsg)}</div>`;
+      }).join('');
       scrollTerminal();
     }
 
     function appendLogLine(log) {
       const out = document.getElementById('terminal-output');
+      if (!out || !log) return;
       const div = document.createElement('div');
-      div.className = `terminal-line ${log.type}`;
-      div.innerText = log.message;
+      const streamType = log.stream || log.type || 'stdout';
+      div.className = `terminal-line ${streamType}`;
+      const rawMsg = log.message || log.data || (typeof log === 'string' ? log : '');
+      div.innerHTML = ansiToHtml(rawMsg);
       out.appendChild(div);
       scrollTerminal();
     }
 
     function scrollTerminal() {
-      if (document.getElementById('chk-autoscroll').checked) {
+      const chk = document.getElementById('chk-autoscroll');
+      if (!chk || chk.checked) {
         const out = document.getElementById('terminal-output');
-        out.scrollTop = out.scrollHeight;
+        if (out) out.scrollTop = out.scrollHeight;
       }
     }
 
+    let activeWs = null;
+    let logPollTimer = null;
+
     function connectAppWebSocket(appId) {
-      if (activeWs) { activeWs.close(); activeWs = null; }
+      if (activeWs) {
+        try { activeWs.close(); } catch(e) {}
+        activeWs = null;
+      }
+      if (logPollTimer) {
+        clearInterval(logPollTimer);
+        logPollTimer = null;
+      }
+
       const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const wsUrl = `${proto}//${window.location.host}/ws?token=${token}`;
-      activeWs = new WebSocket(wsUrl);
 
-      activeWs.onopen = () => {
-        activeWs.send(JSON.stringify({ type: 'subscribe', channel: `app:${appId}` }));
-      };
+      try {
+        activeWs = new WebSocket(wsUrl);
 
-      activeWs.onmessage = (e) => {
+        activeWs.onopen = () => {
+          activeWs.send(JSON.stringify({ type: 'subscribe', channel: `logs:${appId}` }));
+          activeWs.send(JSON.stringify({ type: 'subscribe', channel: `app:${appId}` }));
+        };
+
+        activeWs.onmessage = (e) => {
+          try {
+            const msg = JSON.parse(e.data);
+            if (msg.type === 'log') {
+              appendLogLine(msg.data || { type: msg.stream || 'stdout', message: msg.message });
+            }
+          } catch (err) {}
+        };
+
+        activeWs.onerror = () => {
+          startLogPolling(appId);
+        };
+
+        activeWs.onclose = () => {
+          startLogPolling(appId);
+          setTimeout(() => {
+            if (currentAppId === appId && document.getElementById('pane-console') && document.getElementById('pane-console').style.display !== 'none') {
+              connectAppWebSocket(appId);
+            }
+          }, 3000);
+        };
+      } catch (err) {
+        startLogPolling(appId);
+      }
+    }
+
+    function startLogPolling(appId) {
+      if (logPollTimer) return;
+      logPollTimer = setInterval(async () => {
+        if (currentAppId !== appId) {
+          clearInterval(logPollTimer);
+          logPollTimer = null;
+          return;
+        }
         try {
-          const msg = JSON.parse(e.data);
-          if (msg.type === 'log') appendLogLine(msg.data);
-        } catch (err) {}
-      };
+          const res = await fetch(`${API_BASE}/apps/${appId}/logs?limit=50`, { headers: getHeaders() });
+          if (!res.ok) return;
+          const data = await res.json();
+          if (data && Array.isArray(data.logs)) {
+            renderTerminalLogs(data.logs);
+          }
+        } catch (e) {}
+      }, 2000);
     }
 
     async function saveEnvConfig() {

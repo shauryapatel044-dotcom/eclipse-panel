@@ -45,11 +45,33 @@ export function setupWebSocket(server) {
         }
 
         if (msg.type === 'subscribe') {
-          // Channel format: 'logs:<appId>' or 'system:stats'
+          // Channel format: 'logs:<appId>' or 'app:<appId>' or 'system:stats'
           const { channel } = msg;
           if (channel) {
             ws.subscriptions.add(channel);
+            if (channel.startsWith('app:')) ws.subscriptions.add(`logs:${channel.slice(4)}`);
+            if (channel.startsWith('logs:')) ws.subscriptions.add(`app:${channel.slice(5)}`);
             ws.send(JSON.stringify({ type: 'subscribed', channel }));
+
+            // Immediately send recent log buffer on subscribe
+            if (channel.startsWith('logs:') || channel.startsWith('app:')) {
+              const targetAppId = channel.replace(/^(logs|app):/, '');
+              const history = logStreamer.getLogs(targetAppId, 50);
+              for (const entry of history) {
+                ws.send(JSON.stringify({
+                  type: 'log',
+                  appId: targetAppId,
+                  stream: entry.stream || 'stdout',
+                  message: entry.message,
+                  data: {
+                    type: entry.stream || 'stdout',
+                    message: entry.message,
+                    timestamp: entry.timestamp
+                  },
+                  timestamp: entry.timestamp
+                }));
+              }
+            }
           }
           return;
         }
@@ -58,6 +80,8 @@ export function setupWebSocket(server) {
           const { channel } = msg;
           if (channel) {
             ws.subscriptions.delete(channel);
+            if (channel.startsWith('app:')) ws.subscriptions.delete(`logs:${channel.slice(4)}`);
+            if (channel.startsWith('logs:')) ws.subscriptions.delete(`app:${channel.slice(5)}`);
             ws.send(JSON.stringify({ type: 'unsubscribed', channel }));
           }
           return;
@@ -74,17 +98,21 @@ export function setupWebSocket(server) {
 
   // Listen to logStreamer events and broadcast to subscribed sockets
   logStreamer.on('log', (data) => {
-    const channel = `logs:${data.appId}`;
     const payload = JSON.stringify({
       type: 'log',
       appId: data.appId,
       stream: data.stream,
       message: data.message,
+      data: {
+        type: data.stream,
+        message: data.message,
+        timestamp: data.timestamp
+      },
       timestamp: data.timestamp,
     });
 
     for (const client of wss.clients) {
-      if (client.readyState === 1 && client.subscriptions.has(channel)) {
+      if (client.readyState === 1 && (client.subscriptions.has(`logs:${data.appId}`) || client.subscriptions.has(`app:${data.appId}`))) {
         client.send(payload);
       }
     }
