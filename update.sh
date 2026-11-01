@@ -87,7 +87,7 @@ elif git show-ref --verify --quiet refs/remotes/origin/master; then
 else
     # Fallback tarball clone if git remote fetch had network trouble
     echo -e "${YELLOW}[!] Git fetch fallback: Downloading latest release bundle directly...${NC}"
-    curl -sSL https://github.com/shauryapatel044-dotcom/eclipse-panel/archive/refs/heads/main.tar.gz -o /tmp/eclipse-update.tar.gz
+    curl -q -sSL https://github.com/shauryapatel044-dotcom/eclipse-panel/archive/refs/heads/main.tar.gz -o /tmp/eclipse-update.tar.gz
     if [ -f "/tmp/eclipse-update.tar.gz" ]; then
         tar -xzf /tmp/eclipse-update.tar.gz -C /tmp/
         cp -rf /tmp/eclipse-panel-main/* "$INSTALL_DIR/" 2>/dev/null || true
@@ -244,7 +244,7 @@ echo -e "\n${BOLD_CYAN}[5/5] Verifying daemon health...${NC}"
 HEALTHY=false
 for i in {1..5}; do
     sleep 1
-    HEALTH_CHECK=$(curl --noproxy "*" -s --max-time 3 http://127.0.0.1:8090/api/health 2>/dev/null || true)
+    HEALTH_CHECK=$(curl -q --noproxy "*" -s --max-time 3 http://127.0.0.1:8090/api/health 2>/dev/null || true)
     if [[ "$HEALTH_CHECK" =~ "online" ]]; then
         HEALTHY=true
         break
@@ -264,7 +264,7 @@ echo -e "${BOLD_CYAN}  🌑 ECLIPSE INFRASTRUCTURE UPDATED SUCCESSFULLY! 🌑${N
 echo -e "${BOLD_GREEN}================================================================${NC}"
 echo -e "  ● Service Name       : ${BOLD_CYAN}${SERVICE_NAME}${NC}"
 echo -e "  ● Installation Path  : ${CYAN}${INSTALL_DIR}${NC}"
-echo -e "  ● Live Web Panel     : ${CYAN}http://$(curl -s --max-time 2 https://api.ipify.org 2>/dev/null || echo 'localhost'):8090${NC}"
+echo -e "  ● Live Web Panel     : ${CYAN}http://$(curl -q -s --max-time 2 https://api.ipify.org 2>/dev/null || echo 'localhost'):8090${NC}"
 echo -e "  ● Service Status     : ${CYAN}systemctl status ${SERVICE_NAME}${NC}"
 echo -e "${BOLD_GREEN}================================================================${NC}"
 echo ""
