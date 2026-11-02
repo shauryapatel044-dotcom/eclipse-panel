@@ -315,6 +315,13 @@
 
   // 8. CINEMATIC INTRO SCREEN (Eclipse Panel · Made by Vexezor)
   function showIntroScreen(customOptions = {}) {
+    // Only show intro screen once per browser session to prevent blocking frequent navigation
+    if (!customOptions.force && sessionStorage.getItem('eclipse_intro_seen')) {
+      applyButtonSlowAppear(document);
+      return;
+    }
+    try { sessionStorage.setItem('eclipse_intro_seen', '1'); } catch (e) {}
+
     const isEditor = customOptions.isEditor || window.location.pathname.includes('app.html');
     const title = customOptions.title || (isEditor ? 'ECLIPSE CODE STUDIO' : 'ECLIPSE PANEL');
     const subtitle = customOptions.subtitle || 'High-Performance Cloud Infrastructure';
