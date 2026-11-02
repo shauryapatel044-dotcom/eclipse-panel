@@ -64,3 +64,12 @@ sudo bash install.sh
 - **WebSocket Endpoint**: `ws://<YOUR_IP_OR_DOMAIN>:8090/ws` (or `wss://<DOMAIN>/ws`)
 - **System Telemetry Channel**: Subscribe with `{"type": "subscribe", "channel": "system:stats"}` to receive real-time per-core CPU %, RAM %, and Disk % every 2 seconds.
 - **MariaDB Database URI**: `mysql://eclipse_user:<PASSWORD>@<YOUR_VPS_IP>:3306/eclipse_panel`
+
+---
+
+## 🚀 Continuous Deployment & Auto-Updates (CI/CD)
+
+Whenever changes are committed to the GitHub repository, Eclipse Panel automatically updates on the VPS without requiring manual SSH intervention:
+1. **Autonomous Git Poller (Zero Config)**: The panel daemon checks GitHub every 60s. When a new commit is detected on `main`, it pulls the changes, updates dependencies, and reloads the service smoothly.
+2. **Instant GitHub Webhooks**: Add the webhook URL found in Admin Settings (`/admin.html` -> Auto-Deploy) to your GitHub repository to trigger 1-second instant deployments upon `git push`.
+3. **Discord Bot `/updatepanel`**: Type `/updatepanel` in your Discord server at any time to inspect commits and update the panel on demand.
