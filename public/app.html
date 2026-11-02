@@ -3612,7 +3612,7 @@
     }
 
     async function regenerateWebhookToken() {
-      if (!currentAppId || !confirm('Regenerating this token will invalidate existing GitHub webhook endpoints. Continue?')) return;
+      if (!currentAppId || !confirm('Regenerating this token will invalidate existing webhook endpoints. Continue?')) return;
       try {
         const res = await fetch(`${API_BASE}/apps/${currentAppId}/webhook/generate-token`, { method: 'POST', headers: getHeaders() });
         const d = await res.json();

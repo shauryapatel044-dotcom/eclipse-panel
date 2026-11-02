@@ -577,7 +577,7 @@ class DiscordBotService {
 
       new SlashCommandBuilder()
         .setName('updatepanel')
-        .setDescription('Check for GitHub updates & auto-deploy newest release to Eclipse Panel')
+        .setDescription('Check for platform updates & auto-deploy newest release to Eclipse Panel')
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
         .addBooleanOption(opt =>
           opt.setName('force')
@@ -1405,7 +1405,7 @@ class DiscordBotService {
     await interaction.reply({ embeds: [embed], components: [row] });
   }
 
-  // 11B. /updatepanel command (Check & deploy latest GitHub release)
+  // 11B. /updatepanel command (Check & deploy latest release)
   async cmdUpdatePanel(interaction) {
     const force = interaction.options ? interaction.options.getBoolean('force') : false;
     await interaction.deferReply();
@@ -1419,14 +1419,13 @@ class DiscordBotService {
         const currentCommit = status.currentCommitShort || 'N/A';
 
         const embed = new EmbedBuilder()
-          .setTitle('🚀 Eclipse Panel · Deploying Latest GitHub Release')
+          .setTitle('🚀 Eclipse Panel · Deploying Latest Release')
           .setColor(0x10B981)
           .setDescription(
             `**Automated deployment initiated!**\n\n` +
             `• **Current Local:** \`${currentCommit}\`\n` +
-            `• **Target GitHub:** \`${targetCommit}\`\n` +
-            `• **Repository:** \`${status.repoUrl}\`\n\n` +
-            `_Pulling code, updating npm packages, and reloading daemon..._`
+            `• **Target Release:** \`${targetCommit}\`\n\n` +
+            `_Pulling latest core updates, updating packages, and reloading daemon..._`
           )
           .setFooter({ text: 'Eclipse Panel Auto-Deploy Engine · Made by Vexezor' })
           .setTimestamp();
@@ -1440,9 +1439,8 @@ class DiscordBotService {
           .setTitle('✅ Eclipse Panel · Codebase Up to Date')
           .setColor(0x06B6D4)
           .setDescription(
-            `**The panel is already running the latest GitHub release!**\n\n` +
-            `• **Commit Hash:** \`${status.currentCommitShort}\`\n` +
-            `• **Commit Message:** *${status.currentCommitMsg || 'Latest release'}*\n` +
+            `**The panel is already running the latest platform release!**\n\n` +
+            `• **Version Hash:** \`${status.currentCommitShort}\`\n` +
             `• **Auto-Deploy Poller:** ${status.enabled ? '🟢 Active (Checking every 60s)' : '⏸️ Paused'}`
           )
           .setFooter({ text: 'Use /updatepanel force:true to force re-fetch & restart' })
@@ -1488,7 +1486,7 @@ class DiscordBotService {
         },
         {
           name: '📊 Inspection & Monitoring',
-          value: '• `/serverinfo <identifier>` — View disk usage, files count, port, subdomain, and owner\n• `/panel` — View live VPS CPU load, RAM usage, disk, and telemetry\n• `/updatepanel [force]` — Check GitHub for updates & auto-deploy latest commit'
+          value: '• `/serverinfo <identifier>` — View disk usage, files count, port, subdomain, and owner\n• `/panel` — View live VPS CPU load, RAM usage, disk, and telemetry\n• `/updatepanel [force]` — Check for system updates & auto-deploy latest release'
         },
         {
           name: '👥 User & Account Administration',
@@ -1538,11 +1536,11 @@ class DiscordBotService {
       const status = autoDeployService.getStatus();
       if (checkResult.hasUpdate) {
         return interaction.editReply({
-          content: `⚡ **New GitHub release found!**\n• Current: \`${status.currentCommitShort}\`\n• Remote: \`${status.remoteCommitShort}\`\nRun \`/updatepanel\` or click **Update Panel Now** to deploy!`
+          content: `⚡ **New platform update found!**\n• Current: \`${status.currentCommitShort}\`\n• Remote: \`${status.remoteCommitShort}\`\nRun \`/updatepanel\` or click **Update Panel Now** to deploy!`
         });
       } else {
         return interaction.editReply({
-          content: `✅ **Eclipse Panel is completely up to date!** (Commit: \`${status.currentCommitShort}\`)\nAuto-deploy poller checks GitHub every 60 seconds.`
+          content: `✅ **Eclipse Panel is completely up to date!** (Version: \`${status.currentCommitShort}\`)\nAuto-deploy poller checks for updates every 60 seconds.`
         });
       }
     }
@@ -1551,9 +1549,9 @@ class DiscordBotService {
       await interaction.deferReply();
       const status = autoDeployService.getStatus();
       const embed = new EmbedBuilder()
-        .setTitle('🚀 Deploying Latest GitHub Release')
+        .setTitle('🚀 Deploying Latest Platform Release')
         .setColor(0x10B981)
-        .setDescription('Pulling latest code from GitHub repository, installing modules, and restarting daemon...')
+        .setDescription('Pulling latest updates, installing packages, and restarting daemon...')
         .setFooter({ text: 'Eclipse Panel Auto-Deploy Engine · Made by Vexezor' })
         .setTimestamp();
 

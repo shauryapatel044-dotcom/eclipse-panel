@@ -210,12 +210,14 @@ if [ "$DEPLOY_MODE" == "node" ]; then
             git fetch --all
             git reset --hard origin/main
         else
-            print_step "Cloning Eclipse Daemon into ${NODE_INSTALL_DIR}..."
-            rm -rf /tmp/eclipse-node-clone-tmp
-            git clone https://github.com/shauryapatel044-dotcom/eclipse-panel.git /tmp/eclipse-node-clone-tmp
-            mkdir -p "$NODE_INSTALL_DIR"
-            cp -a /tmp/eclipse-node-clone-tmp/. "$NODE_INSTALL_DIR/"
-            rm -rf /tmp/eclipse-node-clone-tmp
+            if [ -n "$ECLIPSE_REPO" ]; then
+                print_step "Cloning Eclipse Daemon into ${NODE_INSTALL_DIR}..."
+                rm -rf /tmp/eclipse-node-clone-tmp
+                git clone "$ECLIPSE_REPO" /tmp/eclipse-node-clone-tmp
+                mkdir -p "$NODE_INSTALL_DIR"
+                cp -a /tmp/eclipse-node-clone-tmp/. "$NODE_INSTALL_DIR/"
+                rm -rf /tmp/eclipse-node-clone-tmp
+            fi
         fi
     fi
 
@@ -478,12 +480,14 @@ if [ "$SCRIPT_DIR" != "$INSTALL_DIR" ]; then
         git fetch --all
         git reset --hard origin/main
     else
-        print_step "Cloning latest Eclipse Panel from repository..."
-        rm -rf /tmp/eclipse-panel-clone-tmp
-        git clone https://github.com/shauryapatel044-dotcom/eclipse-panel.git /tmp/eclipse-panel-clone-tmp
-        mkdir -p "$INSTALL_DIR"
-        cp -a /tmp/eclipse-panel-clone-tmp/. "$INSTALL_DIR/"
-        rm -rf /tmp/eclipse-panel-clone-tmp
+        if [ -n "$ECLIPSE_REPO" ]; then
+            print_step "Cloning latest Eclipse Panel from repository..."
+            rm -rf /tmp/eclipse-panel-clone-tmp
+            git clone "$ECLIPSE_REPO" /tmp/eclipse-panel-clone-tmp
+            mkdir -p "$INSTALL_DIR"
+            cp -a /tmp/eclipse-panel-clone-tmp/. "$INSTALL_DIR/"
+            rm -rf /tmp/eclipse-panel-clone-tmp
+        fi
     fi
 else
     print_success "Working directly within ${INSTALL_DIR}."

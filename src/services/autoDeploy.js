@@ -18,7 +18,6 @@ class AutoDeployService {
     this.pollIntervalMs = 60 * 1000; // default 60s
     this.enabled = true;
     this.webhookSecret = '';
-    this.repoUrl = 'https://github.com/shauryapatel044-dotcom/eclipse-panel.git';
   }
 
   // Load configuration from database
@@ -86,7 +85,7 @@ class AutoDeployService {
     }
 
     if (this.enabled) {
-      console.log(`[AutoDeploy] 🚀 Continuous Deployment Active (Checking GitHub every ${this.pollIntervalMs / 1000}s)`);
+      console.log(`[AutoDeploy] 🚀 Continuous Deployment Active (Checking for updates every ${this.pollIntervalMs / 1000}s)`);
       // Initial check after 8s delay
       setTimeout(() => this.checkForUpdates().catch(() => {}), 8000);
       this.intervalId = setInterval(() => this.checkForUpdates().catch(() => {}), this.pollIntervalMs);
@@ -113,7 +112,7 @@ class AutoDeployService {
     });
   }
 
-  // Check remote GitHub commit vs local
+  // Check remote release commit vs local
   checkForUpdates() {
     if (this.isDeploying) {
       return Promise.resolve({ isDeploying: true, message: 'Deployment currently executing' });
@@ -142,7 +141,7 @@ class AutoDeployService {
         const hasUpdate = Boolean(remoteHash && this.currentCommit && remoteHash !== this.currentCommit);
 
         if (hasUpdate && this.enabled) {
-          console.log(`[AutoDeploy] ⚡ New commit detected on GitHub (${remoteHash.slice(0, 7)} vs local ${this.currentCommit.slice(0, 7)}). Auto-deploying...`);
+          console.log(`[AutoDeploy] ⚡ New core update detected (${remoteHash.slice(0, 7)} vs local ${this.currentCommit.slice(0, 7)}). Auto-deploying...`);
           const deployRes = await this.deployUpdate('auto_poller');
           return resolve({
             hasUpdate: true,
@@ -195,7 +194,7 @@ class AutoDeployService {
         // Record audit log entry
         try {
           db.prepare('INSERT INTO audit_logs (user_id, username, action, details, ip_address) VALUES (?, ?, ?, ?, ?)')
-            .run(1, 'AutoDeploy', 'system_update', `Deployed latest commit from GitHub (Trigger: ${triggerSource})`, '127.0.0.1');
+            .run(1, 'AutoDeploy', 'system_update', `Deployed latest core update (Trigger: ${triggerSource})`, '127.0.0.1');
         } catch (e) {}
 
         // Step 2: Trigger service restart
@@ -209,14 +208,14 @@ class AutoDeployService {
 
         resolve({
           success: true,
-          message: 'Codebase updated to latest GitHub commit. Daemon restarting...',
+          message: 'Codebase updated to latest release. Daemon restarting...',
           output: stdout
         });
       });
     });
   }
 
-  // Validate GitHub Webhook Signature or Query Secret
+  // Validate Webhook Signature or Query Secret
   verifyWebhook(req) {
     this.loadSettings();
 
@@ -226,7 +225,7 @@ class AutoDeployService {
       return true;
     }
 
-    // 2. GitHub HMAC SHA256 signature verification (x-hub-signature-256)
+    // 2. HMAC SHA256 signature verification (x-hub-signature-256)
     const signature = req.headers['x-hub-signature-256'];
     if (signature && req.rawBody) {
       try {
@@ -261,7 +260,6 @@ class AutoDeployService {
       lastDeploy: this.lastDeploy,
       lastError: this.lastError,
       pollIntervalSec: this.pollIntervalMs / 1000,
-      repoUrl: this.repoUrl,
       webhookUrl: `https://${host}/api/deploy/webhook?secret=${this.webhookSecret}`,
       webhookSecret: this.webhookSecret
     };

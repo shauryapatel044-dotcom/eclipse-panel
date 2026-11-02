@@ -67,16 +67,13 @@ if [ -f "$INSTALL_DIR/.env" ]; then
 fi
 
 # 2. Fetch and pull latest release from GitHub
-echo -e "\n${BOLD_CYAN}[2/5] Fetching latest codebase from GitHub repository...${NC}"
+echo -e "\n${BOLD_CYAN}[2/5] Fetching latest platform updates...${NC}"
 git config --global --add safe.directory "$INSTALL_DIR" 2>/dev/null || true
 
-if [ ! -d "$INSTALL_DIR/.git" ]; then
-    echo -e "${YELLOW}[!] Initializing Git repository link in ${INSTALL_DIR}...${NC}"
-    git init
-    git remote add origin https://github.com/shauryapatel044-dotcom/eclipse-panel.git 2>/dev/null || git remote set-url origin https://github.com/shauryapatel044-dotcom/eclipse-panel.git
+CURRENT_ORIGIN=$(git remote get-url origin 2>/dev/null || true)
+if [ -z "$CURRENT_ORIGIN" ] && [ -n "$ECLIPSE_REPO" ]; then
+    git remote add origin "$ECLIPSE_REPO" 2>/dev/null || git remote set-url origin "$ECLIPSE_REPO" 2>/dev/null || true
 fi
-
-git remote set-url origin https://github.com/shauryapatel044-dotcom/eclipse-panel.git 2>/dev/null || true
 git fetch origin main --depth=1 2>/dev/null || git fetch --all 2>/dev/null || true
 
 # Force update working tree to origin/main
@@ -85,13 +82,14 @@ if git show-ref --verify --quiet refs/remotes/origin/main; then
 elif git show-ref --verify --quiet refs/remotes/origin/master; then
     git reset --hard origin/master
 else
-    # Fallback tarball clone if git remote fetch had network trouble
-    echo -e "${YELLOW}[!] Git fetch fallback: Downloading latest release bundle directly...${NC}"
-    curl -q -sSL https://github.com/shauryapatel044-dotcom/eclipse-panel/archive/refs/heads/main.tar.gz -o /tmp/eclipse-update.tar.gz
-    if [ -f "/tmp/eclipse-update.tar.gz" ]; then
-        tar -xzf /tmp/eclipse-update.tar.gz -C /tmp/
-        cp -rf /tmp/eclipse-panel-main/* "$INSTALL_DIR/" 2>/dev/null || true
-        rm -rf /tmp/eclipse-panel-main /tmp/eclipse-update.tar.gz
+    if [ -n "$ECLIPSE_REPO" ]; then
+        echo -e "${YELLOW}[!] Git fetch fallback: Downloading latest release bundle directly...${NC}"
+        curl -q -sSL "${ECLIPSE_REPO%.git}/archive/refs/heads/main.tar.gz" -o /tmp/eclipse-update.tar.gz 2>/dev/null || true
+        if [ -f "/tmp/eclipse-update.tar.gz" ]; then
+            tar -xzf /tmp/eclipse-update.tar.gz -C /tmp/ 2>/dev/null || true
+            cp -rf /tmp/eclipse-panel-main/* "$INSTALL_DIR/" 2>/dev/null || true
+            rm -rf /tmp/eclipse-panel-main /tmp/eclipse-update.tar.gz 2>/dev/null || true
+        fi
     fi
 fi
 

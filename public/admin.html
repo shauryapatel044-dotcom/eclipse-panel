@@ -628,7 +628,7 @@
                   <svg style="width: 20px; height: 20px; fill: #10B981;" viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>
                   <span>Continuous Deployment & Auto-Updater</span>
                 </h2>
-                <p>Zero-downtime auto-deploy engine. Automatically detects commits in your GitHub repository and updates this panel on the VPS.</p>
+                <p>Zero-downtime auto-deploy engine. Automatically detects new releases and updates this panel on the VPS.</p>
               </div>
               <div id="deploy-status-badge" style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; background: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.3);">
                 <span class="statusOrb online"></span>
@@ -650,13 +650,13 @@
                       <div id="deploy-local-commit" style="font-size: 16px; font-weight: 800; color: #FFF; font-family: var(--font-mono); margin-top: 4px;">--</div>
                     </div>
                     <div style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
-                      <div style="font-size: 11px; color: #94A3B8; text-transform: uppercase; font-weight: 700;">Remote GitHub Main</div>
+                      <div style="font-size: 11px; color: #94A3B8; text-transform: uppercase; font-weight: 700;">Remote Release Hash</div>
                       <div id="deploy-remote-commit" style="font-size: 16px; font-weight: 800; color: #06B6D4; font-family: var(--font-mono); margin-top: 4px;">--</div>
                     </div>
                   </div>
 
                   <div style="font-size: 12px; color: #94A3B8; margin-bottom: 16px; line-height: 1.6;">
-                    <div><strong>Last Commit Message:</strong> <span id="deploy-commit-msg" style="color: #E2E8F0; font-family: var(--font-mono);">--</span></div>
+                    <div><strong>Last Update Summary:</strong> <span id="deploy-commit-msg" style="color: #E2E8F0; font-family: var(--font-mono);">--</span></div>
                     <div style="display: flex; gap: 20px; margin-top: 6px;">
                       <span>Last Checked: <strong id="deploy-last-check" style="color: #FFF;">--</strong></span>
                       <span>Last Deployed: <strong id="deploy-last-deploy" style="color: #FFF;">--</strong></span>
@@ -668,7 +668,7 @@
                       <span>🔄 Check for Updates</span>
                     </button>
                     <button class="btn-primary framer-spring" onclick="triggerAutoDeploy()" style="background: linear-gradient(135deg, #10B981, #06B6D4);">
-                      <span>🚀 Deploy Latest GitHub Release</span>
+                      <span>🚀 Deploy Latest Release</span>
                     </button>
                   </div>
                 </div>
@@ -683,7 +683,7 @@
                       <input type="checkbox" id="deploy-enabled" checked style="width: 16px; height: 16px; accent-color: #10B981;">
                       <div>
                         <div style="font-size: 13px; font-weight: 700; color: #FFF;">Enable Autonomous Background Poller</div>
-                        <div style="font-size: 11.5px; color: #94A3B8;">Automatically checks GitHub and pulls code without requiring webhooks or manual clicks.</div>
+                        <div style="font-size: 11.5px; color: #94A3B8;">Automatically checks for remote updates and pulls code without requiring webhooks or manual clicks.</div>
                       </div>
                     </label>
 
@@ -700,14 +700,14 @@
                 </div>
               </div>
 
-              <!-- Right Column: Instant GitHub Webhook -->
+              <!-- Right Column: Instant Webhook -->
               <div style="display: flex; flex-direction: column; gap: 16px;">
                 <div class="feature-card">
                   <div class="feature-card-title">
-                    <span style="color: #F59E0B;">⚡</span> Instant GitHub Webhook (1-Second Deploy)
+                    <span style="color: #F59E0B;">⚡</span> Instant Webhook CI/CD (1-Second Deploy)
                   </div>
                   <p style="font-size: 12px; color: #94A3B8; line-height: 1.5; margin-bottom: 14px;">
-                    To deploy within <strong>1 second</strong> of typing <code>git push</code>, paste this webhook in your GitHub repository settings.
+                    To deploy within <strong>1 second</strong> of pushing new code, paste this webhook in your Git remote webhook settings.
                   </p>
 
                   <div class="form-group">
@@ -727,9 +727,9 @@
                   </div>
 
                   <div style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); font-size: 11.5px; line-height: 1.6; color: #94A3B8;">
-                    <div style="font-weight: 700; color: #FFF; margin-bottom: 6px;">30-Second Setup in GitHub:</div>
+                    <div style="font-weight: 700; color: #FFF; margin-bottom: 6px;">Instant Webhook Setup:</div>
                     <ol style="margin: 0; padding-left: 18px;">
-                      <li>Open your repository on GitHub → Click <strong>Settings</strong> → <strong>Webhooks</strong>.</li>
+                      <li>Open your Git remote settings → <strong>Webhooks</strong>.</li>
                       <li>Click <strong>Add webhook</strong> and paste the <strong>Payload URL</strong> above.</li>
                       <li>Set Content type to <code>application/json</code>, paste the <strong>Secret</strong>, select <code>Just the push event</code>, and save!</li>
                     </ol>
@@ -1435,7 +1435,7 @@
         if (remoteEl) remoteEl.innerText = s.remoteCommitShort || s.currentCommitShort || '--';
 
         const msgEl = document.getElementById('deploy-commit-msg');
-        if (msgEl) msgEl.innerText = s.currentCommitMsg || 'Latest release from GitHub';
+        if (msgEl) msgEl.innerText = s.currentCommitMsg || 'Latest platform release';
 
         const checkEl = document.getElementById('deploy-last-check');
         if (checkEl) checkEl.innerText = s.lastCheck ? new Date(s.lastCheck).toLocaleTimeString() : 'Just now';
@@ -1461,14 +1461,14 @@
 
     async function checkAutoDeployUpdates() {
       try {
-        notify('Checking GitHub repository for updates...', 'info');
+        notify('Checking for system updates...', 'info');
         const res = await fetch(API_BASE + '/admin/deploy/check', { method: 'POST', headers: getHeaders() });
         const data = await res.json();
         loadAutoDeployStatus();
         if (data.result && data.result.hasUpdate) {
           notify(`New release detected (${(data.result.remoteCommit || '').slice(0, 7)})! Deploying automatically...`, 'success');
         } else {
-          notify('Eclipse Panel is completely up to date with GitHub!', 'success');
+          notify('Eclipse Panel is completely up to date!', 'success');
         }
       } catch (err) {
         notify(err.message, 'error');
@@ -1476,9 +1476,9 @@
     }
 
     async function triggerAutoDeploy() {
-      if (!confirm('Are you sure you want to pull the latest GitHub commit and restart the panel daemon now?')) return;
+      if (!confirm('Are you sure you want to pull the latest platform release and restart the panel daemon now?')) return;
       try {
-        notify('Pulling latest code and dependencies from GitHub...', 'info');
+        notify('Pulling latest code and dependencies...', 'info');
         const res = await fetch(API_BASE + '/admin/deploy/trigger', { method: 'POST', headers: getHeaders() });
         const data = await res.json();
         notify((data.result && data.result.message) || 'Deployment triggered. Daemon is reloading...', 'success');

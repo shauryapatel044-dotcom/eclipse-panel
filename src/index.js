@@ -144,7 +144,7 @@ app.use(express.json({
 }));
 app.use(express.urlencoded({ extended: true, limit: '50gb' }));
 
-// GitHub Webhook for Instant Continuous Deployment
+// Webhook for Instant Continuous Deployment
 app.post('/api/deploy/webhook', async (req, res) => {
   const isAuthorized = autoDeployService.verifyWebhook(req);
   if (!isAuthorized) {
@@ -157,15 +157,15 @@ app.post('/api/deploy/webhook', async (req, res) => {
   }
 
   const commitMsg = (req.body && req.body.head_commit && req.body.head_commit.message) || 'Webhook push';
-  console.log(`[AutoDeploy Webhook] 📥 Received GitHub push event: "${commitMsg}". Initiating auto-update...`);
+  console.log(`[AutoDeploy Webhook] 📥 Received push event: "${commitMsg}". Initiating auto-update...`);
 
   res.json({
     success: true,
-    message: 'GitHub webhook received. Continuous deployment triggered in background.',
+    message: 'Continuous deployment webhook received. Auto-update triggered in background.',
     commit: commitMsg
   });
 
-  autoDeployService.deployUpdate('github_webhook').catch(e => {
+  autoDeployService.deployUpdate('webhook').catch(e => {
     console.error('[AutoDeploy Webhook Error]:', e);
   });
 });

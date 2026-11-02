@@ -10,7 +10,7 @@ A lightweight, high-performance hosting panel engine and process supervisor buil
 Run this command as root on your Linux VPS (Ubuntu 20.04+, Debian 11+, CentOS, AlmaLinux, Rocky Linux):
 
 ```bash
-git clone https://github.com/shauryapatel044-dotcom/eclipse-panel.git /opt/eclipse-panel
+git clone <YOUR_PRIVATE_REPO_URL> /opt/eclipse-panel
 cd /opt/eclipse-panel
 sudo bash install.sh
 ```
@@ -69,7 +69,7 @@ sudo bash install.sh
 
 ## 🚀 Continuous Deployment & Auto-Updates (CI/CD)
 
-Whenever changes are committed to the GitHub repository, Eclipse Panel automatically updates on the VPS without requiring manual SSH intervention:
-1. **Autonomous Git Poller (Zero Config)**: The panel daemon checks GitHub every 60s. When a new commit is detected on `main`, it pulls the changes, updates dependencies, and reloads the service smoothly.
-2. **Instant GitHub Webhooks**: Add the webhook URL found in Admin Settings (`/admin.html` -> Auto-Deploy) to your GitHub repository to trigger 1-second instant deployments upon `git push`.
-3. **Discord Bot `/updatepanel`**: Type `/updatepanel` in your Discord server at any time to inspect commits and update the panel on demand.
+Whenever changes are pushed to your remote repository, Eclipse Panel automatically updates on the VPS without requiring manual SSH intervention:
+1. **Autonomous Git Poller (Zero Config)**: The panel daemon checks for updates every 60s. When a new commit is detected on `main`, it pulls the changes, updates dependencies, and reloads the service smoothly.
+2. **Instant Webhooks**: Add the webhook URL found in Admin Settings (`/admin.html` -> Auto-Deploy) to your repository to trigger 1-second instant deployments upon push.
+3. **Discord Bot `/updatepanel`**: Type `/updatepanel` in your Discord server at any time to inspect versions and update the panel on demand.
