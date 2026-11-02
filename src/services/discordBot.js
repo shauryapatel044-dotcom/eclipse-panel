@@ -23,6 +23,8 @@ import { logStreamer } from '../daemon/logStreamer.js';
 import { getSystemStats } from '../daemon/metrics.js';
 import { autoDeployService } from './autoDeploy.js';
 import { config } from '../config.js';
+import { MinecraftRunner } from '../daemon/minecraftRunner.js';
+import { DatabaseRunner } from '../daemon/databaseRunner.js';
 
 function getDirectoryStats(dirPath) {
   let totalBytes = 0;
@@ -303,11 +305,13 @@ class DiscordBotService {
         )
         .addStringOption(opt =>
           opt.setName('type')
-            .setDescription('Runtime environment')
+            .setDescription('Server category & type')
             .setRequired(true)
             .addChoices(
               { name: 'Node.js (LTS)', value: 'nodejs' },
-              { name: 'Python 3', value: 'python' }
+              { name: 'Python 3', value: 'python' },
+              { name: 'Minecraft (Paper Server)', value: 'minecraft' },
+              { name: 'Database (Redis Server)', value: 'database' }
             )
         )
         .addStringOption(opt =>
@@ -782,27 +786,46 @@ class DiscordBotService {
       if (!owner) owner = { id: 1, username: 'admin', email: 'admin@eclipse.local' };
     }
 
-    // Port allocation
+    // Category and port allocation
+    const isMc = type === 'minecraft';
+    const isDb = type === 'database';
+    const serverCategory = isMc ? 'minecraft' : (isDb ? 'database' : 'software');
+    const engine = isMc ? 'paper' : (isDb ? 'redis' : '');
+    const gameVersion = isMc ? '1.21.1' : '';
+    const dbPassword = isDb ? 'ec_' + crypto.randomBytes(6).toString('hex') : '';
+    const dbName = isDb ? (name.toLowerCase().replace(/[^a-z0-9]/g, '_') || 'app_db') : '';
+    const defaultEntry = isMc ? 'server.jar' : (isDb ? 'redis' : (type === 'python' ? 'main.py' : 'index.js'));
+    const safeRam = ram || (isMc ? 2048 : (isDb ? 512 : 1024));
+
     let port = customPort;
     if (!port) {
       const used = new Set(db.prepare('SELECT port FROM apps WHERE port IS NOT NULL').all().map(a => a.port));
-      port = 3000;
-      while (used.has(port) && port < 9999) port++;
+      let candidate = isMc ? 25565 : (isDb ? 6379 : 3000);
+      while (used.has(candidate) && candidate < 65000) candidate++;
+      port = candidate;
     }
 
     const appId = `app_${crypto.randomBytes(4).toString('hex')}`;
-    const defaultEntry = type === 'python' ? 'main.py' : 'index.js';
     const safeFolder = supervisor.sanitizeFolderName(name.trim(), appId);
     const appDir = supervisor.getAppDir({ id: appId, name: name.trim(), folder_name: safeFolder });
+
+    if (isMc) {
+      MinecraftRunner.configureServerFiles({ id: appId, name: name.trim(), port }, appDir);
+    } else if (isDb) {
+      DatabaseRunner.setupDatabase({ id: appId, name: name.trim(), port, engine, db_password: dbPassword, db_name: dbName, memory_limit: safeRam }, appDir);
+    }
 
     const baseDomain = this.getBaseDomain();
     const slug = name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || appId;
     const serverDomain = baseDomain ? `${slug}.${baseDomain}` : '';
 
     db.prepare(`
-      INSERT INTO apps (id, name, type, user_id, entrypoint, port, memory_limit, cpu_limit, disk_limit, domain, status, node_id, folder_name)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 5120, ?, 'stopped', 'node_local', ?)
-    `).run(appId, name, type, owner.id, defaultEntry, port, ram, cpu, serverDomain, safeFolder);
+      INSERT INTO apps (
+        id, name, type, user_id, entrypoint, port, memory_limit, cpu_limit, disk_limit, domain, status, node_id, folder_name,
+        server_category, engine, game_version, db_password, db_name
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 5120, ?, 'stopped', 'node_local', ?, ?, ?, ?, ?, ?)
+    `).run(appId, name, type, owner.id, defaultEntry, port, safeRam, cpu, serverDomain, safeFolder, serverCategory, engine, gameVersion, dbPassword, dbName);
 
     const newApp = db.prepare('SELECT * FROM apps WHERE id = ?').get(appId);
     let desc = `✅ **Server Created Successfully!**\nAllocated to: **${owner.email}** (@${owner.username})\n\nContainer is clean and empty. Upload your project files or use the buttons below:`;

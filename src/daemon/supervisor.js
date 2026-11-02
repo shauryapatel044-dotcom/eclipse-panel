@@ -6,6 +6,8 @@ import { db } from '../database/index.js';
 import { logStreamer } from './logStreamer.js';
 import { NodeRunner } from './nodeRunner.js';
 import { PythonRunner } from './pythonRunner.js';
+import { MinecraftRunner } from './minecraftRunner.js';
+import { DatabaseRunner } from './databaseRunner.js';
 import { estimateProcessMetrics } from './metrics.js';
 
 function killProcessTree(pid, signal = 'SIGTERM') {
@@ -276,7 +278,11 @@ class Supervisor {
 
     let child = null;
     try {
-      if (app.startup_cmd && app.startup_cmd.trim()) {
+      if (app.type === 'minecraft') {
+        child = await MinecraftRunner.spawnProcess(app, appDir, parsedEnv);
+      } else if (app.type === 'database') {
+        child = await DatabaseRunner.spawnProcess(app, appDir, parsedEnv);
+      } else if (app.startup_cmd && app.startup_cmd.trim()) {
         child = this.spawnStartupProcess(app, appDir, parsedEnv);
       } else if (app.type === 'nodejs') {
         child = NodeRunner.spawnProcess(app, appDir, parsedEnv);
@@ -454,7 +460,13 @@ class Supervisor {
     this.updateAppStatus(appId, 'installing');
     try {
       let res;
-      if (app.type === 'nodejs') {
+      if (app.type === 'minecraft') {
+        await MinecraftRunner.setupMinecraftServer(app, appDir);
+        res = { success: true, message: 'Minecraft server engine downloaded and configured' };
+      } else if (app.type === 'database') {
+        DatabaseRunner.setupDatabase(app, appDir);
+        res = { success: true, message: 'Database environment configured' };
+      } else if (app.type === 'nodejs') {
         res = await NodeRunner.installDependencies(appId, appDir);
       } else if (app.type === 'python') {
         res = await PythonRunner.installDependencies(appId, appDir);

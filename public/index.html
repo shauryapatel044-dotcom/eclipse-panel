@@ -236,57 +236,234 @@
         <input type="hidden" id="app-type" value="nodejs">
         <input type="hidden" id="app-version" value="22">
 
+        <!-- Category Selector Tabs -->
+        <div class="category-tabs-bar">
+          <button type="button" class="category-tab-btn active" id="tab-cat-software" onclick="selectServerCategory('software')">
+            <i class="bi bi-code-slash" style="color: #06B6D4;"></i>
+            <span>Software Application</span>
+          </button>
+          <button type="button" class="category-tab-btn" id="tab-cat-minecraft" onclick="selectServerCategory('minecraft')">
+            <i class="bi bi-box" style="color: #22C55E;"></i>
+            <span>Minecraft Server</span>
+          </button>
+          <button type="button" class="category-tab-btn" id="tab-cat-database" onclick="selectServerCategory('database')">
+            <i class="bi bi-database-fill" style="color: #F97316;"></i>
+            <span>Database Server</span>
+          </button>
+        </div>
+
         <div class="deploy-studio-grid">
           <!-- LEFT COLUMN: Runtime, Name & Hardware Sliders -->
           <div>
-            <!-- 1. Runtime Selection -->
-            <div class="deploy-section-title">
-              <i class="bi bi-cpu-fill" style="color: var(--sidebarButtonActive);"></i>
-              <span>1. Select Execution Engine</span>
-            </div>
-
-            <div class="runtime-tiles-grid">
-              <!-- Node.js Tile -->
-              <div class="runtime-tile node active" id="tile-nodejs" onclick="selectRuntimeTile('nodejs')">
-                <div class="runtime-tile-icon">
-                  <i class="bi bi-filetype-js"></i>
-                </div>
-                <div>
-                  <div style="font-weight: 800; font-size: 14px; color: #FFF;">Node.js</div>
-                  <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4; margin-top: 2px;">V8 engine for Express, Fastify, Discord bots, and TypeScript.</div>
-                </div>
-                <div class="runtime-tile-check"><i class="bi bi-check"></i></div>
+            <!-- SECTION 1A: Software Application -->
+            <div id="cat-section-software">
+              <div class="deploy-section-title">
+                <i class="bi bi-cpu-fill" style="color: var(--sidebarButtonActive);"></i>
+                <span>1. Select Software Runtime</span>
               </div>
 
-              <!-- Python Tile -->
-              <div class="runtime-tile python" id="tile-python" onclick="selectRuntimeTile('python')">
-                <div class="runtime-tile-icon">
-                  <i class="bi bi-filetype-py"></i>
+              <div class="runtime-tiles-grid">
+                <!-- Node.js Tile -->
+                <div class="runtime-tile node active" id="tile-nodejs" onclick="selectRuntimeTile('nodejs')">
+                  <div class="runtime-tile-icon">
+                    <i class="bi bi-filetype-js"></i>
+                  </div>
+                  <div>
+                    <div style="font-weight: 800; font-size: 14px; color: #FFF;">Node.js</div>
+                    <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4; margin-top: 2px;">V8 engine for Express, Fastify, Discord bots, and TypeScript.</div>
+                  </div>
+                  <div class="runtime-tile-check"><i class="bi bi-check"></i></div>
                 </div>
-                <div>
-                  <div style="font-weight: 800; font-size: 14px; color: #FFF;">Python 3</div>
-                  <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4; margin-top: 2px;">Virtualenv for FastAPI, Flask, Django, scrapers & AI agents.</div>
+
+                <!-- Python Tile -->
+                <div class="runtime-tile python" id="tile-python" onclick="selectRuntimeTile('python')">
+                  <div class="runtime-tile-icon">
+                    <i class="bi bi-filetype-py"></i>
+                  </div>
+                  <div>
+                    <div style="font-weight: 800; font-size: 14px; color: #FFF;">Python 3</div>
+                    <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4; margin-top: 2px;">Virtualenv for FastAPI, Flask, Django, scrapers & AI agents.</div>
+                  </div>
+                  <div class="runtime-tile-check"><i class="bi bi-check"></i></div>
                 </div>
-                <div class="runtime-tile-check"><i class="bi bi-check"></i></div>
+              </div>
+
+              <!-- Version Picker Pills -->
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                <span style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Runtime Version</span>
+                <span style="font-size: 11px; color: var(--pagePrimaryHover);" id="version-current-label">Node.js 22 LTS (Recommended)</span>
+              </div>
+              <div class="version-pill-group" id="version-pill-container">
+                <!-- Rendered dynamically -->
               </div>
             </div>
 
-            <!-- Version Picker Pills -->
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-              <span style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Engine Version</span>
-              <span style="font-size: 11px; color: var(--pagePrimaryHover);" id="version-current-label">Node.js 22 LTS (Recommended)</span>
+            <!-- SECTION 1B: Minecraft Server -->
+            <div id="cat-section-minecraft" style="display: none;">
+              <div class="deploy-section-title">
+                <i class="bi bi-box" style="color: #22C55E;"></i>
+                <span>1. Select Minecraft Server Engine</span>
+              </div>
+
+              <div class="runtime-tiles-grid" style="grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px;">
+                <div class="runtime-tile minecraft active" id="tile-mc-paper" onclick="selectMcEngine('paper')">
+                  <div class="runtime-tile-icon" style="width: 34px; height: 34px; font-size: 16px;">
+                    <i class="bi bi-file-earmark-code"></i>
+                  </div>
+                  <div style="min-width: 0;">
+                    <div style="font-weight: 800; font-size: 13px; color: #FFF;">Paper</div>
+                    <div style="font-size: 10px; color: var(--text-muted);">High performance</div>
+                  </div>
+                  <div class="runtime-tile-check"><i class="bi bi-check"></i></div>
+                </div>
+
+                <div class="runtime-tile minecraft" id="tile-mc-purpur" onclick="selectMcEngine('purpur')">
+                  <div class="runtime-tile-icon" style="width: 34px; height: 34px; font-size: 16px;">
+                    <i class="bi bi-stars"></i>
+                  </div>
+                  <div style="min-width: 0;">
+                    <div style="font-weight: 800; font-size: 13px; color: #FFF;">Purpur</div>
+                    <div style="font-size: 10px; color: var(--text-muted);">Custom Paper</div>
+                  </div>
+                  <div class="runtime-tile-check"><i class="bi bi-check"></i></div>
+                </div>
+
+                <div class="runtime-tile minecraft" id="tile-mc-fabric" onclick="selectMcEngine('fabric')">
+                  <div class="runtime-tile-icon" style="width: 34px; height: 34px; font-size: 16px;">
+                    <i class="bi bi-layers"></i>
+                  </div>
+                  <div style="min-width: 0;">
+                    <div style="font-weight: 800; font-size: 13px; color: #FFF;">Fabric</div>
+                    <div style="font-size: 10px; color: var(--text-muted);">Light modloader</div>
+                  </div>
+                  <div class="runtime-tile-check"><i class="bi bi-check"></i></div>
+                </div>
+
+                <div class="runtime-tile minecraft" id="tile-mc-neoforge" onclick="selectMcEngine('neoforge')">
+                  <div class="runtime-tile-icon" style="width: 34px; height: 34px; font-size: 16px;">
+                    <i class="bi bi-lightning-charge"></i>
+                  </div>
+                  <div style="min-width: 0;">
+                    <div style="font-weight: 800; font-size: 13px; color: #FFF;">NeoForge</div>
+                    <div style="font-size: 10px; color: var(--text-muted);">Modern modding</div>
+                  </div>
+                  <div class="runtime-tile-check"><i class="bi bi-check"></i></div>
+                </div>
+
+                <div class="runtime-tile minecraft" id="tile-mc-forge" onclick="selectMcEngine('forge')">
+                  <div class="runtime-tile-icon" style="width: 34px; height: 34px; font-size: 16px;">
+                    <i class="bi bi-hammer"></i>
+                  </div>
+                  <div style="min-width: 0;">
+                    <div style="font-weight: 800; font-size: 13px; color: #FFF;">Forge</div>
+                    <div style="font-size: 10px; color: var(--text-muted);">Classic modding</div>
+                  </div>
+                  <div class="runtime-tile-check"><i class="bi bi-check"></i></div>
+                </div>
+
+                <div class="runtime-tile minecraft" id="tile-mc-vanilla" onclick="selectMcEngine('vanilla')">
+                  <div class="runtime-tile-icon" style="width: 34px; height: 34px; font-size: 16px;">
+                    <i class="bi bi-box-seam"></i>
+                  </div>
+                  <div style="min-width: 0;">
+                    <div style="font-weight: 800; font-size: 13px; color: #FFF;">Vanilla</div>
+                    <div style="font-size: 10px; color: var(--text-muted);">Mojang official</div>
+                  </div>
+                  <div class="runtime-tile-check"><i class="bi bi-check"></i></div>
+                </div>
+              </div>
+
+              <!-- Minecraft Version Picker -->
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                <span style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Minecraft Version</span>
+                <span style="font-size: 11px; color: #22C55E;" id="mc-version-label">1.21.1 (Stable LTS)</span>
+              </div>
+              <div class="version-pill-group" id="mc-version-pill-container">
+                <!-- Rendered dynamically -->
+              </div>
+              <div style="font-size: 11px; color: #64748B; margin-top: -10px; margin-bottom: 14px;">
+                <i class="bi bi-check-circle-fill" style="color: #22C55E;"></i> Auto-accepts Minecraft EULA & provisions server.properties on port 25565.
+              </div>
             </div>
-            <div class="version-pill-group" id="version-pill-container">
-              <!-- Rendered dynamically -->
+
+            <!-- SECTION 1C: Database Server -->
+            <div id="cat-section-database" style="display: none;">
+              <div class="deploy-section-title">
+                <i class="bi bi-database-fill" style="color: #F97316;"></i>
+                <span>1. Select Database Engine</span>
+              </div>
+
+              <div class="runtime-tiles-grid" style="grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
+                <div class="runtime-tile database active" id="tile-db-redis" onclick="selectDbEngine('redis')">
+                  <div class="runtime-tile-icon">
+                    <i class="bi bi-lightning-fill"></i>
+                  </div>
+                  <div>
+                    <div style="font-weight: 800; font-size: 14px; color: #FFF;">Redis</div>
+                    <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4; margin-top: 2px;">In-memory key-value cache & fast data store (Port 6379).</div>
+                  </div>
+                  <div class="runtime-tile-check"><i class="bi bi-check"></i></div>
+                </div>
+
+                <div class="runtime-tile database" id="tile-db-postgres" onclick="selectDbEngine('postgres')">
+                  <div class="runtime-tile-icon">
+                    <i class="bi bi-database"></i>
+                  </div>
+                  <div>
+                    <div style="font-weight: 800; font-size: 14px; color: #FFF;">PostgreSQL</div>
+                    <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4; margin-top: 2px;">Enterprise relational SQL database (Port 5432).</div>
+                  </div>
+                  <div class="runtime-tile-check"><i class="bi bi-check"></i></div>
+                </div>
+
+                <div class="runtime-tile database" id="tile-db-mariadb" onclick="selectDbEngine('mariadb')">
+                  <div class="runtime-tile-icon">
+                    <i class="bi bi-server"></i>
+                  </div>
+                  <div>
+                    <div style="font-weight: 800; font-size: 14px; color: #FFF;">MariaDB / MySQL</div>
+                    <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4; margin-top: 2px;">Fast relational MySQL-compatible daemon (Port 3306).</div>
+                  </div>
+                  <div class="runtime-tile-check"><i class="bi bi-check"></i></div>
+                </div>
+
+                <div class="runtime-tile database" id="tile-db-mongodb" onclick="selectDbEngine('mongodb')">
+                  <div class="runtime-tile-icon">
+                    <i class="bi bi-folder-fill"></i>
+                  </div>
+                  <div>
+                    <div style="font-weight: 800; font-size: 14px; color: #FFF;">MongoDB</div>
+                    <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4; margin-top: 2px;">Flexible NoSQL JSON document store (Port 27017).</div>
+                  </div>
+                  <div class="runtime-tile-check"><i class="bi bi-check"></i></div>
+                </div>
+              </div>
+
+              <!-- Database Credentials Configuration -->
+              <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 12px 14px; margin-bottom: 14px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                  <div>
+                    <label class="form-label" for="app-db-name" style="font-size: 11px;">Database Name</label>
+                    <input type="text" id="app-db-name" class="form-control" value="app_db" style="font-size: 12px; font-family: var(--font-mono);">
+                  </div>
+                  <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                      <label class="form-label" for="app-db-pass" style="font-size: 11px; margin-bottom: 0;">Auth Password</label>
+                      <button type="button" class="quick-cmd-btn" onclick="generateRandomDbPass()" style="padding: 2px 6px; font-size: 10px;">Regenerate</button>
+                    </div>
+                    <input type="text" id="app-db-pass" class="form-control" value="eclipse_pass_6f3a" style="font-size: 12px; font-family: var(--font-mono);">
+                  </div>
+                </div>
+              </div>
             </div>
 
             <!-- 2. Server Identity -->
             <div class="deploy-section-title" style="margin-top: 14px;">
               <i class="bi bi-tag-fill" style="color: var(--sidebarButtonActive);"></i>
-              <span>2. Server Identity & Entrypoint</span>
+              <span>2. Server Identity</span>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 140px; gap: 10px; margin-bottom: 14px;">
+            <div style="display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-bottom: 14px;">
               <div class="form-group" style="margin-bottom: 0;">
                 <label class="form-label" for="app-name">Server Instance Name</label>
                 <div style="position: relative;">
@@ -297,7 +474,7 @@
                 </div>
               </div>
 
-              <div class="form-group" style="margin-bottom: 0;">
+              <div class="form-group" id="group-app-entry" style="margin-bottom: 0; width: 140px;">
                 <label class="form-label" for="app-entry">Entrypoint</label>
                 <input type="text" id="app-entry" class="form-control" value="index.js" required oninput="updateDeployPreview()">
               </div>
@@ -615,6 +792,11 @@
     // Modal helpers
     
     // NEBULA DEPLOY STUDIO INTERACTIVE CONTROLS
+    let currentCategory = 'software';
+    let selectedMcEngine = 'paper';
+    let selectedMcVersion = '1.21.1';
+    let selectedDbEngine = 'redis';
+
     const RUNTIME_VERSIONS = {
       nodejs: [
         { ver: '22', label: 'Node.js 22 LTS (Current)', recommended: true },
@@ -630,11 +812,116 @@
       ]
     };
 
+    const MINECRAFT_VERSIONS = [
+      { ver: '1.21.4', label: '1.21.4 (Latest)' },
+      { ver: '1.21.1', label: '1.21.1 (Stable LTS)', recommended: true },
+      { ver: '1.20.4', label: '1.20.4' },
+      { ver: '1.20.1', label: '1.20.1' },
+      { ver: '1.19.4', label: '1.19.4' },
+      { ver: '1.18.2', label: '1.18.2' },
+      { ver: '1.16.5', label: '1.16.5' },
+      { ver: '1.12.2', label: '1.12.2' },
+      { ver: '1.8.8', label: '1.8.8' }
+    ];
+
     const RANDOM_NAMES = [
       'eclipse-core', 'quantum-express', 'stellar-api', 'hyperion-bot', 'apex-worker',
       'vortex-node', 'cosmic-fastapi', 'zenith-service', 'phoenix-micro', 'titan-backend',
-      'pulse-streamer', 'aurora-server', 'cipher-node', 'solaris-py', 'chrono-worker'
+      'pulse-streamer', 'aurora-server', 'cipher-node', 'solaris-py', 'chrono-worker',
+      'minecraft-realm', 'survival-smp', 'bungee-hub', 'redis-cache', 'postgres-db'
     ];
+
+    function selectServerCategory(cat) {
+      currentCategory = cat;
+      ['software', 'minecraft', 'database'].forEach(c => {
+        const tab = document.getElementById(`tab-cat-${c}`);
+        if (tab) tab.classList.toggle('active', c === cat);
+        const section = document.getElementById(`cat-section-${c}`);
+        if (section) section.style.display = (c === cat) ? 'block' : 'none';
+      });
+
+      const entryGroup = document.getElementById('group-app-entry');
+      const portInput = document.getElementById('app-port');
+      const ramSlider = document.getElementById('app-ram');
+
+      if (cat === 'minecraft') {
+        if (entryGroup) entryGroup.style.display = 'none';
+        if (portInput) portInput.value = '25565';
+        if (ramSlider && parseInt(ramSlider.value, 10) < 2048) {
+          ramSlider.value = 2048;
+          handleSliderChange('ram', 2048);
+        }
+        renderMcVersionPills();
+      } else if (cat === 'database') {
+        if (entryGroup) entryGroup.style.display = 'none';
+        const portMap = { redis: 6379, postgres: 5432, mariadb: 3306, mongodb: 27017 };
+        if (portInput) portInput.value = portMap[selectedDbEngine] || 6379;
+        if (ramSlider) {
+          ramSlider.value = 512;
+          handleSliderChange('ram', 512);
+        }
+        if (!document.getElementById('app-db-pass')?.value) generateRandomDbPass();
+      } else {
+        if (entryGroup) entryGroup.style.display = 'block';
+        if (portInput && (portInput.value === '25565' || ['6379', '5432', '3306', '27017'].includes(portInput.value))) {
+          autoAssignNextFreePort();
+        }
+      }
+
+      updateDeployPreview();
+    }
+
+    function selectMcEngine(engine) {
+      selectedMcEngine = engine;
+      ['paper', 'purpur', 'fabric', 'neoforge', 'forge', 'vanilla'].forEach(e => {
+        const el = document.getElementById(`tile-mc-${e}`);
+        if (el) el.classList.toggle('active', e === engine);
+      });
+      updateDeployPreview();
+    }
+
+    function renderMcVersionPills() {
+      const container = document.getElementById('mc-version-pill-container');
+      const label = document.getElementById('mc-version-label');
+      if (!container) return;
+
+      const defaultVer = MINECRAFT_VERSIONS.find(v => v.recommended) || MINECRAFT_VERSIONS[0];
+      selectedMcVersion = defaultVer.ver;
+      if (label) label.innerText = defaultVer.label;
+
+      container.innerHTML = MINECRAFT_VERSIONS.map(v => {
+        const isAct = v.ver === selectedMcVersion;
+        return `<button type="button" class="version-pill ${isAct ? 'active' : ''}" onclick="selectMcVersionPill('${v.ver}', '${v.label}')">${v.label}</button>`;
+      }).join('');
+    }
+
+    function selectMcVersionPill(ver, labelText) {
+      selectedMcVersion = ver;
+      const label = document.getElementById('mc-version-label');
+      if (label) label.innerText = labelText;
+
+      const pills = document.querySelectorAll('#mc-version-pill-container .version-pill');
+      pills.forEach(p => p.classList.toggle('active', p.innerText === labelText));
+      updateDeployPreview();
+    }
+
+    function selectDbEngine(engine) {
+      selectedDbEngine = engine;
+      ['redis', 'postgres', 'mariadb', 'mongodb'].forEach(e => {
+        const el = document.getElementById(`tile-db-${e}`);
+        if (el) el.classList.toggle('active', e === engine);
+      });
+      const portMap = { redis: 6379, postgres: 5432, mariadb: 3306, mongodb: 27017 };
+      const portInput = document.getElementById('app-port');
+      if (portInput) portInput.value = portMap[engine] || 6379;
+      updateDeployPreview();
+    }
+
+    function generateRandomDbPass() {
+      const pass = 'ec_' + Math.random().toString(36).slice(2, 10);
+      const passInput = document.getElementById('app-db-pass');
+      if (passInput) passInput.value = pass;
+    }
 
     function selectRuntimeTile(type) {
       document.getElementById('app-type').value = type;
@@ -752,10 +1039,9 @@
     }
 
     function updateDeployPreview() {
-      const name = document.getElementById('app-name').value.trim() || 'my-awesome-server';
-      const type = document.getElementById('app-type').value;
-      const ip = document.getElementById('app-ip').value.trim() || '0.0.0.0';
-      const port = document.getElementById('app-port').value || '3100';
+      const name = document.getElementById('app-name')?.value.trim() || 'my-awesome-server';
+      const ip = document.getElementById('app-ip')?.value.trim() || '0.0.0.0';
+      const port = document.getElementById('app-port')?.value || '3100';
 
       const previewName = document.getElementById('preview-name');
       const previewAddr = document.getElementById('preview-addr');
@@ -764,16 +1050,26 @@
       if (previewName) previewName.innerText = name;
       if (previewAddr) previewAddr.innerText = `${ip}:${port}`;
       if (previewIcon) {
-        if (type === 'nodejs') {
-          previewIcon.innerHTML = '<i class="bi bi-filetype-js" style="color: #2CDD2F;"></i>';
+        if (currentCategory === 'minecraft') {
+          previewIcon.innerHTML = '<i class="bi bi-box" style="color: #22C55E;"></i>';
+        } else if (currentCategory === 'database') {
+          previewIcon.innerHTML = '<i class="bi bi-database-fill" style="color: #F97316;"></i>';
         } else {
-          previewIcon.innerHTML = '<i class="bi bi-filetype-py" style="color: #38BDF8;"></i>';
+          const type = document.getElementById('app-type')?.value;
+          if (type === 'nodejs') {
+            previewIcon.innerHTML = '<i class="bi bi-filetype-js" style="color: #2CDD2F;"></i>';
+          } else {
+            previewIcon.innerHTML = '<i class="bi bi-filetype-py" style="color: #38BDF8;"></i>';
+          }
         }
       }
     }
 
     function openCreateAppModal() {
       renderVersionPills('nodejs');
+      renderMcVersionPills();
+      generateRandomDbPass();
+      selectServerCategory('software');
       autoAssignNextFreePort();
       if (!document.getElementById('app-name').value) {
         generateRandomServerName();
@@ -1187,8 +1483,26 @@
             orbClass = 'error';
           }
 
-          const runtimeLabel = app.type === 'python' ? 'Python 3' : 'Node.js';
-          const runtimeVersion = app.runtime_version ? ` v${app.runtime_version}` : '';
+          const isMinecraft = app.server_category === 'minecraft' || app.type === 'minecraft';
+          const isDatabase = app.server_category === 'database' || app.type === 'database';
+
+          let runtimeLabel = 'Node.js';
+          let cardIcon = 'bi bi-filetype-js';
+          let cardIconColor = '#2CDD2F';
+
+          if (isMinecraft) {
+            runtimeLabel = `⛏️ ${(app.engine || 'Paper').toUpperCase()} ${app.game_version || ''}`;
+            cardIcon = 'bi bi-box';
+            cardIconColor = '#22C55E';
+          } else if (isDatabase) {
+            runtimeLabel = `🗄️ ${(app.engine || 'Redis').toUpperCase()}`;
+            cardIcon = 'bi bi-database-fill';
+            cardIconColor = '#F97316';
+          } else {
+            runtimeLabel = (app.type === 'python' ? 'Python 3' : 'Node.js') + (app.runtime_version ? ` v${app.runtime_version}` : '');
+            cardIcon = app.type === 'python' ? 'bi bi-filetype-py' : 'bi bi-filetype-js';
+            cardIconColor = app.type === 'python' ? '#38BDF8' : '#2CDD2F';
+          }
 
           const hostIp = (app.domain && app.domain.trim() !== '')
             ? app.domain.trim()
@@ -1216,8 +1530,8 @@
               <!-- Card Header: Icon, Name, Status Orb & Status Badge -->
               <div class="nebula-server-card-top" style="position: relative; z-index: 2;">
                 <div style="display: flex; align-items: flex-start; gap: 12px; min-width: 0;">
-                  <div style="width: 44px; height: 44px; border-radius: 8px; background: var(--pageSecondaryHover); display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--pagePrimary); flex-shrink: 0;">
-                    <i class="bi bi-hdd-rack-fill"></i>
+                  <div style="width: 44px; height: 44px; border-radius: 8px; background: var(--pageSecondaryHover); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">
+                    <i class="${cardIcon}" style="color: ${cardIconColor};"></i>
                   </div>
                   <div style="min-width: 0;">
                     <div class="nebula-server-title-group">
@@ -1265,7 +1579,7 @@
               <div class="nebula-server-action-bar" style="position: relative; z-index: 2;">
                 <span style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
                   <i class="bi bi-terminal"></i>
-                  <span>${runtimeLabel}${runtimeVersion}</span>
+                  <span>${runtimeLabel}</span>
                 </span>
 
                 <div style="display: flex; align-items: center; gap: 8px;">
@@ -1316,7 +1630,17 @@
             orbClass = 'error';
           }
 
-          const runtimeLabel = app.type === 'python' ? 'Python 3' : 'Node.js';
+          const isMinecraft = app.server_category === 'minecraft' || app.type === 'minecraft';
+          const isDatabase = app.server_category === 'database' || app.type === 'database';
+
+          let runtimeLabel = 'Node.js';
+          if (isMinecraft) {
+            runtimeLabel = `⛏️ ${(app.engine || 'Paper').toUpperCase()} ${app.game_version || ''}`;
+          } else if (isDatabase) {
+            runtimeLabel = `🗄️ ${(app.engine || 'Redis').toUpperCase()}`;
+          } else {
+            runtimeLabel = (app.type === 'python' ? 'Python 3' : 'Node.js') + (app.runtime_version ? ` v${app.runtime_version}` : '');
+          }
           const ramStr = (app.memory_limit || 1024) + ' MB';
           const cpuStr = (app.cpu_limit || 100) + '%';
           const diskStr = (app.disk_limit || 5120) + ' MB';
@@ -1449,16 +1773,29 @@
         if (progressFill) progressFill.style.width = '65%';
         if (progressTitle) progressTitle.innerText = 'Configuring Supervisor & Runtime Scripts...';
 
+        const category = currentCategory || 'software';
+        const finalType = category === 'minecraft' ? 'minecraft' : (category === 'database' ? 'database' : type);
+        const finalEngine = category === 'minecraft' ? selectedMcEngine : (category === 'database' ? selectedDbEngine : '');
+        const finalGameVer = category === 'minecraft' ? selectedMcVersion : '';
+        const finalDbPass = category === 'database' ? (document.getElementById('app-db-pass')?.value.trim() || '') : '';
+        const finalDbName = category === 'database' ? (document.getElementById('app-db-name')?.value.trim() || '') : '';
+        const finalEntry = category === 'minecraft' ? 'server.jar' : (category === 'database' ? selectedDbEngine : entry);
+
         const res = await fetch(API_BASE + '/apps', {
           method: 'POST',
           headers: getHeaders(),
           body: JSON.stringify({
             name,
-            type,
-            runtime_version,
+            server_category: category,
+            type: finalType,
+            engine: finalEngine,
+            game_version: finalGameVer,
+            db_password: finalDbPass,
+            db_name: finalDbName,
+            runtime_version: category === 'minecraft' ? finalGameVer : runtime_version,
             port,
-            entrypoint: entry,
-            main_file: entry,
+            entrypoint: finalEntry,
+            main_file: finalEntry,
             memory_limit,
             cpu_limit,
             disk_limit,

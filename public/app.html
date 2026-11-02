@@ -775,13 +775,15 @@
             </div>
 
             <!-- Quick Command Bar -->
-            <div style="display: flex; align-items: center; gap: 6px; padding: 6px 14px; background: #080711; border-bottom: 1px solid rgba(255,255,255,0.05); overflow-x: auto;">
+            <div id="terminal-quick-bar" style="display: flex; align-items: center; gap: 6px; padding: 6px 14px; background: #080711; border-bottom: 1px solid rgba(255,255,255,0.05); overflow-x: auto;">
               <span style="font-family: var(--font-mono); font-size: 11px; color: #555A6E;">Quick:</span>
-              <button class="quick-cmd-btn" onclick="runQuickCmd('npm install')">npm i</button>
-              <button class="quick-cmd-btn" onclick="runQuickCmd('pip install -r requirements.txt')">pip i</button>
-              <button class="quick-cmd-btn" onclick="runQuickCmd('node -v')">node -v</button>
-              <button class="quick-cmd-btn" onclick="runQuickCmd('python --version')">python -V</button>
-              <button class="quick-cmd-btn" onclick="runQuickCmd('ls -la')">ls -la</button>
+              <div id="terminal-quick-buttons" style="display: flex; align-items: center; gap: 6px;">
+                <button class="quick-cmd-btn" onclick="runQuickCmd('npm install')">npm i</button>
+                <button class="quick-cmd-btn" onclick="runQuickCmd('pip install -r requirements.txt')">pip i</button>
+                <button class="quick-cmd-btn" onclick="runQuickCmd('node -v')">node -v</button>
+                <button class="quick-cmd-btn" onclick="runQuickCmd('python --version')">python -V</button>
+                <button class="quick-cmd-btn" onclick="runQuickCmd('ls -la')">ls -la</button>
+              </div>
             </div>
 
             <!-- Live Terminal Body -->
@@ -1261,81 +1263,205 @@
             <!-- Header with Auto-Save Badge -->
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
               <div>
-                <h2 style="font-size: 22px; font-weight: 800; color: #FFF; margin: 0; letter-spacing: -0.02em;">Startup Configuration</h2>
-                <p style="font-size: 13px; color: #94A3B8; margin-top: 4px;">Configure the container runtime image, engine version, and entrypoint variables.</p>
+                <h2 style="font-size: 22px; font-weight: 800; color: #FFF; margin: 0; letter-spacing: -0.02em;" id="startup-pane-title">Startup Configuration</h2>
+                <p style="font-size: 13px; color: #94A3B8; margin-top: 4px;" id="startup-pane-desc">Configure the execution engine, environment version, and parameters.</p>
               </div>
               <div style="display: flex; align-items: center; gap: 10px;">
                 <span id="startup-autosave-indicator" style="font-size: 12px; font-weight: 700; color: #10B981; display: inline-flex; align-items: center; gap: 6px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.25); padding: 5px 12px; border-radius: 20px; font-family: var(--font-mono);">
                   <i class="bi bi-check-circle-fill"></i> Auto-saved
                 </span>
-                <button type="button" class="btn-secondary" onclick="resetStartupToDefault()" style="border-radius: 20px; padding: 6px 14px; font-size: 12px;" title="Reset configuration to runtime defaults">
+                <button type="button" class="btn-secondary" id="btn-startup-reset" onclick="resetStartupToDefault()" style="border-radius: 20px; padding: 6px 14px; font-size: 12px;" title="Reset configuration to runtime defaults">
                   <i class="bi bi-arrow-counterclockwise"></i> Reset Defaults
                 </button>
               </div>
             </div>
 
-            <!-- Top Grid: Active Command Preview & Runtime Selector -->
-            <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; margin-bottom: 24px;">
-              <!-- Command Editor -->
-              <div style="background: #121422; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 14px; padding: 22px 24px;">
-                <div style="font-size: 11px; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
-                  <span>STARTUP COMMAND PIPELINE</span>
-                  <span style="font-size: 11px; color: #06B6D4; text-transform: none; font-weight: 600;"><i class="bi bi-terminal"></i> Bash Executable</span>
-                </div>
-                <textarea id="startup-cmd-editor" class="form-control" rows="5" style="background: #0A0B14; border: 1px solid rgba(6, 182, 212, 0.25); border-radius: 10px; padding: 14px 16px; font-family: var(--font-mono); font-size: 12px; color: #22D3EE; line-height: 1.6; resize: vertical; width: 100%; box-sizing: border-box;" oninput="triggerAutoSaveStartup()"></textarea>
-                <div style="font-size: 12px; color: #64748B; margin-top: 10px;">
-                  The supervisor command executed on boot. Supports environment variables (<code style="color: #22D3EE;">\${MAIN_FILE}</code>, <code style="color: #22D3EE;">\${NODE_PACKAGES}</code>, <code style="color: #22D3EE;">\${REQUIREMENTS_FILE}</code>).
-                </div>
-              </div>
-
-              <!-- Runtime Platform & Engine Version -->
-              <div style="background: #121422; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 14px; padding: 22px 24px;">
-                <div style="font-size: 11px; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 14px;">
-                  CONTAINER RUNTIME & ENGINE
-                </div>
-                <div style="display: flex; flex-direction: column; gap: 14px;">
-                  <div>
-                    <label style="font-size: 11px; font-weight: 700; color: #CBD5E1; display: block; margin-bottom: 6px;">Runtime Environment</label>
-                    <select id="startup-type-select" class="form-control" style="font-size: 13px; font-weight: 600;" onchange="handleRuntimeTypeChange(this.value); autoSaveStartupConfig();">
-                      <option value="nodejs">Node.js (JavaScript / TypeScript)</option>
-                      <option value="python">Python (FastAPI / Flask / Django)</option>
-                      <option value="java">Java (Minecraft Paper / Spring Boot)</option>
-                      <option value="bun">Bun (High-Performance JS/TS Engine)</option>
-                      <option value="go">Go (Golang Web Services)</option>
+            <!-- VIEW 1: MINECRAFT CONFIGURATION -->
+            <div id="startup-view-minecraft" style="display: none;">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
+                <div style="background: #121422; border: 1px solid rgba(34, 197, 94, 0.25); border-radius: 14px; padding: 22px 24px;">
+                  <div style="font-size: 11px; font-weight: 700; color: #22C55E; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 14px; display: flex; align-items: center; gap: 6px;">
+                    <i class="bi bi-box"></i> MINECRAFT SERVER ENGINE
+                  </div>
+                  <div style="margin-bottom: 14px;">
+                    <label style="font-size: 11px; font-weight: 700; color: #CBD5E1; display: block; margin-bottom: 6px;">Server Software</label>
+                    <select id="mc-engine-select" class="form-control" style="font-size: 13px; font-weight: 600;" onchange="saveMinecraftStartup()">
+                      <option value="paper">Paper (Recommended - High Performance Plugins)</option>
+                      <option value="purpur">Purpur (Customizable Paper Fork)</option>
+                      <option value="fabric">Fabric (Modern Modded Loader)</option>
+                      <option value="neoforge">NeoForge (Modern Community Mod Loader)</option>
+                      <option value="forge">Forge (Classic Modded)</option>
+                      <option value="vanilla">Vanilla (Official Mojang)</option>
                     </select>
                   </div>
                   <div>
-                    <label style="font-size: 11px; font-weight: 700; color: #CBD5E1; display: block; margin-bottom: 6px;">Engine Version</label>
-                    <select id="startup-version-select" class="form-control" style="font-size: 13px; font-weight: 600;" onchange="handleVersionChange(this.value); autoSaveStartupConfig();">
-                      <!-- Populated dynamically -->
+                    <label style="font-size: 11px; font-weight: 700; color: #CBD5E1; display: block; margin-bottom: 6px;">Game Version</label>
+                    <select id="mc-version-select" class="form-control" style="font-size: 13px; font-weight: 600;" onchange="saveMinecraftStartup()">
+                      <option value="1.21.4">1.21.4 (Latest)</option>
+                      <option value="1.21.3">1.21.3</option>
+                      <option value="1.21.1">1.21.1 (Stable LTS)</option>
+                      <option value="1.20.6">1.20.6</option>
+                      <option value="1.20.4">1.20.4</option>
+                      <option value="1.20.2">1.20.2</option>
+                      <option value="1.20.1">1.20.1 (Popular Mods)</option>
+                      <option value="1.19.4">1.19.4</option>
+                      <option value="1.19.2">1.19.2</option>
+                      <option value="1.18.2">1.18.2</option>
+                      <option value="1.16.5">1.16.5 (Combat / Legacy Modded)</option>
+                      <option value="1.12.2">1.12.2 (Classic 1.12 Mods)</option>
+                      <option value="1.8.8">1.8.8 (Competitive PvP)</option>
                     </select>
+                  </div>
+                </div>
+
+                <div style="background: #121422; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 14px; padding: 22px 24px;">
+                  <div style="font-size: 11px; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 14px;">
+                    MANAGED JAVA & CONTAINER STATUS
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 10px; font-size: 12px;">
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
+                      <span style="color: #94A3B8;">Java Runtime:</span>
+                      <span style="color: #22C55E; font-weight: 700;" id="mc-java-info">OpenJDK 21 LTS (Headless)</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
+                      <span style="color: #94A3B8;">EULA Agreement:</span>
+                      <span style="color: #22C55E; font-weight: 700;">Accepted (eula=true)</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
+                      <span style="color: #94A3B8;">Properties & Port:</span>
+                      <span style="color: #22D3EE; font-family: var(--font-mono);" id="mc-port-info">0.0.0.0:25565</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding-top: 4px;">
+                      <span style="color: #94A3B8;">Garbage Collector:</span>
+                      <span style="color: #CBD5E1; font-family: var(--font-mono);">Aikar's G1GC Flags</span>
+                    </div>
+                  </div>
+                  <div style="margin-top: 18px;">
+                    <button type="button" class="btn-primary" onclick="triggerReinstallMcEngine()" style="width: 100%; justify-content: center; height: 36px;">
+                      <i class="bi bi-download"></i> Re-Download / Verify server.jar
+                    </button>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Variables Section -->
-            <h3 style="font-size: 16px; font-weight: 800; color: #FFF; margin: 0 0 16px 0; letter-spacing: -0.01em;">Execution Variables</h3>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px;">
-              <!-- Entrypoint -->
-              <div style="background: #121422; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 14px; padding: 20px 22px;">
-                <span style="font-size: 11px; font-weight: 700; color: #94A3B8; text-transform: uppercase;">MAIN ENTRYPOINT FILE</span>
-                <input type="text" id="startup-var-main" class="form-control" style="margin-top: 8px; font-family: var(--font-mono); font-size: 13px;" value="index.js" oninput="updateStartupCmdFromEntrypoint(this.value); triggerAutoSaveStartup();">
-                <div style="font-size: 11px; color: #64748B; margin-top: 6px;">Primary script or jarfile to execute (e.g. index.js, main.py, server.jar).</div>
+            <!-- VIEW 2: DATABASE CONFIGURATION -->
+            <div id="startup-view-database" style="display: none;">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
+                <div style="background: #121422; border: 1px solid rgba(249, 115, 22, 0.25); border-radius: 14px; padding: 22px 24px;">
+                  <div style="font-size: 11px; font-weight: 700; color: #F97316; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 14px; display: flex; align-items: center; gap: 6px;">
+                    <i class="bi bi-database-fill"></i> DATABASE ENGINE & CREDENTIALS
+                  </div>
+                  <div style="margin-bottom: 14px;">
+                    <label style="font-size: 11px; font-weight: 700; color: #CBD5E1; display: block; margin-bottom: 6px;">Database Engine</label>
+                    <select id="db-engine-select" class="form-control" style="font-size: 13px; font-weight: 600;" onchange="saveDatabaseStartup()">
+                      <option value="redis">Redis (In-Memory Key-Value)</option>
+                      <option value="postgres">PostgreSQL (Relational SQL)</option>
+                      <option value="mariadb">MariaDB / MySQL (Relational SQL)</option>
+                      <option value="mongodb">MongoDB (NoSQL Document Store)</option>
+                    </select>
+                  </div>
+                  <div style="margin-bottom: 14px;">
+                    <label style="font-size: 11px; font-weight: 700; color: #CBD5E1; display: block; margin-bottom: 6px;">Database Name</label>
+                    <input type="text" id="db-name-input" class="form-control" style="font-family: var(--font-mono); font-size: 13px;" oninput="triggerAutoSaveStartup()">
+                  </div>
+                  <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                      <label style="font-size: 11px; font-weight: 700; color: #CBD5E1; margin-bottom: 0;">Auth Password</label>
+                      <button type="button" class="quick-cmd-btn" onclick="regenerateDbPassword()" style="font-size: 10px; padding: 2px 8px;">Regenerate</button>
+                    </div>
+                    <div style="position: relative;">
+                      <input type="password" id="db-pass-input" class="form-control" style="font-family: var(--font-mono); font-size: 13px; padding-right: 70px;" oninput="triggerAutoSaveStartup()">
+                      <button type="button" class="quick-cmd-btn" onclick="toggleDbPassVisibility()" id="btn-toggle-db-pass" style="position: absolute; right: 5px; top: 5px; padding: 3px 8px; font-size: 11px;">Show</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="background: #121422; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 14px; padding: 22px 24px; display: flex; flex-direction: column; justify-content: space-between;">
+                  <div>
+                    <div style="font-size: 11px; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 14px;">
+                      CONNECTION STRING (URI)
+                    </div>
+                    <div style="background: #0A0B14; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 14px; margin-bottom: 14px;">
+                      <div style="font-family: var(--font-mono); font-size: 12px; color: #22D3EE; word-break: break-all; line-height: 1.6;" id="db-connection-uri">
+                        redis://:password@20.219.198.128:6379
+                      </div>
+                    </div>
+                    <div style="font-size: 12px; color: #64748B;">
+                      Use this URI to connect your Node.js, Python, or client applications directly to this database server.
+                    </div>
+                  </div>
+                  <div style="margin-top: 18px;">
+                    <button type="button" class="btn-primary" onclick="copyDbConnectionUri()" style="width: 100%; justify-content: center; height: 36px;">
+                      <i class="bi bi-clipboard"></i> Copy Connection URI
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- VIEW 3: SOFTWARE RUNTIME (NODE.JS / PYTHON) -->
+            <div id="startup-view-software">
+              <!-- Top Grid: Active Command Preview & Runtime Selector -->
+              <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; margin-bottom: 24px;">
+                <!-- Command Editor -->
+                <div style="background: #121422; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 14px; padding: 22px 24px;">
+                  <div style="font-size: 11px; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+                    <span>STARTUP COMMAND PIPELINE</span>
+                    <span style="font-size: 11px; color: #06B6D4; text-transform: none; font-weight: 600;"><i class="bi bi-terminal"></i> Bash Executable</span>
+                  </div>
+                  <textarea id="startup-cmd-editor" class="form-control" rows="5" style="background: #0A0B14; border: 1px solid rgba(6, 182, 212, 0.25); border-radius: 10px; padding: 14px 16px; font-family: var(--font-mono); font-size: 12px; color: #22D3EE; line-height: 1.6; resize: vertical; width: 100%; box-sizing: border-box;" oninput="triggerAutoSaveStartup()"></textarea>
+                  <div style="font-size: 12px; color: #64748B; margin-top: 10px;">
+                    The supervisor command executed on boot. Supports environment variables (<code style="color: #22D3EE;">\${MAIN_FILE}</code>, <code style="color: #22D3EE;">\${NODE_PACKAGES}</code>, <code style="color: #22D3EE;">\${REQUIREMENTS_FILE}</code>).
+                  </div>
+                </div>
+
+                <!-- Runtime Platform & Engine Version -->
+                <div style="background: #121422; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 14px; padding: 22px 24px;">
+                  <div style="font-size: 11px; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 14px;">
+                    CONTAINER RUNTIME & ENGINE
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 14px;">
+                    <div>
+                      <label style="font-size: 11px; font-weight: 700; color: #CBD5E1; display: block; margin-bottom: 6px;">Runtime Environment</label>
+                      <select id="startup-type-select" class="form-control" style="font-size: 13px; font-weight: 600;" onchange="handleRuntimeTypeChange(this.value); autoSaveStartupConfig();">
+                        <option value="nodejs">Node.js (JavaScript / TypeScript)</option>
+                        <option value="python">Python (FastAPI / Flask / Django)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style="font-size: 11px; font-weight: 700; color: #CBD5E1; display: block; margin-bottom: 6px;">Engine Version</label>
+                      <select id="startup-version-select" class="form-control" style="font-size: 13px; font-weight: 600;" onchange="handleVersionChange(this.value); autoSaveStartupConfig();">
+                        <!-- Populated dynamically -->
+                      </select>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <!-- Arguments -->
-              <div style="background: #121422; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 14px; padding: 20px 22px;">
-                <span style="font-size: 11px; font-weight: 700; color: #94A3B8; text-transform: uppercase;">RUNTIME ARGUMENTS / FLAGS</span>
-                <input type="text" id="startup-var-nodeargs" class="form-control" style="margin-top: 8px; font-family: var(--font-mono); font-size: 13px;" placeholder="e.g. --max-old-space-size=1024 or -u" oninput="triggerAutoSaveStartup()">
-                <div style="font-size: 11px; color: #64748B; margin-top: 6px;">Command-line arguments and process flags passed on boot.</div>
-              </div>
+              <!-- Variables Section -->
+              <h3 style="font-size: 16px; font-weight: 800; color: #FFF; margin: 0 0 16px 0; letter-spacing: -0.01em;">Execution Variables</h3>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px;">
+                <!-- Entrypoint -->
+                <div style="background: #121422; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 14px; padding: 20px 22px;">
+                  <span style="font-size: 11px; font-weight: 700; color: #94A3B8; text-transform: uppercase;">MAIN ENTRYPOINT FILE</span>
+                  <input type="text" id="startup-var-main" class="form-control" style="margin-top: 8px; font-family: var(--font-mono); font-size: 13px;" value="index.js" oninput="updateStartupCmdFromEntrypoint(this.value); triggerAutoSaveStartup();">
+                  <div style="font-size: 11px; color: #64748B; margin-top: 6px;">Primary script to execute (e.g. index.js, app.js, main.py).</div>
+                </div>
 
-              <!-- Packages -->
-              <div style="background: #121422; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 14px; padding: 20px 22px; grid-column: span 2;">
-                <span style="font-size: 11px; font-weight: 700; color: #94A3B8; text-transform: uppercase;">ADDITIONAL PACKAGES & DEPENDENCIES</span>
-                <input type="text" id="startup-var-nodepkg" class="form-control" style="margin-top: 8px; font-family: var(--font-mono); font-size: 13px;" placeholder="e.g. express cors dotenv or requirements.txt" oninput="triggerAutoSaveStartup()">
-                <div style="font-size: 11px; color: #64748B; margin-top: 6px;">Packages installed automatically during server launch pipeline.</div>
+                <!-- Arguments -->
+                <div style="background: #121422; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 14px; padding: 20px 22px;">
+                  <span style="font-size: 11px; font-weight: 700; color: #94A3B8; text-transform: uppercase;">RUNTIME ARGUMENTS / FLAGS</span>
+                  <input type="text" id="startup-var-nodeargs" class="form-control" style="margin-top: 8px; font-family: var(--font-mono); font-size: 13px;" placeholder="e.g. --max-old-space-size=1024 or -u" oninput="triggerAutoSaveStartup()">
+                  <div style="font-size: 11px; color: #64748B; margin-top: 6px;">Command-line arguments and process flags passed on boot.</div>
+                </div>
+
+                <!-- Packages -->
+                <div style="background: #121422; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 14px; padding: 20px 22px; grid-column: span 2;">
+                  <span style="font-size: 11px; font-weight: 700; color: #94A3B8; text-transform: uppercase;">ADDITIONAL PACKAGES & DEPENDENCIES</span>
+                  <input type="text" id="startup-var-nodepkg" class="form-control" style="margin-top: 8px; font-family: var(--font-mono); font-size: 13px;" placeholder="e.g. express cors dotenv or requirements.txt" oninput="triggerAutoSaveStartup()">
+                  <div style="font-size: 11px; color: #64748B; margin-top: 6px;">Packages installed automatically during server launch pipeline.</div>
+                </div>
               </div>
             </div>
           </div>
@@ -1809,8 +1935,20 @@
         const headerName = document.getElementById('header-app-name');
         if (headerName) headerName.innerText = app.name;
 
+        const isMc = app.server_category === 'minecraft' || app.type === 'minecraft';
+        const isDb = app.server_category === 'database' || app.type === 'database';
+
         const runtimePill = document.getElementById('hero-runtime-pill');
-        if (runtimePill) runtimePill.innerText = (app.type || 'nodejs').toUpperCase() + (app.runtime_version ? ` v${app.runtime_version}` : '');
+        if (runtimePill) {
+          if (isMc) {
+            runtimePill.innerHTML = `⛏️ MINECRAFT · ${(app.engine || 'Paper').toUpperCase()} ${app.game_version || ''}`;
+          } else if (isDb) {
+            runtimePill.innerHTML = `🗄️ DATABASE · ${(app.engine || 'Redis').toUpperCase()}`;
+          } else {
+            runtimePill.innerText = (app.type || 'nodejs').toUpperCase() + (app.runtime_version ? ` v${app.runtime_version}` : '');
+          }
+        }
+        renderQuickCommands(app);
 
         const isInstalling = app.status === 'installing';
         const isRunning = app.status === 'running' || app.status === 'online';
@@ -2281,6 +2419,40 @@
       }
     }
 
+    function renderQuickCommands(app) {
+      const container = document.getElementById('terminal-quick-buttons');
+      if (!container) return;
+      const isMc = app.server_category === 'minecraft' || app.type === 'minecraft';
+      const isDb = app.server_category === 'database' || app.type === 'database';
+
+      if (isMc) {
+        container.innerHTML = `
+          <button class="quick-cmd-btn" onclick="runQuickCmd('help')">help</button>
+          <button class="quick-cmd-btn" onclick="runQuickCmd('list')">list</button>
+          <button class="quick-cmd-btn" onclick="runQuickCmd('tps')">tps</button>
+          <button class="quick-cmd-btn" onclick="runQuickCmd('save-all')">save-all</button>
+          <button class="quick-cmd-btn" onclick="const p = prompt('Player name to OP:'); if(p) runQuickCmd('op ' + p.trim());">op</button>
+          <button class="quick-cmd-btn" onclick="runQuickCmd('whitelist on')">whitelist on</button>
+          <button class="quick-cmd-btn" onclick="runQuickCmd('stop')">stop</button>
+        `;
+      } else if (isDb) {
+        container.innerHTML = `
+          <button class="quick-cmd-btn" onclick="runQuickCmd('PING')">PING</button>
+          <button class="quick-cmd-btn" onclick="runQuickCmd('INFO')">INFO</button>
+          <button class="quick-cmd-btn" onclick="runQuickCmd('DBSIZE')">DBSIZE</button>
+          <button class="quick-cmd-btn" onclick="runQuickCmd('CLIENT LIST')">CLIENT LIST</button>
+        `;
+      } else {
+        container.innerHTML = `
+          <button class="quick-cmd-btn" onclick="runQuickCmd('npm install')">npm i</button>
+          <button class="quick-cmd-btn" onclick="runQuickCmd('pip install -r requirements.txt')">pip i</button>
+          <button class="quick-cmd-btn" onclick="runQuickCmd('node -v')">node -v</button>
+          <button class="quick-cmd-btn" onclick="runQuickCmd('python --version')">python -V</button>
+          <button class="quick-cmd-btn" onclick="runQuickCmd('ls -la')">ls -la</button>
+        `;
+      }
+    }
+
     function resetStartupToDefault() {
       const type = document.getElementById('startup-type-select')?.value || 'nodejs';
       const preset = RUNTIME_PRESETS[type] || RUNTIME_PRESETS.nodejs;
@@ -2297,38 +2469,219 @@
         if (!res.ok) return;
         const { startup } = await res.json();
 
-        const typeSelect = document.getElementById('startup-type-select');
-        if (typeSelect) typeSelect.value = startup.type || 'nodejs';
+        const category = startup.server_category || (['minecraft', 'database'].includes(startup.type) ? startup.type : 'software');
+        const viewMc = document.getElementById('startup-view-minecraft');
+        const viewDb = document.getElementById('startup-view-database');
+        const viewSoft = document.getElementById('startup-view-software');
+        const resetBtn = document.getElementById('btn-startup-reset');
+        const titleEl = document.getElementById('startup-pane-title');
+        const descEl = document.getElementById('startup-pane-desc');
 
-        updateVersionOptions(startup.type || 'nodejs', startup.runtime_version);
+        if (category === 'minecraft') {
+          if (viewMc) viewMc.style.display = 'block';
+          if (viewDb) viewDb.style.display = 'none';
+          if (viewSoft) viewSoft.style.display = 'none';
+          if (resetBtn) resetBtn.style.display = 'none';
+          if (titleEl) titleEl.innerText = 'Minecraft Server Configuration';
+          if (descEl) descEl.innerText = 'Configure Minecraft software engine, version, and server properties.';
 
-        const preset = RUNTIME_PRESETS[startup.type] || RUNTIME_PRESETS.nodejs;
-        const cmdEditor = document.getElementById('startup-cmd-editor');
-        if (cmdEditor) {
-          cmdEditor.value = startup.startup_cmd || preset.defaultCmd;
-        }
+          const engineSel = document.getElementById('mc-engine-select');
+          if (engineSel) engineSel.value = startup.engine || 'paper';
 
-        const mainInput = document.getElementById('startup-var-main');
-        if (mainInput) {
-          mainInput.value = startup.main_file || preset.entrypoint;
-        }
+          const verSel = document.getElementById('mc-version-select');
+          if (verSel) verSel.value = startup.game_version || '1.21.1';
 
-        const argsInput = document.getElementById('startup-var-nodeargs');
-        if (argsInput) {
-          argsInput.value = startup.node_args || '';
-        }
+          const portInfo = document.getElementById('mc-port-info');
+          if (portInfo) portInfo.innerText = `0.0.0.0:${currentAppObj?.port || 25565}`;
 
-        const pkgInput = document.getElementById('startup-var-nodepkg');
-        if (pkgInput) {
-          pkgInput.value = startup.node_packages || '';
+          const javaInfo = document.getElementById('mc-java-info');
+          if (javaInfo) {
+            const ver = startup.game_version || '1.21.1';
+            javaInfo.innerText = (ver.startsWith('1.21') || ver.startsWith('1.20.5') || ver.startsWith('1.20.6')) ? 'OpenJDK 21 LTS (Headless)' : 'OpenJDK 17 LTS (Headless)';
+          }
+        } else if (category === 'database') {
+          if (viewDb) viewDb.style.display = 'block';
+          if (viewMc) viewMc.style.display = 'none';
+          if (viewSoft) viewSoft.style.display = 'none';
+          if (resetBtn) resetBtn.style.display = 'none';
+          if (titleEl) titleEl.innerText = 'Database Instance Configuration';
+          if (descEl) descEl.innerText = 'Manage database daemon engine, access credentials, and connection strings.';
+
+          const engineSel = document.getElementById('db-engine-select');
+          if (engineSel) engineSel.value = startup.engine || 'redis';
+
+          const nameInput = document.getElementById('db-name-input');
+          if (nameInput) nameInput.value = startup.db_name || (currentAppObj?.name || 'app_db');
+
+          const passInput = document.getElementById('db-pass-input');
+          if (passInput) passInput.value = startup.db_password || '';
+
+          updateDbConnectionUriDisplay(startup.engine || 'redis', startup.db_password, startup.db_name);
+        } else {
+          if (viewSoft) viewSoft.style.display = 'block';
+          if (viewMc) viewMc.style.display = 'none';
+          if (viewDb) viewDb.style.display = 'none';
+          if (resetBtn) resetBtn.style.display = 'inline-flex';
+          if (titleEl) titleEl.innerText = 'Startup Configuration';
+          if (descEl) descEl.innerText = 'Configure container runtime engine, version, and execution variables.';
+
+          const typeSelect = document.getElementById('startup-type-select');
+          if (typeSelect) typeSelect.value = startup.type || 'nodejs';
+
+          updateVersionOptions(startup.type || 'nodejs', startup.runtime_version);
+
+          const preset = RUNTIME_PRESETS[startup.type] || RUNTIME_PRESETS.nodejs;
+          const cmdEditor = document.getElementById('startup-cmd-editor');
+          if (cmdEditor) {
+            cmdEditor.value = startup.startup_cmd || preset.defaultCmd;
+          }
+
+          const mainInput = document.getElementById('startup-var-main');
+          if (mainInput) {
+            mainInput.value = startup.main_file || preset.entrypoint;
+          }
+
+          const argsInput = document.getElementById('startup-var-nodeargs');
+          if (argsInput) {
+            argsInput.value = startup.node_args || '';
+          }
+
+          const pkgInput = document.getElementById('startup-var-nodepkg');
+          if (pkgInput) {
+            pkgInput.value = startup.node_packages || '';
+          }
         }
       } catch (e) {
         console.error('Load startup error:', e);
       }
     }
 
+    function updateDbConnectionUriDisplay(engine, pass, dbName) {
+      const uriBox = document.getElementById('db-connection-uri');
+      if (!uriBox) return;
+      const host = (currentAppObj?.primary_ip && currentAppObj.primary_ip !== '0.0.0.0') ? currentAppObj.primary_ip : (window.location.hostname || '127.0.0.1');
+      const port = currentAppObj?.port || (engine === 'redis' ? 6379 : (engine === 'postgres' ? 5432 : (engine === 'mariadb' ? 3306 : 27017)));
+      const p = pass || document.getElementById('db-pass-input')?.value || 'password';
+      const d = dbName || document.getElementById('db-name-input')?.value || 'app_db';
+
+      if (engine === 'redis') {
+        uriBox.innerText = `redis://:${p}@${host}:${port}`;
+      } else if (engine === 'postgres') {
+        uriBox.innerText = `postgresql://postgres:${p}@${host}:${port}/${d}`;
+      } else if (engine === 'mariadb' || engine === 'mysql') {
+        uriBox.innerText = `mysql://eclipse_user:${p}@${host}:${port}/${d}`;
+      } else {
+        uriBox.innerText = `mongodb://${host}:${port}/${d}`;
+      }
+    }
+
+    async function saveMinecraftStartup() {
+      if (!currentAppId) return;
+      const engine = document.getElementById('mc-engine-select')?.value || 'paper';
+      const game_version = document.getElementById('mc-version-select')?.value || '1.21.1';
+
+      try {
+        const res = await fetch(`${API_BASE}/apps/${currentAppId}/startup`, {
+          method: 'PUT',
+          headers: getHeaders(),
+          body: JSON.stringify({ engine, game_version })
+        });
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.error || 'Failed to save Minecraft configuration');
+        notify(`Minecraft configured to ${engine.toUpperCase()} (${game_version})`, 'success');
+
+        const pill = document.getElementById('hero-runtime-pill');
+        if (pill) pill.innerHTML = `⛏️ MINECRAFT · ${engine.toUpperCase()} ${game_version}`;
+      } catch (e) {
+        notify(e.message, 'error');
+      }
+    }
+
+    async function triggerReinstallMcEngine() {
+      if (!currentAppId) return;
+      notify('Initiating server jar provisioning in background...', 'info');
+      try {
+        const res = await fetch(`${API_BASE}/apps/${currentAppId}/action/install`, {
+          method: 'POST',
+          headers: getHeaders()
+        });
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.error || 'Failed to provision engine');
+        notify('Engine download started. Switch to Terminal tab to watch progress.', 'success');
+        switchConsoleTab('console');
+      } catch (e) {
+        notify(e.message, 'error');
+      }
+    }
+
+    async function saveDatabaseStartup() {
+      if (!currentAppId) return;
+      const engine = document.getElementById('db-engine-select')?.value || 'redis';
+      const db_name = document.getElementById('db-name-input')?.value.trim() || '';
+      const db_password = document.getElementById('db-pass-input')?.value.trim() || '';
+
+      updateDbConnectionUriDisplay(engine, db_password, db_name);
+
+      try {
+        const res = await fetch(`${API_BASE}/apps/${currentAppId}/startup`, {
+          method: 'PUT',
+          headers: getHeaders(),
+          body: JSON.stringify({ engine, db_name, db_password })
+        });
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.error || 'Failed to save database configuration');
+        notify(`Database configured to ${engine.toUpperCase()}`, 'success');
+
+        const pill = document.getElementById('hero-runtime-pill');
+        if (pill) pill.innerHTML = `🗄️ DATABASE · ${engine.toUpperCase()}`;
+      } catch (e) {
+        notify(e.message, 'error');
+      }
+    }
+
+    function toggleDbPassVisibility() {
+      const input = document.getElementById('db-pass-input');
+      const btn = document.getElementById('btn-toggle-db-pass');
+      if (!input || !btn) return;
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.innerText = 'Hide';
+      } else {
+        input.type = 'password';
+        btn.innerText = 'Show';
+      }
+    }
+
+    function regenerateDbPassword() {
+      const pass = 'ec_' + Math.random().toString(36).slice(2, 10);
+      const input = document.getElementById('db-pass-input');
+      if (input) input.value = pass;
+      saveDatabaseStartup();
+    }
+
+    function copyDbConnectionUri() {
+      const uriBox = document.getElementById('db-connection-uri');
+      if (!uriBox) return;
+      const text = uriBox.innerText.trim();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          notify('Connection URI copied to clipboard!', 'success');
+        });
+      }
+    }
+
     async function saveStartupConfig() {
       if (!currentAppId) return;
+      const isMc = currentAppObj?.server_category === 'minecraft' || currentAppObj?.type === 'minecraft';
+      const isDb = currentAppObj?.server_category === 'database' || currentAppObj?.type === 'database';
+
+      if (isMc) {
+        return saveMinecraftStartup();
+      }
+      if (isDb) {
+        return saveDatabaseStartup();
+      }
+
       const type = document.getElementById('startup-type-select')?.value || 'nodejs';
       const runtime_version = document.getElementById('startup-version-select')?.value || '';
       const startup_cmd = document.getElementById('startup-cmd-editor')?.value || '';

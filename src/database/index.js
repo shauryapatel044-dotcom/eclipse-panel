@@ -49,6 +49,11 @@ export function initDatabase() {
       node_args TEXT DEFAULT '',
       requirements_file TEXT DEFAULT 'requirements.txt',
       folder_name TEXT DEFAULT '',
+      server_category TEXT DEFAULT 'software',
+      engine TEXT DEFAULT '',
+      game_version TEXT DEFAULT '',
+      db_password TEXT DEFAULT '',
+      db_name TEXT DEFAULT '',
       created_at TEXT DEFAULT CURRENT_TIMESTAMP,
       updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -156,6 +161,11 @@ export function initDatabase() {
   try { db.exec(`ALTER TABLE apps ADD COLUMN node_id TEXT DEFAULT 'node_local';`); } catch (e) {}
   try { db.exec(`ALTER TABLE apps ADD COLUMN webhook_token TEXT DEFAULT '';`); } catch (e) {}
   try { db.exec(`ALTER TABLE apps ADD COLUMN folder_name TEXT DEFAULT '';`); } catch (e) {}
+  try { db.exec(`ALTER TABLE apps ADD COLUMN server_category TEXT DEFAULT 'software';`); } catch (e) {}
+  try { db.exec(`ALTER TABLE apps ADD COLUMN engine TEXT DEFAULT '';`); } catch (e) {}
+  try { db.exec(`ALTER TABLE apps ADD COLUMN game_version TEXT DEFAULT '';`); } catch (e) {}
+  try { db.exec(`ALTER TABLE apps ADD COLUMN db_password TEXT DEFAULT '';`); } catch (e) {}
+  try { db.exec(`ALTER TABLE apps ADD COLUMN db_name TEXT DEFAULT '';`); } catch (e) {}
   try { db.exec(`ALTER TABLE audit_logs ADD COLUMN ip_address TEXT DEFAULT '';`); } catch (e) {}
   try { db.exec(`ALTER TABLE audit_logs ADD COLUMN username TEXT DEFAULT '';`); } catch (e) {}
 

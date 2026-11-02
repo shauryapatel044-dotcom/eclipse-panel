@@ -9,6 +9,8 @@ import { supervisor } from '../daemon/supervisor.js';
 import { logStreamer } from '../daemon/logStreamer.js';
 import { getHostIp } from '../daemon/metrics.js';
 import { checkAppAccess } from '../utils/permissions.js';
+import { MinecraftRunner } from '../daemon/minecraftRunner.js';
+import { DatabaseRunner } from '../daemon/databaseRunner.js';
 
 export class AppController {
   static async getApps(req, res) {
@@ -143,44 +145,103 @@ export class AppController {
         main_file,
         node_packages,
         node_args,
-        requirements_file
+        requirements_file,
+        server_category,
+        engine,
+        game_version,
+        db_password,
+        db_name
       } = req.body;
 
-      if (!name || !type) {
-        return res.status(400).json({ error: 'App name and type (nodejs | python) are required' });
+      if (!name) {
+        return res.status(400).json({ error: 'App name is required' });
       }
 
-      const normalizedType = type.toLowerCase().trim();
-      if (!['nodejs', 'python'].includes(normalizedType)) {
-        return res.status(400).json({ error: 'Type must be either "nodejs" or "python"' });
+      // Determine category and runtime type
+      let category = (server_category || '').toLowerCase().trim();
+      let normalizedType = (type || '').toLowerCase().trim();
+
+      if (category === 'minecraft' || normalizedType === 'minecraft') {
+        category = 'minecraft';
+        normalizedType = 'minecraft';
+      } else if (category === 'database' || normalizedType === 'database') {
+        category = 'database';
+        normalizedType = 'database';
+      } else {
+        category = 'software';
+        if (!['nodejs', 'python'].includes(normalizedType)) {
+          normalizedType = 'nodejs';
+        }
       }
 
       const appId = `app_${crypto.randomBytes(4).toString('hex')}`;
-      const defaultEntry = main_file || entrypoint || (normalizedType === 'nodejs' ? 'index.js' : 'main.py');
       const envJson = typeof env_vars === 'object' ? JSON.stringify(env_vars) : (env_vars || '{}');
       const autoRestartVal = auto_restart === false || auto_restart === 0 ? 0 : 1;
+      
+      // Defaults based on category
+      let finalEngine = '';
+      let finalGameVersion = '';
+      let finalDbPass = '';
+      let finalDbName = '';
+      let defaultEntry = '';
+
+      if (category === 'minecraft') {
+        const validEngines = ['paper', 'fabric', 'neoforge', 'forge', 'purpur', 'vanilla'];
+        finalEngine = validEngines.includes((engine || '').toLowerCase()) ? engine.toLowerCase() : 'paper';
+        finalGameVersion = game_version || '1.21.1';
+        defaultEntry = 'server.jar';
+      } else if (category === 'database') {
+        const validEngines = ['redis', 'postgres', 'mariadb', 'mongodb'];
+        finalEngine = validEngines.includes((engine || '').toLowerCase()) ? engine.toLowerCase() : 'redis';
+        finalDbPass = db_password || 'ec_' + crypto.randomBytes(6).toString('hex');
+        finalDbName = db_name || (name.trim().toLowerCase().replace(/[^a-z0-9]/g, '_') || 'app_db');
+        defaultEntry = finalEngine;
+      } else {
+        defaultEntry = main_file || entrypoint || (normalizedType === 'nodejs' ? 'index.js' : 'main.py');
+      }
+
+      // Port allocation
       let appPort = port ? parseInt(port, 10) : null;
       if (!appPort) {
         const appsWithPort = db.prepare('SELECT port FROM apps WHERE port IS NOT NULL').all();
         const usedPorts = new Set(appsWithPort.map(a => a.port));
         let candidate = 3000;
-        while (usedPorts.has(candidate) && candidate < 9999) {
+        if (category === 'minecraft') {
+          candidate = 25565;
+        } else if (category === 'database') {
+          if (finalEngine === 'redis') candidate = 6379;
+          else if (finalEngine === 'postgres') candidate = 5432;
+          else if (finalEngine === 'mariadb' || finalEngine === 'mysql') candidate = 3306;
+          else candidate = 27017;
+        }
+        while (usedPorts.has(candidate) && candidate < 65000) {
           candidate++;
         }
         appPort = candidate;
       }
-      const memLimit = memory_limit ? parseInt(memory_limit, 10) : 1024;
+
+      const memLimit = memory_limit ? parseInt(memory_limit, 10) : (category === 'minecraft' ? 2048 : (category === 'database' ? 512 : 1024));
       const cpLimit = cpu_limit ? parseInt(cpu_limit, 10) : 100;
-      const diskLimit = disk_limit ? parseInt(disk_limit, 10) : 5120;
+      const diskLimit = disk_limit ? parseInt(disk_limit, 10) : (category === 'minecraft' ? 10240 : 5120);
       const serverIp = (primary_ip && primary_ip.trim() !== '0.0.0.0' && primary_ip.trim() !== '127.0.0.1') ? primary_ip.trim() : getHostIp();
       const baseDomain = process.env.BASE_DOMAIN || '';
       const serverDomain = domain ? domain.trim() : (baseDomain ? `${name.toLowerCase().replace(/[^a-z0-9-]/g, '')}.${baseDomain}` : '');
-      const rVersion = runtime_version ? runtime_version.trim() : (normalizedType === 'nodejs' ? '20' : '3.11');
+      const rVersion = runtime_version ? runtime_version.trim() : (category === 'minecraft' ? finalGameVersion : (normalizedType === 'nodejs' ? '20' : '3.11'));
 
       const defaultNodeStartup = `if [[ -d .git ]] && [[ 0 == "1" ]]; then git pull; fi; if [[ ! -z "\${NODE_PACKAGES}" ]]; then /usr/local/bin/npm install \${NODE_PACKAGES}; fi; if [[ ! -z "\${UNNODE_PACKAGES}" ]]; then /usr/local/bin/npm uninstall \${UNNODE_PACKAGES}; fi; if [ -f /home/container/package.json ]; then /usr/local/bin/npm install; fi; if [[ "\${MAIN_FILE##*.}" == "js" ]]; then /usr/local/bin/node "/home/container/\${MAIN_FILE}" \${NODE_ARGS}; else /usr/local/bin/ts-node --esm "/home/container/\${MAIN_FILE}" \${NODE_ARGS}; fi`;
       const defaultPythonStartup = `if [[ -d .git ]] && [[ "0" == "1" ]]; then git pull; fi; if [[ ! -z "" ]]; then pip install -U --prefix .local ; fi; if [[ -f /home/container/\${REQUIREMENTS_FILE} ]]; then pip install -U --prefix .local -r \${REQUIREMENTS_FILE}; fi; /usr/local/bin/python /home/container/main.py`;
 
-      const startCmd = startup_cmd || (normalizedType === 'nodejs' ? defaultNodeStartup : defaultPythonStartup);
+      let startCmd = startup_cmd;
+      if (!startCmd) {
+        if (category === 'minecraft') {
+          startCmd = `java -Xms512M -Xmx\${SERVER_MEMORY}M -jar server.jar nogui`;
+        } else if (category === 'database') {
+          startCmd = `${finalEngine}-server`;
+        } else {
+          startCmd = (normalizedType === 'nodejs' ? defaultNodeStartup : defaultPythonStartup);
+        }
+      }
+
       const reqFile = requirements_file || 'requirements.txt';
       const nPackages = node_packages || '';
       const nArgs = node_args || '';
@@ -191,19 +252,30 @@ export class AppController {
         INSERT INTO apps (
           id, name, type, user_id, entrypoint, port, env_vars, auto_restart, 
           memory_limit, cpu_limit, disk_limit, primary_ip, domain, runtime_version, 
-          startup_cmd, main_file, node_packages, node_args, requirements_file, status, folder_name
+          startup_cmd, main_file, node_packages, node_args, requirements_file, status, folder_name,
+          server_category, engine, game_version, db_password, db_name
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'stopped', ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'stopped', ?, ?, ?, ?, ?, ?)
       `);
       insertStmt.run(
         appId, name.trim(), normalizedType, req.user.id, defaultEntry, appPort, envJson, autoRestartVal,
         memLimit, cpLimit, diskLimit, serverIp, serverDomain, rVersion,
-        startCmd, defaultEntry, nPackages, nArgs, reqFile, safeFolder
+        startCmd, defaultEntry, nPackages, nArgs, reqFile, safeFolder,
+        category, finalEngine, finalGameVersion, finalDbPass, finalDbName
       );
 
       // Create clean, empty app directory using server name
       const appDir = supervisor.getAppDir({ id: appId, name: name.trim(), folder_name: safeFolder });
-      logStreamer.append(appId, 'system', `[Eclipse Daemon] Container directory initialized at "${safeFolder}" (clean empty directory). Upload your project files or connect Git to begin.`);
+
+      if (category === 'minecraft') {
+        MinecraftRunner.configureServerFiles({ id: appId, name: name.trim(), port: appPort }, appDir);
+        logStreamer.append(appId, 'system', `[Minecraft Server] Provisioned directory "${safeFolder}" on port ${appPort}. Engine: ${finalEngine.toUpperCase()} (${finalGameVersion}). Accepted eula.txt.`);
+      } else if (category === 'database') {
+        DatabaseRunner.setupDatabase({ id: appId, name: name.trim(), port: appPort, engine: finalEngine, db_password: finalDbPass, db_name: finalDbName, memory_limit: memLimit }, appDir);
+        logStreamer.append(appId, 'system', `[Database Server] Provisioned ${finalEngine.toUpperCase()} on port ${appPort}. Connection configuration written.`);
+      } else {
+        logStreamer.append(appId, 'system', `[Eclipse Daemon] Container directory initialized at "${safeFolder}". Ready for code files.`);
+      }
 
       return res.status(201).json({
         message: 'Application created successfully',
@@ -212,6 +284,9 @@ export class AppController {
           id: appId,
           name: name.trim(),
           type: normalizedType,
+          server_category: category,
+          engine: finalEngine,
+          game_version: finalGameVersion,
           port: appPort,
           status: 'stopped',
           memory_limit: memLimit,
@@ -248,7 +323,11 @@ export class AppController {
         node_packages,
         unnode_packages,
         node_args,
-        requirements_file
+        requirements_file,
+        engine,
+        game_version,
+        db_password,
+        db_name
       } = req.body;
 
       const stmt = db.prepare('SELECT * FROM apps WHERE id = ?');
@@ -272,8 +351,26 @@ export class AppController {
         }
       }
 
+      // Strict category isolation guard
+      const currentCategory = app.server_category || (['minecraft', 'database'].includes(app.type) ? app.type : 'software');
+      let newType = app.type;
+      if (type && type.trim().toLowerCase() !== app.type) {
+        const reqType = type.trim().toLowerCase();
+        if (currentCategory === 'minecraft' && reqType !== 'minecraft') {
+          return res.status(400).json({ error: 'This is a Minecraft server and cannot be converted to software or database.' });
+        }
+        if (currentCategory === 'database' && reqType !== 'database') {
+          return res.status(400).json({ error: 'This is a Database server and cannot be converted to software or Minecraft.' });
+        }
+        if (currentCategory === 'software') {
+          if (!['nodejs', 'python'].includes(reqType)) {
+            return res.status(400).json({ error: 'Software servers can only run Node.js or Python applications.' });
+          }
+          newType = reqType;
+        }
+      }
+
       const newName = name !== undefined ? name.trim() : app.name;
-      const newType = type !== undefined ? type.trim().toLowerCase() : app.type;
       const newEntrypoint = entrypoint !== undefined ? entrypoint.trim() : app.entrypoint;
       const newPort = port !== undefined ? (port ? parseInt(port, 10) : null) : app.port;
       const newAutoRestart = auto_restart !== undefined ? (auto_restart ? 1 : 0) : app.auto_restart;
@@ -290,6 +387,11 @@ export class AppController {
       const newArgs = node_args !== undefined ? node_args : (app.node_args || '');
       const newReqs = requirements_file !== undefined ? requirements_file : (app.requirements_file || 'requirements.txt');
       const newEnv = env_vars !== undefined ? (typeof env_vars === 'object' ? JSON.stringify(env_vars) : env_vars) : app.env_vars;
+      
+      const newEngine = engine !== undefined ? engine.trim().toLowerCase() : (app.engine || '');
+      const newGameVersion = game_version !== undefined ? game_version.trim() : (app.game_version || '');
+      const newDbPassword = db_password !== undefined ? db_password.trim() : (app.db_password || '');
+      const newDbName = db_name !== undefined ? db_name.trim() : (app.db_name || '');
 
       let newFolder = app.folder_name || supervisor.sanitizeFolderName(app.name);
       if (newName && newName.trim() !== app.name) {
@@ -311,15 +413,27 @@ export class AppController {
         SET name = ?, type = ?, entrypoint = ?, port = ?, env_vars = ?, auto_restart = ?, 
             memory_limit = ?, cpu_limit = ?, disk_limit = ?, primary_ip = ?, domain = ?,
             runtime_version = ?, startup_cmd = ?, main_file = ?, node_packages = ?,
-            unnode_packages = ?, node_args = ?, requirements_file = ?, folder_name = ?, updated_at = CURRENT_TIMESTAMP
+            unnode_packages = ?, node_args = ?, requirements_file = ?, folder_name = ?,
+            engine = ?, game_version = ?, db_password = ?, db_name = ?, updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
       `);
       updateStmt.run(
         newName, newType, newEntrypoint, newPort, newEnv, newAutoRestart, 
         newMem, newCpu, newDisk, newIp, newDomain,
         newRVersion, newStartupCmd, newMainFile, newPackages,
-        newUnPackages, newArgs, newReqs, newFolder, id
+        newUnPackages, newArgs, newReqs, newFolder,
+        newEngine, newGameVersion, newDbPassword, newDbName, id
       );
+
+      // Reconfigure port in config files if changed
+      if (newPort && newPort !== app.port) {
+        const appDir = supervisor.getAppDir({ ...app, folder_name: newFolder });
+        if (currentCategory === 'minecraft') {
+          MinecraftRunner.configureServerFiles({ id, name: newName, port: newPort }, appDir);
+        } else if (currentCategory === 'database') {
+          DatabaseRunner.setupDatabase({ id, name: newName, port: newPort, engine: newEngine, db_password: newDbPassword, db_name: newDbName, memory_limit: newMem }, appDir);
+        }
+      }
 
       logStreamer.append(id, 'system', `[Config Updated] Specs updated: Port=${newPort}, RAM=${newMem}MB, CPU=${newCpu}%, Disk=${newDisk}MB, IP=${newIp}, Domain=${newDomain}`);
 
@@ -343,12 +457,19 @@ export class AppController {
       const defaultNodeStartup = `if [[ -d .git ]] && [[ 0 == "1" ]]; then git pull; fi; if [[ ! -z "\${NODE_PACKAGES}" ]]; then /usr/local/bin/npm install \${NODE_PACKAGES}; fi; if [[ ! -z "\${UNNODE_PACKAGES}" ]]; then /usr/local/bin/npm uninstall \${UNNODE_PACKAGES}; fi; if [ -f /home/container/package.json ]; then /usr/local/bin/npm install; fi; if [[ "\${MAIN_FILE##*.}" == "js" ]]; then /usr/local/bin/node "/home/container/\${MAIN_FILE}" \${NODE_ARGS}; else /usr/local/bin/ts-node --esm "/home/container/\${MAIN_FILE}" \${NODE_ARGS}; fi`;
       const defaultPythonStartup = `if [[ -d .git ]] && [[ "0" == "1" ]]; then git pull; fi; if [[ ! -z "" ]]; then pip install -U --prefix .local ; fi; if [[ -f /home/container/\${REQUIREMENTS_FILE} ]]; then pip install -U --prefix .local -r \${REQUIREMENTS_FILE}; fi; /usr/local/bin/python /home/container/main.py`;
 
+      const category = app.server_category || (['minecraft', 'database'].includes(app.type) ? app.type : 'software');
+
       return res.json({
         startup: {
           type: app.type,
-          runtime_version: app.runtime_version || (app.type === 'nodejs' ? '20' : '3.11'),
+          server_category: category,
+          engine: app.engine || (category === 'minecraft' ? 'paper' : (category === 'database' ? 'redis' : '')),
+          game_version: app.game_version || (category === 'minecraft' ? '1.21.1' : ''),
+          db_password: app.db_password || '',
+          db_name: app.db_name || '',
+          runtime_version: app.runtime_version || (app.type === 'nodejs' ? '20' : (app.type === 'python' ? '3.11' : '')),
           startup_cmd: app.startup_cmd || (app.type === 'nodejs' ? defaultNodeStartup : defaultPythonStartup),
-          main_file: app.main_file || app.entrypoint || (app.type === 'nodejs' ? 'index.js' : 'main.py'),
+          main_file: app.main_file || app.entrypoint || (app.type === 'nodejs' ? 'index.js' : (app.type === 'python' ? 'main.py' : 'server.jar')),
           node_packages: app.node_packages || '',
           unnode_packages: app.unnode_packages || '',
           node_args: app.node_args || '',
@@ -375,7 +496,11 @@ export class AppController {
         node_packages, 
         unnode_packages, 
         node_args, 
-        requirements_file 
+        requirements_file,
+        engine,
+        game_version,
+        db_password,
+        db_name
       } = req.body;
 
       const stmt = db.prepare('SELECT * FROM apps WHERE id = ?');
@@ -386,7 +511,46 @@ export class AppController {
         return res.status(403).json({ error: 'Forbidden: Insufficient permissions to perform server actions' });
       }
 
+      const category = app.server_category || (['minecraft', 'database'].includes(app.type) ? app.type : 'software');
+
+      if (category === 'minecraft') {
+        const newEngine = engine ? engine.trim().toLowerCase() : (app.engine || 'paper');
+        const newGameVersion = game_version ? game_version.trim() : (app.game_version || '1.21.1');
+        
+        db.prepare(`
+          UPDATE apps
+          SET engine = ?, game_version = ?, updated_at = CURRENT_TIMESTAMP
+          WHERE id = ?
+        `).run(newEngine, newGameVersion, id);
+
+        logStreamer.append(id, 'system', `[Startup Updated] Minecraft engine updated to ${newEngine.toUpperCase()} (MC ${newGameVersion})`);
+        return res.json({ message: 'Minecraft engine and version updated successfully' });
+      }
+
+      if (category === 'database') {
+        const newEngine = engine ? engine.trim().toLowerCase() : (app.engine || 'redis');
+        const newPassword = db_password !== undefined ? db_password.trim() : (app.db_password || '');
+        const newDbName = db_name !== undefined ? db_name.trim() : (app.db_name || '');
+
+        db.prepare(`
+          UPDATE apps
+          SET engine = ?, db_password = ?, db_name = ?, updated_at = CURRENT_TIMESTAMP
+          WHERE id = ?
+        `).run(newEngine, newPassword, newDbName, id);
+
+        // Regenerate DB config files
+        const appDir = supervisor.getAppDir(app);
+        DatabaseRunner.setupDatabase({ ...app, engine: newEngine, db_password: newPassword, db_name: newDbName }, appDir);
+
+        logStreamer.append(id, 'system', `[Startup Updated] Database engine set to ${newEngine.toUpperCase()}`);
+        return res.json({ message: 'Database parameters updated successfully' });
+      }
+
+      // Software Category (NodeJS / Python)
       const newType = type ? type.trim().toLowerCase() : app.type;
+      if (!['nodejs', 'python'].includes(newType)) {
+        return res.status(400).json({ error: 'Invalid runtime type. Allowed: nodejs, python' });
+      }
       const newVersion = runtime_version ? runtime_version.trim() : (app.runtime_version || '');
       const newCmd = startup_cmd !== undefined ? startup_cmd : app.startup_cmd;
       const newMain = main_file ? main_file.trim() : (app.main_file || app.entrypoint);
