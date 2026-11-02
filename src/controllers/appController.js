@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import path from 'path';
 import fs from 'fs';
 import { execSync } from 'child_process';
-import { db } from '../database/index.js';
+import { db, recordAuditLog } from '../database/index.js';
 import { config } from '../config.js';
 import { supervisor } from '../daemon/supervisor.js';
 import { logStreamer } from '../daemon/logStreamer.js';
@@ -277,6 +277,15 @@ export class AppController {
         logStreamer.append(appId, 'system', `[Eclipse Daemon] Container directory initialized at "${safeFolder}". Ready for code files.`);
       }
 
+      recordAuditLog({
+        userId: req.user.id,
+        username: req.user.username,
+        action: 'SERVER_CREATE',
+        details: `Created ${category} server "${name.trim()}" (Port: ${appPort}, RAM: ${memLimit}MB, CPU: ${cpLimit}%)`,
+        ip: req.ip || req.socket?.remoteAddress || '',
+        appId
+      });
+
       return res.status(201).json({
         message: 'Application created successfully',
         appId,
@@ -437,6 +446,15 @@ export class AppController {
 
       logStreamer.append(id, 'system', `[Config Updated] Specs updated: Port=${newPort}, RAM=${newMem}MB, CPU=${newCpu}%, Disk=${newDisk}MB, IP=${newIp}, Domain=${newDomain}`);
 
+      recordAuditLog({
+        userId: req.user.id,
+        username: req.user.username,
+        action: 'CONFIG_UPDATE',
+        details: `Updated configuration for "${newName}": Port=${newPort}, RAM=${newMem}MB, CPU=${newCpu}%, Disk=${newDisk}MB, IP=${newIp}`,
+        ip: req.ip || req.socket?.remoteAddress || '',
+        appId: id
+      });
+
       return res.json({ message: 'Server specs and settings updated successfully' });
     } catch (err) {
       return res.status(500).json({ error: err.message });
@@ -524,6 +542,14 @@ export class AppController {
         `).run(newEngine, newGameVersion, id);
 
         logStreamer.append(id, 'system', `[Startup Updated] Minecraft engine updated to ${newEngine.toUpperCase()} (MC ${newGameVersion})`);
+        recordAuditLog({
+          userId: req.user.id,
+          username: req.user.username,
+          action: 'STARTUP_UPDATE',
+          details: `Minecraft engine updated to ${newEngine.toUpperCase()} (MC ${newGameVersion})`,
+          ip: req.ip || req.socket?.remoteAddress || '',
+          appId: id
+        });
         return res.json({ message: 'Minecraft engine and version updated successfully' });
       }
 
@@ -543,6 +569,14 @@ export class AppController {
         DatabaseRunner.setupDatabase({ ...app, engine: newEngine, db_password: newPassword, db_name: newDbName }, appDir);
 
         logStreamer.append(id, 'system', `[Startup Updated] Database engine set to ${newEngine.toUpperCase()}`);
+        recordAuditLog({
+          userId: req.user.id,
+          username: req.user.username,
+          action: 'STARTUP_UPDATE',
+          details: `Database engine updated to ${newEngine.toUpperCase()}`,
+          ip: req.ip || req.socket?.remoteAddress || '',
+          appId: id
+        });
         return res.json({ message: 'Database parameters updated successfully' });
       }
 
@@ -569,6 +603,14 @@ export class AppController {
       updateStmt.run(newType, newVersion, newCmd, newMain, newMain, newPkg, newUnPkg, newArgs, newReq, id);
 
       logStreamer.append(id, 'system', `[Startup Updated] Runtime changed to ${newType} (v${newVersion}), Main=${newMain}`);
+      recordAuditLog({
+        userId: req.user.id,
+        username: req.user.username,
+        action: 'STARTUP_UPDATE',
+        details: `Runtime changed to ${newType} (v${newVersion}), Main=${newMain}`,
+        ip: req.ip || req.socket?.remoteAddress || '',
+        appId: id
+      });
 
       return res.json({ message: 'Startup parameters updated successfully' });
     } catch (err) {
@@ -589,6 +631,14 @@ export class AppController {
       }
 
       const result = await supervisor.sendCommand(id, command);
+      recordAuditLog({
+        userId: req.user.id,
+        username: req.user.username,
+        action: 'CONSOLE_COMMAND',
+        details: `Ran terminal command: "${command}"`,
+        ip: req.ip || req.socket?.remoteAddress || '',
+        appId: id
+      });
       return res.json(result);
     } catch (err) {
       return res.status(500).json({ error: err.message });
@@ -650,6 +700,15 @@ export class AppController {
 
       logStreamer.clear(id);
 
+      recordAuditLog({
+        userId: req.user.id,
+        username: req.user.username,
+        action: 'SERVER_DELETE',
+        details: `Permanently deleted server "${app.name}" (ID: ${id})`,
+        ip: req.ip || req.socket?.remoteAddress || '',
+        appId: id
+      });
+
       return res.json({ message: 'Application deleted permanently' });
     } catch (err) {
       return res.status(500).json({ error: err.message });
@@ -666,6 +725,23 @@ export class AppController {
       if (!checkAppAccess(id, req.user, 'power') && !checkAppAccess(id, req.user, 'console')) {
         return res.status(403).json({ error: 'Forbidden: Insufficient permissions to perform server actions' });
       }
+
+      const actionMap = {
+        start: 'SERVER_START',
+        stop: 'SERVER_STOP',
+        restart: 'SERVER_RESTART',
+        kill: 'SERVER_KILL',
+        install: 'DEPENDENCY_INSTALL'
+      };
+      const auditAction = actionMap[action.toLowerCase()] || `ACTION_${action.toUpperCase()}`;
+      recordAuditLog({
+        userId: req.user.id,
+        username: req.user.username,
+        action: auditAction,
+        details: `Executed power action "${action}" on server "${app.name}"`,
+        ip: req.ip || req.socket?.remoteAddress || '',
+        appId: id
+      });
 
       switch (action.toLowerCase()) {
         case 'start': {
@@ -722,9 +798,15 @@ export class AppController {
   static async getActivity(req, res) {
     try {
       const { id } = req.params;
-      const stmt = db.prepare('SELECT id, action, details, created_at, username FROM audit_logs WHERE details LIKE ? OR details LIKE ? OR action LIKE ? ORDER BY created_at DESC LIMIT 50');
+      const stmt = db.prepare(`
+        SELECT id, action, details, ip_address, created_at, username, app_id 
+        FROM audit_logs 
+        WHERE app_id = ? OR details LIKE ? OR action LIKE ?
+        ORDER BY created_at DESC 
+        LIMIT 100
+      `);
       const param = '%' + id + '%';
-      const logs = stmt.all(param, param, param);
+      const logs = stmt.all(id, param, param);
       return res.json({ success: true, activity: logs });
     } catch (err) {
       return res.status(500).json({ error: err.message });
@@ -741,6 +823,14 @@ export class AppController {
         return res.status(400).json({ error: 'Cannot attach system panel domain to individual applications' });
       }
       db.prepare('UPDATE apps SET domain = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(cleanDomain, id);
+      recordAuditLog({
+        userId: req.user.id,
+        username: req.user.username,
+        action: 'DOMAIN_UPDATE',
+        details: `Updated custom domain to "${cleanDomain}"`,
+        ip: req.ip || req.socket?.remoteAddress || '',
+        appId: id
+      });
       return res.json({ success: true, domain: cleanDomain, message: 'Custom domain saved' });
     } catch (err) {
       return res.status(500).json({ error: err.message });

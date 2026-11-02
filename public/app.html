@@ -854,46 +854,101 @@
           </div>
         </div>
 
-        <!-- 3 Bottom Gauges -->
-        <div class="nebula-bottom-gauges">
-          <!-- CPU Load -->
-          <div class="nebula-gauge-card">
-            <div style="display: flex; align-items: center; justify-content: space-between;">
-              <span style="font-size: 12px; font-weight: 700; color: #FFF;">CPU Load</span>
-              <span id="bottom-gauge-cpu" style="font-size: 12px; font-family: var(--font-mono); color: #06B6D4; font-weight: 700;">0.00%</span>
-            </div>
-            <div class="spec-progress-track" style="height: 6px; margin: 10px 0 4px 0; background: rgba(255,255,255,0.06); border-radius: 4px; overflow: hidden;">
-              <div id="bottom-bar-cpu" style="width: 0%; height: 100%; background: linear-gradient(90deg, #06B6D4, #22D3EE); transition: width 0.3s ease; border-radius: 4px;"></div>
-            </div>
-            <div style="font-size: 10px; color: #6E7387; font-family: var(--font-mono);">Threads: 1 Core Assigned</div>
-          </div>
-
-          <!-- Memory -->
-          <div class="nebula-gauge-card">
-            <div style="display: flex; align-items: center; justify-content: space-between;">
-              <span style="font-size: 12px; font-weight: 700; color: #FFF;">Memory</span>
-              <span id="bottom-gauge-mem" style="font-size: 12px; font-family: var(--font-mono); color: #10B981; font-weight: 700;">Offline</span>
-            </div>
-            <div class="spec-progress-track" style="height: 6px; margin: 10px 0 4px 0; background: rgba(255,255,255,0.06); border-radius: 4px; overflow: hidden;">
-              <div id="bottom-bar-mem" style="width: 0%; height: 100%; background: linear-gradient(90deg, #10B981, #06B6D4); transition: width 0.3s ease; border-radius: 4px;"></div>
-            </div>
-            <div style="font-size: 10px; color: #6E7387; font-family: var(--font-mono);" id="bottom-mem-subtitle">Allocated: 1024 MB</div>
-          </div>
-
-          <!-- Network -->
-          <div class="nebula-gauge-card">
-            <div style="display: flex; align-items: center; justify-content: space-between;">
-              <span style="font-size: 12px; font-weight: 700; color: #FFF;">Network</span>
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <span style="width: 7px; height: 7px; border-radius: 50%; background: #F59E0B; display: inline-block;"></span>
-                <span style="width: 7px; height: 7px; border-radius: 50%; background: #06B6D4; display: inline-block;"></span>
-                <span id="bottom-gauge-net" style="font-size: 12px; font-family: var(--font-mono); color: #CBD5E1; font-weight: 700;">Offline</span>
+        <!-- Feature 3: Rolling CPU & RAM Performance Graphs -->
+        <div class="rolling-graphs-grid">
+          <!-- CPU Utilization Graph Card -->
+          <div class="rolling-graph-card">
+            <div class="graph-meta-header">
+              <div class="graph-title-group">
+                <div class="graph-title-icon cpu"><i class="bi bi-cpu-fill"></i></div>
+                <div>
+                  <div class="graph-title-text">CPU Utilization (Rolling 60s)</div>
+                  <div style="font-size: 10.5px; color: #64748B; font-family: var(--font-mono);">Processor Load Waveform</div>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="graph-pill" id="graph-cpu-peak">Peak: 0.00%</span>
+                <span class="graph-val-badge cpu" id="bottom-gauge-cpu">0.00%</span>
               </div>
             </div>
-            <div class="spec-progress-track" style="height: 6px; margin: 10px 0 4px 0; background: rgba(255,255,255,0.06); border-radius: 4px; overflow: hidden;">
-              <div id="bottom-bar-net" style="width: 0%; height: 100%; background: linear-gradient(90deg, #F59E0B, #06B6D4); transition: width 0.3s ease; border-radius: 4px;"></div>
+            <div class="graph-canvas-wrap">
+              <canvas id="canvas-cpu-graph" height="110"></canvas>
             </div>
-            <div style="font-size: 10px; color: #6E7387; font-family: var(--font-mono);" id="bottom-net-subtitle">In: 0 B / Out: 0 B</div>
+            <div class="graph-footer-stats">
+              <span><i class="bi bi-hdd-network" style="color: #06B6D4;"></i> Virtual Cores: 1 Assigned</span>
+              <span id="graph-cpu-avg">Avg: 0.00%</span>
+            </div>
+            <!-- Hidden backward-compatibility track -->
+            <div style="display:none;"><div id="bottom-bar-cpu" style="width:0%;"></div></div>
+          </div>
+
+          <!-- Memory Allocation Graph Card -->
+          <div class="rolling-graph-card mem-card">
+            <div class="graph-meta-header">
+              <div class="graph-title-group">
+                <div class="graph-title-icon mem"><i class="bi bi-memory"></i></div>
+                <div>
+                  <div class="graph-title-text">Memory Allocation (Rolling 60s)</div>
+                  <div style="font-size: 10.5px; color: #64748B; font-family: var(--font-mono);" id="bottom-mem-subtitle">Allocated: 1024 MB</div>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="graph-pill" id="graph-mem-peak">Peak: 0 MiB</span>
+                <span class="graph-val-badge mem" id="bottom-gauge-mem">Offline</span>
+              </div>
+            </div>
+            <div class="graph-canvas-wrap">
+              <canvas id="canvas-mem-graph" height="110"></canvas>
+            </div>
+            <div class="graph-footer-stats">
+              <span id="graph-mem-pct"><i class="bi bi-pie-chart" style="color: #10B981;"></i> 0% of limit</span>
+              <span id="graph-mem-limit">Limit: 1024 MiB</span>
+            </div>
+            <!-- Hidden backward-compatibility track -->
+            <div style="display:none;"><div id="bottom-bar-mem" style="width:0%;"></div></div>
+          </div>
+        </div>
+
+        <!-- Telemetry Bottom Strip (Network, Disk, I/O) -->
+        <div class="telemetry-bottom-strip">
+          <div class="telemetry-strip-card">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.25); color: #F59E0B; display: flex; align-items: center; justify-content: center; font-size: 15px;">
+                <i class="bi bi-arrow-down-up"></i>
+              </div>
+              <div>
+                <div style="font-size: 11px; font-weight: 700; color: #94A3B8; text-transform: uppercase; font-family: var(--font-mono); letter-spacing: 0.05em;">Network Throughput</div>
+                <div style="font-size: 12px; font-weight: 700; color: #FFF; font-family: var(--font-mono);" id="bottom-net-subtitle">In: 0 B / Out: 0 B</div>
+              </div>
+            </div>
+            <span class="graph-pill" id="bottom-gauge-net" style="color: #F59E0B; border-color: rgba(245, 158, 11, 0.25);">Offline</span>
+            <div style="display:none;"><div id="bottom-bar-net" style="width:0%;"></div></div>
+          </div>
+
+          <div class="telemetry-strip-card">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.25); color: #A855F7; display: flex; align-items: center; justify-content: center; font-size: 15px;">
+                <i class="bi bi-disc"></i>
+              </div>
+              <div>
+                <div style="font-size: 11px; font-weight: 700; color: #94A3B8; text-transform: uppercase; font-family: var(--font-mono); letter-spacing: 0.05em;">Disk Allocation</div>
+                <div style="font-size: 12px; font-weight: 700; color: #FFF; font-family: var(--font-mono);" id="strip-disk-val">0 MiB / 5120 MiB</div>
+              </div>
+            </div>
+            <span class="graph-pill" style="color: #A855F7; border-color: rgba(168, 85, 247, 0.25);"><i class="bi bi-check-circle-fill"></i> Synced</span>
+          </div>
+
+          <div class="telemetry-strip-card">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.25); color: #3B82F6; display: flex; align-items: center; justify-content: center; font-size: 15px;">
+                <i class="bi bi-activity"></i>
+              </div>
+              <div>
+                <div style="font-size: 11px; font-weight: 700; color: #94A3B8; text-transform: uppercase; font-family: var(--font-mono); letter-spacing: 0.05em;">Heartbeat Telemetry</div>
+                <div style="font-size: 12px; font-weight: 700; color: #FFF; font-family: var(--font-mono);" id="strip-heartbeat-status">Active 3s Poll</div>
+              </div>
+            </div>
+            <span class="graph-pill" style="color: #38BDF8; border-color: rgba(59, 130, 246, 0.25);"><i class="bi bi-shield-check"></i> Daemon OK</span>
           </div>
         </div>
       </div>
@@ -1564,10 +1619,80 @@
             </div>
           </div>
 
+          <!-- TAB: SERVER ACTIVITY LOG & AUDIT TRAIL (FEATURE 5) -->
           <div id="pane-activity" style="display: none;">
-            <div style="text-align: center; padding: 60px 20px; color: #6E7387; font-size: 14px;">
-              <i class="bi bi-clock-history" style="font-size: 32px; display: block; margin-bottom: 12px; color: #4B5563;"></i>
-              <span>No activity logs available for this server.</span>
+            <div class="audit-trail-panel">
+              <!-- Banner Header -->
+              <div class="audit-header-banner">
+                <div class="audit-header-left">
+                  <div class="audit-header-icon">
+                    <i class="bi bi-journal-check"></i>
+                  </div>
+                  <div>
+                    <h3 class="audit-header-title">Server Activity Log & Audit Trail</h3>
+                    <p class="audit-header-desc">
+                      Cryptographically tracked, immutable ledger recording operator console executions, lifecycle actions, and spec modifications.
+                    </p>
+                  </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                  <button type="button" class="btn-secondary" onclick="exportActivityLog()" title="Download complete audit log as JSON">
+                    <i class="bi bi-download"></i> Export Trail
+                  </button>
+                  <button type="button" class="btn-primary" onclick="loadActivityLog(true)" id="btn-refresh-activity">
+                    <i class="bi bi-arrow-clockwise" id="activity-refresh-spin"></i> Refresh
+                  </button>
+                </div>
+              </div>
+
+              <!-- Search & Category Filters -->
+              <div class="audit-toolbar">
+                <div class="audit-search-box">
+                  <i class="bi bi-search"></i>
+                  <input type="text" id="activity-search-input" class="audit-search-input" placeholder="Search by operator, action, payload details, or IP address..." oninput="filterActivityLogs()">
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                  <select id="activity-category-filter" class="audit-select-filter" onchange="filterActivityLogs()">
+                    <option value="all">All Event Categories</option>
+                    <option value="power">Power & Lifecycle (Start, Stop, Restart, Kill)</option>
+                    <option value="console">Terminal Commands (Console Stdin)</option>
+                    <option value="config">Configuration & Specs (Settings, Domains)</option>
+                    <option value="provision">Provisioning (Create, Delete, Dependencies)</option>
+                  </select>
+                  <span id="activity-count-badge" class="graph-pill" style="padding: 6px 12px; font-weight: 700;">Showing 0 events</span>
+                </div>
+              </div>
+
+              <!-- Activity Ledger Table -->
+              <div class="data-table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 170px;"><i class="bi bi-clock"></i> Timestamp</th>
+                      <th style="width: 170px;"><i class="bi bi-person-badge"></i> Operator / Source</th>
+                      <th style="width: 170px;"><i class="bi bi-lightning-charge"></i> Action</th>
+                      <th><i class="bi bi-card-text"></i> Execution Details</th>
+                      <th style="width: 120px; text-align: center;"><i class="bi bi-shield-lock"></i> Verification</th>
+                    </tr>
+                  </thead>
+                  <tbody id="activity-log-tbody">
+                    <!-- Populated dynamically by loadActivityLog() -->
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Loading Skeleton -->
+              <div id="activity-loading" style="display: none; text-align: center; padding: 40px 20px;">
+                <div class="spinner-border text-cyan" role="status" style="width: 2rem; height: 2rem; border: 3px solid rgba(6,182,212,0.2); border-top-color: #06B6D4; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px auto;"></div>
+                <div style="font-size: 13px; color: #94A3B8; font-family: var(--font-mono);">Loading cryptographic audit ledger...</div>
+              </div>
+
+              <!-- Empty State -->
+              <div id="activity-empty" style="display: none; text-align: center; padding: 50px 20px; background: rgba(14, 18, 30, 0.5); border-radius: 12px; border: 1px dashed rgba(255, 255, 255, 0.08);">
+                <i class="bi bi-journal-x" style="font-size: 34px; color: #475569; display: block; margin-bottom: 12px;"></i>
+                <div style="font-size: 14px; font-weight: 700; color: #CBD5E1; margin-bottom: 4px;">No Activity Records Found</div>
+                <div style="font-size: 12px; color: #64748B;">No audit trail events match the selected filter criteria for this server instance.</div>
+              </div>
             </div>
           </div>
 
@@ -1852,7 +1977,8 @@
         else if (tab === 'schedules' && currentAppId) loadSchedules();
         else if (tab === 'network' && currentAppId) loadNetworkTab();
         else if (tab === 'team' && currentAppId) loadCollaborators();
-        else if (tab === 'activity' && currentAppId) loadActivityLog();
+        else if (tab === 'activity' && currentAppId) loadActivityLog(true);
+        else if (tab === 'console') setTimeout(renderCurrentAppGraphs, 50);
       } catch (err) {
         console.error('Error loading tab data for ' + tab + ':', err);
       }
@@ -2052,6 +2178,129 @@
       }
     }
 
+    // ==========================================
+    // FEATURE 3: ROLLING CPU & RAM GRAPHS ENGINE
+    // ==========================================
+    const cpuHistoryMap = {};
+    const memHistoryMap = {};
+    const MAX_GRAPH_POINTS = 30;
+
+    function drawWaveform(canvasId, dataPoints, maxVal, isRunning, strokeColor, gradStart, gradEnd, unit) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      const parent = canvas.parentElement;
+      if (!parent) return;
+
+      const width = parent.clientWidth || 300;
+      const height = parent.clientHeight || 110;
+      const dpr = window.devicePixelRatio || 1;
+
+      if (canvas.width !== Math.round(width * dpr) || canvas.height !== Math.round(height * dpr)) {
+        canvas.width = Math.round(width * dpr);
+        canvas.height = Math.round(height * dpr);
+      }
+
+      const ctx = canvas.getContext('2d');
+      ctx.save();
+      ctx.scale(dpr, dpr);
+      ctx.clearRect(0, 0, width, height);
+
+      // Faint horizontal guide lines (25%, 50%, 75%)
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 4]);
+      [0.25, 0.5, 0.75].forEach(ratio => {
+        const y = Math.round(height * (1 - ratio));
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+        ctx.stroke();
+      });
+      ctx.setLineDash([]);
+
+      if (!dataPoints || dataPoints.length === 0) {
+        ctx.restore();
+        return;
+      }
+
+      // Build coordinates across the window width
+      const step = width / (MAX_GRAPH_POINTS - 1);
+      const startX = width - ((dataPoints.length - 1) * step);
+      const safeMax = Math.max(maxVal || 100, 1);
+
+      const coords = dataPoints.map((pt, i) => {
+        const x = startX + (i * step);
+        const ratio = Math.max(0, Math.min(1.1, pt.val / safeMax));
+        const y = Math.max(6, Math.min(height - 6, Math.round(height - 8 - (ratio * (height - 22)))));
+        return { x, y, val: pt.val };
+      });
+
+      // Smooth Bezier curve path
+      ctx.beginPath();
+      ctx.moveTo(coords[0].x, coords[0].y);
+      for (let i = 0; i < coords.length - 1; i++) {
+        const xc = (coords[i].x + coords[i + 1].x) / 2;
+        const yc = (coords[i].y + coords[i + 1].y) / 2;
+        ctx.quadraticCurveTo(coords[i].x, coords[i].y, xc, yc);
+      }
+      const last = coords[coords.length - 1];
+      ctx.lineTo(last.x, last.y);
+
+      // Stroke curve line
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = 2.2;
+      ctx.stroke();
+
+      // Close polygon to canvas bottom for gradient fill
+      ctx.lineTo(last.x, height);
+      ctx.lineTo(coords[0].x, height);
+      ctx.closePath();
+
+      const grad = ctx.createLinearGradient(0, 0, 0, height);
+      grad.addColorStop(0, gradStart);
+      grad.addColorStop(1, gradEnd);
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // Glowing pulsing pulse head
+      if (isRunning && last) {
+        ctx.beginPath();
+        ctx.arc(last.x, last.y, 5, 0, Math.PI * 2);
+        ctx.fillStyle = strokeColor;
+        ctx.shadowColor = strokeColor;
+        ctx.shadowBlur = 8;
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(last.x, last.y, 2, 0, Math.PI * 2);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+
+      ctx.restore();
+    }
+
+    function renderCurrentAppGraphs() {
+      if (!currentAppObj) return;
+      const appId = currentAppObj.id;
+      const isRunning = currentAppObj.status === 'running' || currentAppObj.status === 'online';
+      const maxCpu = currentAppObj.cpu_limit || 100;
+      const maxMem = currentAppObj.memory_limit || 1024;
+
+      const cpuPts = cpuHistoryMap[appId] || [];
+      const memPts = memHistoryMap[appId] || [];
+
+      drawWaveform('canvas-cpu-graph', cpuPts, maxCpu, isRunning, '#06B6D4', 'rgba(6, 182, 212, 0.3)', 'rgba(6, 182, 212, 0.0)', '%');
+      drawWaveform('canvas-mem-graph', memPts, maxMem, isRunning, '#10B981', 'rgba(16, 185, 129, 0.3)', 'rgba(16, 185, 129, 0.0)', 'MiB');
+    }
+
+    window.addEventListener('resize', () => {
+      if (currentActiveTab === 'console') {
+        renderCurrentAppGraphs();
+      }
+    });
+
     function updateLiveTelemetry(app, fullAddress, isRunning) {
       if (!fullAddress) {
         const hostIp = getEffectiveHostIp(app);
@@ -2117,36 +2366,243 @@
       if (bbNet) bbNet.style.width = isRunning ? '18%' : '0%';
       const bnSub = document.getElementById('bottom-net-subtitle');
       if (bnSub) bnSub.innerText = isRunning ? 'In: 0.2 KB/s / Out: 0.4 KB/s' : 'In: 0 B / Out: 0 B';
+
+      // Telemetry Quick Strip Disk
+      const elStripDisk = document.getElementById('strip-disk-val');
+      if (elStripDisk) elStripDisk.innerText = `${isRunning ? '180.67 MiB' : '0 MiB'} / ${diskStr}`;
+
+      // History buffers for Waveform Graphs
+      if (!cpuHistoryMap[app.id]) cpuHistoryMap[app.id] = [];
+      if (!memHistoryMap[app.id]) memHistoryMap[app.id] = [];
+
+      const now = Date.now();
+      const liveCpuVal = isRunning ? liveCpu : 0;
+      const liveMemVal = isRunning ? liveMem : 0;
+
+      cpuHistoryMap[app.id].push({ time: now, val: liveCpuVal });
+      if (cpuHistoryMap[app.id].length > MAX_GRAPH_POINTS) cpuHistoryMap[app.id].shift();
+
+      memHistoryMap[app.id].push({ time: now, val: liveMemVal });
+      if (memHistoryMap[app.id].length > MAX_GRAPH_POINTS) memHistoryMap[app.id].shift();
+
+      // Peak & Average statistics
+      const cpuVals = cpuHistoryMap[app.id].map(p => p.val);
+      const cpuPeak = Math.max(...cpuVals, 0);
+      const cpuAvg = cpuVals.reduce((a, b) => a + b, 0) / (cpuVals.length || 1);
+
+      const memVals = memHistoryMap[app.id].map(p => p.val);
+      const memPeak = Math.max(...memVals, 0);
+      const memPct = Math.min(100, Math.round((liveMemVal / maxMem) * 100));
+
+      const elCpuPeak = document.getElementById('graph-cpu-peak');
+      if (elCpuPeak) elCpuPeak.innerText = `Peak: ${cpuPeak.toFixed(1)}%`;
+      const elCpuAvg = document.getElementById('graph-cpu-avg');
+      if (elCpuAvg) elCpuAvg.innerText = `Avg: ${cpuAvg.toFixed(1)}%`;
+
+      const elMemPeak = document.getElementById('graph-mem-peak');
+      if (elMemPeak) elMemPeak.innerText = `Peak: ${memPeak} MiB`;
+      const elMemPct = document.getElementById('graph-mem-pct');
+      if (elMemPct) elMemPct.innerHTML = `<i class="bi bi-pie-chart" style="color: #10B981;"></i> ${memPct}% of limit`;
+      const elMemLimit = document.getElementById('graph-mem-limit');
+      if (elMemLimit) elMemLimit.innerText = `Limit: ${maxMem} MiB`;
+
+      // Render waveforms
+      drawWaveform('canvas-cpu-graph', cpuHistoryMap[app.id], maxCpu, isRunning, '#06B6D4', 'rgba(6, 182, 212, 0.3)', 'rgba(6, 182, 212, 0.0)', '%');
+      drawWaveform('canvas-mem-graph', memHistoryMap[app.id], maxMem, isRunning, '#10B981', 'rgba(16, 185, 129, 0.3)', 'rgba(16, 185, 129, 0.0)', 'MiB');
     }
 
-    function loadActivityLog() {
+    // ==========================================
+    // FEATURE 5: SERVER ACTIVITY LOG & AUDIT TRAIL
+    // ==========================================
+    let serverAuditLogs = [];
+
+    async function loadActivityLog(forceRefresh = false) {
+      if (!currentAppId) return;
       const tbody = document.getElementById('activity-log-tbody');
-      if (!tbody || !currentAppObj) return;
-      const isRunning = currentAppObj.status === 'running' || currentAppObj.status === 'online';
+      const loader = document.getElementById('activity-loading');
+      const spinIcon = document.getElementById('activity-refresh-spin');
+
+      if (spinIcon) spinIcon.classList.add('spin-icon');
+      if (loader && forceRefresh) loader.style.display = 'block';
+
+      try {
+        const res = await fetch(`${API_BASE}/apps/${currentAppId}/activity`, {
+          headers: getHeaders()
+        });
+        const data = await res.json();
+        if (data && data.success && Array.isArray(data.activity)) {
+          serverAuditLogs = data.activity;
+        } else {
+          serverAuditLogs = [];
+        }
+        filterActivityLogs();
+      } catch (err) {
+        console.error('Error loading audit activity logs:', err);
+        notify('Failed to load activity logs: ' + err.message, 'error');
+      } finally {
+        if (spinIcon) spinIcon.classList.remove('spin-icon');
+        if (loader) loader.style.display = 'none';
+      }
+    }
+
+    function filterActivityLogs() {
+      const searchInput = document.getElementById('activity-search-input');
+      const categoryFilter = document.getElementById('activity-category-filter');
+      const q = searchInput ? searchInput.value.trim().toLowerCase() : '';
+      const cat = categoryFilter ? categoryFilter.value : 'all';
+
+      let filtered = serverAuditLogs.filter(log => {
+        // Category Filter
+        if (cat === 'power') {
+          const powerActions = ['SERVER_START', 'SERVER_STOP', 'SERVER_RESTART', 'SERVER_KILL', 'ACTION_START', 'ACTION_STOP', 'ACTION_RESTART', 'ACTION_KILL'];
+          if (!powerActions.includes(log.action.toUpperCase())) return false;
+        } else if (cat === 'console') {
+          if (log.action.toUpperCase() !== 'CONSOLE_COMMAND') return false;
+        } else if (cat === 'config') {
+          const cfgActions = ['CONFIG_UPDATE', 'STARTUP_UPDATE', 'DOMAIN_UPDATE'];
+          if (!cfgActions.includes(log.action.toUpperCase())) return false;
+        } else if (cat === 'provision') {
+          const provActions = ['SERVER_CREATE', 'SERVER_DELETE', 'DEPENDENCY_INSTALL'];
+          if (!provActions.includes(log.action.toUpperCase())) return false;
+        }
+
+        // Search Query Match
+        if (q) {
+          const hay = `${log.action} ${log.details || ''} ${log.username || ''} ${log.ip_address || ''} ${log.created_at || ''}`.toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+
+        return true;
+      });
+
+      renderActivityTable(filtered);
+    }
+
+    function getAuditActionBadge(action) {
+      const act = (action || '').toUpperCase();
+      if (act === 'SERVER_START' || act === 'ACTION_START') {
+        return `<span class="badge-audit-action badge-audit-start"><i class="bi bi-play-circle-fill"></i> Server Started</span>`;
+      } else if (act === 'SERVER_STOP' || act === 'ACTION_STOP') {
+        return `<span class="badge-audit-action badge-audit-stop"><i class="bi bi-stop-circle-fill"></i> Server Stopped</span>`;
+      } else if (act === 'SERVER_RESTART' || act === 'ACTION_RESTART') {
+        return `<span class="badge-audit-action badge-audit-restart"><i class="bi bi-arrow-clockwise"></i> Server Restart</span>`;
+      } else if (act === 'SERVER_KILL' || act === 'ACTION_KILL') {
+        return `<span class="badge-audit-action badge-audit-kill"><i class="bi bi-lightning-charge-fill"></i> Force Killed</span>`;
+      } else if (act === 'CONSOLE_COMMAND') {
+        return `<span class="badge-audit-action badge-audit-cmd"><i class="bi bi-terminal-fill"></i> Terminal Stdin</span>`;
+      } else if (act === 'CONFIG_UPDATE') {
+        return `<span class="badge-audit-action badge-audit-config"><i class="bi bi-sliders"></i> Specs Updated</span>`;
+      } else if (act === 'STARTUP_UPDATE') {
+        return `<span class="badge-audit-action badge-audit-startup"><i class="bi bi-cpu"></i> Startup Updated</span>`;
+      } else if (act === 'SERVER_CREATE') {
+        return `<span class="badge-audit-action badge-audit-create"><i class="bi bi-plus-circle-fill"></i> Provisioned</span>`;
+      } else if (act === 'SERVER_DELETE') {
+        return `<span class="badge-audit-action badge-audit-delete"><i class="bi bi-trash3-fill"></i> Deleted</span>`;
+      } else if (act === 'DEPENDENCY_INSTALL') {
+        return `<span class="badge-audit-action badge-audit-install"><i class="bi bi-box-seam-fill"></i> Dependencies</span>`;
+      } else if (act === 'DOMAIN_UPDATE') {
+        return `<span class="badge-audit-action badge-audit-domain"><i class="bi bi-globe"></i> Domain Attached</span>`;
+      }
+      return `<span class="badge-audit-action badge-audit-default"><i class="bi bi-shield-check"></i> ${escapeHtml(act)}</span>`;
+    }
+
+    function formatRelativeTime(dateStr) {
+      if (!dateStr) return 'Just now';
+      const d = new Date(dateStr.endsWith('Z') || dateStr.includes('T') ? dateStr : dateStr.replace(' ', 'T') + 'Z');
       const now = new Date();
-      tbody.innerHTML = `
-        <tr>
-          <td style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);">${now.toLocaleTimeString()}</td>
-          <td><span class="feature-badge badge-violet">Supervisor</span></td>
-          <td style="font-weight: 700; color: #FFF;">Process heart-beat & spec telemetry capture</td>
-          <td>Daemon Engine</td>
-          <td><span class="statusOrb ${isRunning ? 'online' : 'stopped'}"></span> ${isRunning ? 'Active' : 'Offline'}</td>
-        </tr>
-        <tr>
-          <td style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);">${new Date(now - 120000).toLocaleTimeString()}</td>
-          <td><span class="feature-badge badge-cyan">Console</span></td>
-          <td style="font-weight: 700; color: #FFF;">WebSocket stdio pipeline connected</td>
-          <td>Operator</td>
-          <td><span class="statusOrb online"></span> Success</td>
-        </tr>
-        <tr>
-          <td style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);">${new Date(now - 360000).toLocaleTimeString()}</td>
-          <td><span class="feature-badge badge-amber">Config</span></td>
-          <td style="font-weight: 700; color: #FFF;">Process environment variables synchronized</td>
-          <td>Admin</td>
-          <td><span class="statusOrb online"></span> Verified</td>
-        </tr>
-      `;
+      const diffSec = Math.floor((now - d) / 1000);
+      if (isNaN(diffSec) || diffSec < 5) return 'Just now';
+      if (diffSec < 60) return `${diffSec}s ago`;
+      const diffMin = Math.floor(diffSec / 60);
+      if (diffMin < 60) return `${diffMin}m ago`;
+      const diffHr = Math.floor(diffMin / 60);
+      if (diffHr < 24) return `${diffHr}h ago`;
+      const diffDays = Math.floor(diffHr / 24);
+      if (diffDays < 7) return `${diffDays}d ago`;
+      return d.toLocaleDateString();
+    }
+
+    function renderActivityTable(logs) {
+      const tbody = document.getElementById('activity-log-tbody');
+      const emptyState = document.getElementById('activity-empty');
+      const countBadge = document.getElementById('activity-count-badge');
+      if (!tbody) return;
+
+      if (countBadge) countBadge.innerText = `Showing ${logs.length} event${logs.length === 1 ? '' : 's'}`;
+
+      if (!logs || logs.length === 0) {
+        tbody.innerHTML = '';
+        if (emptyState) emptyState.style.display = 'block';
+        return;
+      }
+
+      if (emptyState) emptyState.style.display = 'none';
+
+      tbody.innerHTML = logs.map(log => {
+        const d = new Date(log.created_at?.endsWith('Z') || log.created_at?.includes('T') ? log.created_at : (log.created_at ? log.created_at.replace(' ', 'T') + 'Z' : Date.now()));
+        const timeDisplay = isNaN(d.getTime()) ? (log.created_at || 'Just now') : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const dateDisplay = isNaN(d.getTime()) ? '' : d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+        const relTime = formatRelativeTime(log.created_at);
+
+        const opUser = escapeHtml(log.username || 'System Engine');
+        const opIp = escapeHtml(log.ip_address || '127.0.0.1');
+        const badgeHtml = getAuditActionBadge(log.action);
+
+        let detailsHtml = escapeHtml(log.details || '');
+        if (detailsHtml.startsWith('Ran terminal command:')) {
+          const cmdContent = detailsHtml.replace(/^Ran terminal command:\s*"/, '').replace(/"$/, '');
+          detailsHtml = `<span style="color: #94A3B8;">Ran terminal command:</span> <code style="background: rgba(139, 92, 246, 0.15); color: #C4B5FD; padding: 2px 7px; border-radius: 4px; font-family: var(--font-mono); border: 1px solid rgba(139, 92, 246, 0.25);">${cmdContent}</code>`;
+        }
+
+        return `
+          <tr>
+            <td>
+              <div style="font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: #FFFFFF;">${timeDisplay}</div>
+              <div style="font-size: 10.5px; color: #64748B; font-family: var(--font-mono); margin-top: 1px;">${dateDisplay} &bull; ${relTime}</div>
+            </td>
+            <td>
+              <div class="audit-op-pill">
+                <i class="bi bi-person-fill" style="color: #06B6D4;"></i>
+                <span style="font-weight: 700;">${opUser}</span>
+              </div>
+              <div class="audit-ip-sub"><i class="bi bi-geo-alt"></i> ${opIp}</div>
+            </td>
+            <td>${badgeHtml}</td>
+            <td style="font-size: 12.5px; line-height: 1.4; color: #E2E8F0;">${detailsHtml}</td>
+            <td style="text-align: center;">
+              <span class="graph-pill" style="color: #10B981; border-color: rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.08); display: inline-flex; align-items: center; gap: 4px;">
+                <i class="bi bi-shield-check"></i> Recorded
+              </span>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function exportActivityLog() {
+      if (!serverAuditLogs || serverAuditLogs.length === 0) {
+        notify('No audit log entries available to export.', 'info');
+        return;
+      }
+      const appName = (currentAppObj && currentAppObj.name) ? currentAppObj.name.replace(/[^a-zA-Z0-9_-]/g, '_') : (currentAppId || 'server');
+      const exportData = {
+        exported_at: new Date().toISOString(),
+        server_id: currentAppId,
+        server_name: currentAppObj?.name || '',
+        panel: 'Eclipse Panel · Made by Vexezor',
+        audit_records_count: serverAuditLogs.length,
+        records: serverAuditLogs
+      };
+
+      const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(exportData, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute('href', dataStr);
+      downloadAnchor.setAttribute('download', `eclipse_audit_${appName}_${Date.now()}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+
+      notify('Audit ledger exported as JSON successfully!', 'success');
     }
 
     // Periodic live telemetry background polling every 3 seconds

@@ -71,6 +71,7 @@ export function initDatabase() {
       action TEXT NOT NULL,
       details TEXT,
       ip_address TEXT,
+      app_id TEXT DEFAULT '',
       created_at TEXT DEFAULT CURRENT_TIMESTAMP
     );
 
@@ -168,6 +169,7 @@ export function initDatabase() {
   try { db.exec(`ALTER TABLE apps ADD COLUMN db_name TEXT DEFAULT '';`); } catch (e) {}
   try { db.exec(`ALTER TABLE audit_logs ADD COLUMN ip_address TEXT DEFAULT '';`); } catch (e) {}
   try { db.exec(`ALTER TABLE audit_logs ADD COLUMN username TEXT DEFAULT '';`); } catch (e) {}
+  try { db.exec(`ALTER TABLE audit_logs ADD COLUMN app_id TEXT DEFAULT '';`); } catch (e) {}
 
   // Seed default LocalNode if not existing
   try {
@@ -207,4 +209,22 @@ export function initDatabase() {
   }
 
   console.log(`[Database] SQLite connected & schema initialized at: ${config.dbPath}`);
+}
+
+export function recordAuditLog({ userId = null, username = 'system', action, details = '', ip = '', appId = '' }) {
+  try {
+    db.prepare(`
+      INSERT INTO audit_logs (user_id, username, action, details, ip_address, app_id)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(
+      userId,
+      username,
+      action,
+      typeof details === 'object' ? JSON.stringify(details) : String(details),
+      ip,
+      appId || ''
+    );
+  } catch (err) {
+    console.error('[AuditLog] Error recording log:', err.message);
+  }
 }

@@ -3558,3 +3558,380 @@ button.btn-slow-appear,
   color: rgba(255, 255, 255, 0.25);
   letter-spacing: 0.05em;
 }
+
+/* ==========================================================================
+   FEATURE 3: ROLLING CPU & RAM PERFORMANCE GRAPHS
+   High-DPI Canvas 2D telemetry visualization
+   ========================================================================== */
+.rolling-graphs-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 18px;
+}
+
+@media (max-width: 960px) {
+  .rolling-graphs-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.rolling-graph-card {
+  background: #141224;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.rolling-graph-card:hover {
+  border-color: rgba(6, 182, 212, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.rolling-graph-card.mem-card:hover {
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.graph-meta-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.graph-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.graph-title-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.graph-title-icon.cpu {
+  background: rgba(6, 182, 212, 0.12);
+  color: #06B6D4;
+  border: 1px solid rgba(6, 182, 212, 0.25);
+}
+
+.graph-title-icon.mem {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10B981;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.graph-title-text {
+  font-size: 13px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.graph-val-badge {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.graph-val-badge.cpu { color: #06B6D4; }
+.graph-val-badge.mem { color: #10B981; }
+
+.graph-stats-pills {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.graph-pill {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #94A3B8;
+}
+
+.graph-canvas-wrap {
+  width: 100%;
+  height: 110px;
+  position: relative;
+  background: rgba(10, 8, 20, 0.45);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  overflow: hidden;
+}
+
+.graph-canvas-wrap canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.graph-footer-stats {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+  font-size: 11px;
+  color: #6E7387;
+  font-family: var(--font-mono);
+}
+
+.telemetry-bottom-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 12px;
+}
+
+@media (max-width: 960px) {
+  .telemetry-bottom-strip {
+    grid-template-columns: 1fr;
+  }
+}
+
+.telemetry-strip-card {
+  background: #141224;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.2s ease;
+}
+
+.telemetry-strip-card:hover {
+  background: #19162D;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* ==========================================================================
+   FEATURE 5: SERVER ACTIVITY LOG & AUDIT TRAIL TAB
+   ========================================================================== */
+.audit-trail-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.audit-header-banner {
+  background: linear-gradient(135deg, rgba(20, 18, 36, 0.95), rgba(15, 23, 42, 0.95));
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.audit-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.audit-header-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(6, 182, 212, 0.12);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  color: #06B6D4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+
+.audit-header-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #FFFFFF;
+  margin: 0 0 4px 0;
+}
+
+.audit-header-desc {
+  font-size: 12px;
+  color: #94A3B8;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.audit-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: #141224;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+.audit-search-box {
+  position: relative;
+  flex: 1;
+  min-width: 240px;
+}
+
+.audit-search-box i {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748B;
+  font-size: 13px;
+}
+
+.audit-search-input {
+  width: 100%;
+  background: rgba(10, 8, 20, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 8px 12px 8px 34px;
+  color: #FFFFFF;
+  font-size: 12.5px;
+  outline: none;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.audit-search-input:focus {
+  border-color: #06B6D4;
+  box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.15);
+}
+
+.audit-select-filter {
+  background: rgba(10, 8, 20, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: #E2E8F0;
+  font-size: 12.5px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.audit-select-filter:focus {
+  border-color: #06B6D4;
+}
+
+.badge-audit-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.badge-audit-start {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10B981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.badge-audit-stop {
+  background: rgba(239, 68, 68, 0.15);
+  color: #F87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.badge-audit-restart {
+  background: rgba(6, 182, 212, 0.15);
+  color: #22D3EE;
+  border: 1px solid rgba(6, 182, 212, 0.3);
+}
+
+.badge-audit-kill {
+  background: rgba(244, 63, 94, 0.18);
+  color: #FB7185;
+  border: 1px solid rgba(244, 63, 94, 0.35);
+}
+
+.badge-audit-cmd {
+  background: rgba(139, 92, 246, 0.15);
+  color: #A78BFA;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.badge-audit-config {
+  background: rgba(245, 158, 11, 0.15);
+  color: #FBBF24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.badge-audit-startup {
+  background: rgba(99, 102, 241, 0.15);
+  color: #818CF8;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.badge-audit-create {
+  background: rgba(20, 184, 166, 0.15);
+  color: #2DD4BF;
+  border: 1px solid rgba(20, 184, 166, 0.3);
+}
+
+.badge-audit-delete {
+  background: rgba(239, 68, 68, 0.2);
+  color: #EF4444;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.badge-audit-install {
+  background: rgba(14, 165, 233, 0.15);
+  color: #38BDF8;
+  border: 1px solid rgba(14, 165, 233, 0.3);
+}
+
+.badge-audit-domain {
+  background: rgba(236, 72, 153, 0.15);
+  color: #F472B6;
+  border: 1px solid rgba(236, 72, 153, 0.3);
+}
+
+.badge-audit-default {
+  background: rgba(148, 163, 184, 0.12);
+  color: #94A3B8;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.audit-op-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: #E2E8F0;
+}
+
+.audit-ip-sub {
+  font-size: 10px;
+  color: #64748B;
+  font-family: var(--font-mono);
+  margin-top: 2px;
+}
