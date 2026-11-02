@@ -3,6 +3,7 @@ import { db } from '../database/index.js';
 import { getSystemStats } from '../daemon/metrics.js';
 import { supervisor } from '../daemon/supervisor.js';
 import { discordBotService } from '../services/discordBot.js';
+import { autoDeployService } from '../services/autoDeploy.js';
 
 export class AdminController {
   static async getSystemInfo(req, res) {
@@ -395,6 +396,45 @@ export class AdminController {
         message: result.success ? 'Discord Bot reconnected successfully' : result.error,
         status: discordBotService.getStatus()
       });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
+  // Auto-Deploy & Continuous Updates
+  static async getDeployStatus(req, res) {
+    try {
+      const status = autoDeployService.getStatus();
+      return res.json({ status });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
+  static async checkDeployUpdates(req, res) {
+    try {
+      const result = await autoDeployService.checkForUpdates();
+      return res.json({ result, status: autoDeployService.getStatus() });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
+  static async triggerDeploy(req, res) {
+    try {
+      const username = (req.user && req.user.username) || 'admin';
+      const result = await autoDeployService.deployUpdate(`user_${username}`);
+      return res.json({ result, status: autoDeployService.getStatus() });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
+  static async updateDeploySettings(req, res) {
+    try {
+      const { enabled, intervalSec } = req.body;
+      const status = autoDeployService.saveSettings({ enabled, intervalSec });
+      return res.json({ success: true, message: 'Auto-deployment settings saved successfully', status });
     } catch (err) {
       return res.status(500).json({ error: err.message });
     }

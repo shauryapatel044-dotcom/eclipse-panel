@@ -37,4 +37,10 @@ router.get('/next-port', AdminController.getNextAvailablePort);
 router.get('/theme', AdminController.getTheme);
 router.post('/theme', AdminController.updateTheme);
 
+// Auto-Deploy & Continuous Updates
+router.get('/deploy', AdminController.getDeployStatus);
+router.post('/deploy/check', AdminController.checkDeployUpdates);
+router.post('/deploy/trigger', AdminController.triggerDeploy);
+router.put('/deploy/settings', AdminController.updateDeploySettings);
+
 export default router;

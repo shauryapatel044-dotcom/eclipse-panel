@@ -21,6 +21,7 @@ import { db } from '../database/index.js';
 import { supervisor } from '../daemon/supervisor.js';
 import { logStreamer } from '../daemon/logStreamer.js';
 import { getSystemStats } from '../daemon/metrics.js';
+import { autoDeployService } from './autoDeploy.js';
 import { config } from '../config.js';
 
 function getDirectoryStats(dirPath) {
@@ -575,6 +576,16 @@ class DiscordBotService {
         ),
 
       new SlashCommandBuilder()
+        .setName('updatepanel')
+        .setDescription('Check for GitHub updates & auto-deploy newest release to Eclipse Panel')
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+        .addBooleanOption(opt =>
+          opt.setName('force')
+            .setDescription('Force reinstall and reload daemon even if hash matches')
+            .setRequired(false)
+        ),
+
+      new SlashCommandBuilder()
         .setName('help')
         .setDescription('View documentation and command reference for Eclipse Discord Bot')
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
@@ -651,6 +662,8 @@ class DiscordBotService {
       await this.cmdListUsers(interaction);
     } else if (commandName === 'panel') {
       await this.cmdPanelStats(interaction);
+    } else if (commandName === 'updatepanel') {
+      await this.cmdUpdatePanel(interaction);
     } else if (commandName === 'help') {
       await this.cmdHelp(interaction);
     }
@@ -1352,13 +1365,18 @@ class DiscordBotService {
     const totalApps = db.prepare('SELECT COUNT(*) as count FROM apps').get().count;
     const runningApps = db.prepare("SELECT COUNT(*) as count FROM apps WHERE status = 'running' OR status = 'online'").get().count;
     const totalUsers = db.prepare('SELECT COUNT(*) as count FROM users').get().count;
+    const deployStatus = autoDeployService.getStatus();
 
     const hostIp = config.vpsPublicIp || '20.219.198.128';
 
     const embed = new EmbedBuilder()
       .setTitle('🌑 Eclipse Panel · Cloud VPS Telemetry')
       .setColor(0x06B6D4)
-      .setDescription(`**Host Address:** \`http://${hostIp}:8090\`\n**Platform:** ${stats.os ? stats.os.platform : 'Linux'} (${stats.os ? stats.os.distro : 'Ubuntu'})`)
+      .setDescription(
+        `**Host Address:** \`http://${hostIp}:8090\`\n` +
+        `**Platform:** ${stats.os ? stats.os.platform : 'Linux'} (${stats.os ? stats.os.distro : 'Ubuntu'})\n` +
+        `**Git Version:** \`${deployStatus.currentCommitShort || 'Latest'}\` | **Auto-Deploy:** ${deployStatus.enabled ? '🟢 Active (60s)' : '⏸️ Disabled'}`
+      )
       .addFields(
         { name: 'CPU Load', value: `\`${stats.cpu ? stats.cpu.usage_percent : 0}%\``, inline: true },
         { name: 'RAM Usage', value: `\`${stats.memory ? stats.memory.used_mb : 0} / ${stats.memory ? stats.memory.total_mb : 0} MB\``, inline: true },
@@ -1370,7 +1388,79 @@ class DiscordBotService {
       .setFooter({ text: 'Eclipse Panel · Cloud Container Infrastructure · Made by Vexezor' })
       .setTimestamp();
 
-    await interaction.reply({ embeds: [embed] });
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId('btn_checkupdates')
+        .setLabel('Check Updates')
+        .setEmoji('🔄')
+        .setStyle(ButtonStyle.Secondary),
+
+      new ButtonBuilder()
+        .setCustomId('btn_triggerdeploy')
+        .setLabel('Update Panel Now')
+        .setEmoji('🚀')
+        .setStyle(ButtonStyle.Primary)
+    );
+
+    await interaction.reply({ embeds: [embed], components: [row] });
+  }
+
+  // 11B. /updatepanel command (Check & deploy latest GitHub release)
+  async cmdUpdatePanel(interaction) {
+    const force = interaction.options ? interaction.options.getBoolean('force') : false;
+    await interaction.deferReply();
+
+    try {
+      const checkResult = await autoDeployService.checkForUpdates();
+      const status = autoDeployService.getStatus();
+
+      if (checkResult.hasUpdate || force) {
+        const targetCommit = checkResult.remoteHash ? checkResult.remoteHash.slice(0, 7) : (status.remoteCommitShort || 'Latest');
+        const currentCommit = status.currentCommitShort || 'N/A';
+
+        const embed = new EmbedBuilder()
+          .setTitle('🚀 Eclipse Panel · Deploying Latest GitHub Release')
+          .setColor(0x10B981)
+          .setDescription(
+            `**Automated deployment initiated!**\n\n` +
+            `• **Current Local:** \`${currentCommit}\`\n` +
+            `• **Target GitHub:** \`${targetCommit}\`\n` +
+            `• **Repository:** \`${status.repoUrl}\`\n\n` +
+            `_Pulling code, updating npm packages, and reloading daemon..._`
+          )
+          .setFooter({ text: 'Eclipse Panel Auto-Deploy Engine · Made by Vexezor' })
+          .setTimestamp();
+
+        await interaction.editReply({ embeds: [embed] });
+
+        // Trigger deploy
+        await autoDeployService.deployUpdate(`discord_${interaction.user.username}`);
+      } else {
+        const embed = new EmbedBuilder()
+          .setTitle('✅ Eclipse Panel · Codebase Up to Date')
+          .setColor(0x06B6D4)
+          .setDescription(
+            `**The panel is already running the latest GitHub release!**\n\n` +
+            `• **Commit Hash:** \`${status.currentCommitShort}\`\n` +
+            `• **Commit Message:** *${status.currentCommitMsg || 'Latest release'}*\n` +
+            `• **Auto-Deploy Poller:** ${status.enabled ? '🟢 Active (Checking every 60s)' : '⏸️ Paused'}`
+          )
+          .setFooter({ text: 'Use /updatepanel force:true to force re-fetch & restart' })
+          .setTimestamp();
+
+        const row = new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId('btn_triggerdeploy')
+            .setLabel('Force Reinstall & Reload')
+            .setStyle(ButtonStyle.Secondary)
+            .setEmoji('⚡')
+        );
+
+        await interaction.editReply({ embeds: [embed], components: [row] });
+      }
+    } catch (err) {
+      await interaction.editReply({ content: `⚠️ Update check failed: ${err.message}` });
+    }
   }
 
   // 12. /help command
@@ -1398,7 +1488,7 @@ class DiscordBotService {
         },
         {
           name: '📊 Inspection & Monitoring',
-          value: '• `/serverinfo <identifier>` — View disk usage, files count, port, subdomain, and owner\n• `/panel` — View live VPS CPU load, RAM usage, disk, and telemetry'
+          value: '• `/serverinfo <identifier>` — View disk usage, files count, port, subdomain, and owner\n• `/panel` — View live VPS CPU load, RAM usage, disk, and telemetry\n• `/updatepanel [force]` — Check GitHub for updates & auto-deploy latest commit'
         },
         {
           name: '👥 User & Account Administration',
@@ -1439,6 +1529,37 @@ class DiscordBotService {
         content: '❌ **Access Denied**: This Eclipse Panel bot can only be accessed and managed by server administrators.',
         ephemeral: true
       });
+    }
+
+    // Auto-Deploy & Update buttons
+    if (action === 'checkupdates') {
+      await interaction.deferReply({ ephemeral: true });
+      const checkResult = await autoDeployService.checkForUpdates();
+      const status = autoDeployService.getStatus();
+      if (checkResult.hasUpdate) {
+        return interaction.editReply({
+          content: `⚡ **New GitHub release found!**\n• Current: \`${status.currentCommitShort}\`\n• Remote: \`${status.remoteCommitShort}\`\nRun \`/updatepanel\` or click **Update Panel Now** to deploy!`
+        });
+      } else {
+        return interaction.editReply({
+          content: `✅ **Eclipse Panel is completely up to date!** (Commit: \`${status.currentCommitShort}\`)\nAuto-deploy poller checks GitHub every 60 seconds.`
+        });
+      }
+    }
+
+    if (action === 'triggerdeploy' || action === 'forcedeploy') {
+      await interaction.deferReply();
+      const status = autoDeployService.getStatus();
+      const embed = new EmbedBuilder()
+        .setTitle('🚀 Deploying Latest GitHub Release')
+        .setColor(0x10B981)
+        .setDescription('Pulling latest code from GitHub repository, installing modules, and restarting daemon...')
+        .setFooter({ text: 'Eclipse Panel Auto-Deploy Engine · Made by Vexezor' })
+        .setTimestamp();
+
+      await interaction.editReply({ embeds: [embed] });
+      await autoDeployService.deployUpdate(`discord_${interaction.user.username}`);
+      return;
     }
 
     // Live Console Controls

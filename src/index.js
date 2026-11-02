@@ -9,6 +9,7 @@ import { supervisor } from './daemon/supervisor.js';
 import { setupWebSocket } from './websocket/wsServer.js';
 import { getSystemStats } from './daemon/metrics.js';
 import { discordBotService } from './services/discordBot.js';
+import { autoDeployService } from './services/autoDeploy.js';
 import { AdminController } from './controllers/adminController.js';
 
 // Route handlers
@@ -135,8 +136,39 @@ app.use(cors({
   origin: config.corsOrigin,
   credentials: true,
 }));
-app.use(express.json({ limit: '50gb' }));
+app.use(express.json({
+  limit: '50gb',
+  verify: (req, res, buf) => {
+    req.rawBody = buf;
+  }
+}));
 app.use(express.urlencoded({ extended: true, limit: '50gb' }));
+
+// GitHub Webhook for Instant Continuous Deployment
+app.post('/api/deploy/webhook', async (req, res) => {
+  const isAuthorized = autoDeployService.verifyWebhook(req);
+  if (!isAuthorized) {
+    return res.status(401).json({ error: 'Unauthorized: Invalid webhook secret token' });
+  }
+
+  const ref = req.body && req.body.ref;
+  if (ref && ref !== 'refs/heads/main' && ref !== 'refs/heads/master') {
+    return res.json({ success: true, message: `Ignored push to non-main branch: ${ref}` });
+  }
+
+  const commitMsg = (req.body && req.body.head_commit && req.body.head_commit.message) || 'Webhook push';
+  console.log(`[AutoDeploy Webhook] 📥 Received GitHub push event: "${commitMsg}". Initiating auto-update...`);
+
+  res.json({
+    success: true,
+    message: 'GitHub webhook received. Continuous deployment triggered in background.',
+    commit: commitMsg
+  });
+
+  autoDeployService.deployUpdate('github_webhook').catch(e => {
+    console.error('[AutoDeploy Webhook Error]:', e);
+  });
+});
 
 // Health & Status
 app.get('/api/health', (req, res) => {
@@ -221,6 +253,7 @@ async function start() {
 
       supervisor.bootAllAutoStartApps();
       discordBotService.init().catch(e => console.error('[DiscordBot] Startup error:', e.message));
+      autoDeployService.init().catch(e => console.error('[AutoDeploy] Startup error:', e.message));
     });
   } catch (err) {
     console.error('Fatal initialization error:', err);
