@@ -49,12 +49,80 @@ class Supervisor {
     this.crashCounters = new Map();
   }
 
-  getAppDir(appId) {
-    const dir = path.join(config.appsDir, appId);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
+  // Sanitize folder name from server name
+  sanitizeFolderName(name, fallback = 'server') {
+    if (!name || typeof name !== 'string') return fallback;
+    let safe = name.trim().replace(/[\/\\:*?"<>|]/g, '-').replace(/\s+/g, '-');
+    safe = safe.replace(/^[.-]+|[.-]+$/g, '');
+    return safe || fallback;
+  }
+
+  // Get or create dedicated folder on VPS named after server
+  getAppDir(appOrId) {
+    let app = null;
+    let appId = '';
+    let appName = '';
+    let folderName = '';
+
+    if (typeof appOrId === 'object' && appOrId !== null) {
+      app = appOrId;
+      appId = app.id || '';
+      appName = app.name || '';
+      folderName = app.folder_name || '';
+    } else if (typeof appOrId === 'string') {
+      appId = appOrId;
+      try {
+        app = db.prepare('SELECT id, name, folder_name FROM apps WHERE id = ? OR name = ? OR folder_name = ?').get(appOrId, appOrId, appOrId);
+        if (app) {
+          appId = app.id;
+          appName = app.name;
+          folderName = app.folder_name || '';
+        }
+      } catch (e) {}
     }
-    return dir;
+
+    // Determine target directory name based on server name
+    const safeName = this.sanitizeFolderName(folderName || appName || appId || 'server');
+    const namedDir = path.join(config.appsDir, safeName);
+    const idDir = appId ? path.join(config.appsDir, appId) : null;
+
+    // 1. If folder with server name already exists, use it
+    if (fs.existsSync(namedDir)) {
+      if (app && app.id && app.folder_name !== safeName) {
+        try {
+          db.prepare('UPDATE apps SET folder_name = ? WHERE id = ?').run(safeName, app.id);
+        } catch (e) {}
+      }
+      return namedDir;
+    }
+
+    // 2. If legacy ID directory exists (e.g. storage/apps/app_219c5bc0), migrate/rename it to server name!
+    if (idDir && fs.existsSync(idDir) && idDir !== namedDir) {
+      try {
+        fs.renameSync(idDir, namedDir);
+        console.log(`[Supervisor] 📁 Migrated server directory from ${idDir} -> ${namedDir}`);
+        if (app && app.id) {
+          try {
+            db.prepare('UPDATE apps SET folder_name = ? WHERE id = ?').run(safeName, app.id);
+          } catch (e) {}
+        }
+        return namedDir;
+      } catch (e) {
+        console.warn(`[Supervisor] Could not rename legacy folder ${idDir} to ${namedDir}: ${e.message}`);
+        return idDir;
+      }
+    }
+
+    // 3. Create clean directory with server name
+    if (!fs.existsSync(namedDir)) {
+      fs.mkdirSync(namedDir, { recursive: true });
+    }
+    if (app && app.id && app.folder_name !== safeName) {
+      try {
+        db.prepare('UPDATE apps SET folder_name = ? WHERE id = ?').run(safeName, app.id);
+      } catch (e) {}
+    }
+    return namedDir;
   }
 
   spawnStartupProcess(app, appDir, customEnv = {}) {

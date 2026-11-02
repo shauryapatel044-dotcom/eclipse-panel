@@ -53,7 +53,7 @@ function getDirectoryStats(dirPath) {
 }
 
 function listContainerFiles(appId, subPath = '') {
-  const appDir = path.join(config.appsDir, appId);
+  const appDir = supervisor.getAppDir(appId);
   const cleanSub = (subPath || '').trim().replace(/^[\/\\]+/, '');
   const targetDir = path.normalize(path.join(appDir, cleanSub));
 
@@ -792,21 +792,17 @@ class DiscordBotService {
 
     const appId = `app_${crypto.randomBytes(4).toString('hex')}`;
     const defaultEntry = type === 'python' ? 'main.py' : 'index.js';
-    const appDir = path.join(config.appsDir, appId);
-
-    // Create empty app directory without any boilerplate files
-    if (!fs.existsSync(appDir)) {
-      fs.mkdirSync(appDir, { recursive: true });
-    }
+    const safeFolder = supervisor.sanitizeFolderName(name.trim(), appId);
+    const appDir = supervisor.getAppDir({ id: appId, name: name.trim(), folder_name: safeFolder });
 
     const baseDomain = this.getBaseDomain();
     const slug = name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || appId;
     const serverDomain = baseDomain ? `${slug}.${baseDomain}` : '';
 
     db.prepare(`
-      INSERT INTO apps (id, name, type, user_id, entrypoint, port, memory_limit, cpu_limit, disk_limit, domain, status, node_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 5120, ?, 'stopped', 'node_local')
-    `).run(appId, name, type, owner.id, defaultEntry, port, ram, cpu, serverDomain);
+      INSERT INTO apps (id, name, type, user_id, entrypoint, port, memory_limit, cpu_limit, disk_limit, domain, status, node_id, folder_name)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 5120, ?, 'stopped', 'node_local', ?)
+    `).run(appId, name, type, owner.id, defaultEntry, port, ram, cpu, serverDomain, safeFolder);
 
     const newApp = db.prepare('SELECT * FROM apps WHERE id = ?').get(appId);
     let desc = `✅ **Server Created Successfully!**\nAllocated to: **${owner.email}** (@${owner.username})\n\nContainer is clean and empty. Upload your project files or use the buttons below:`;
@@ -1024,7 +1020,7 @@ class DiscordBotService {
     const app = db.prepare('SELECT * FROM apps WHERE id = ? OR LOWER(name) = LOWER(?)').get(query, query);
     if (!app) return interaction.reply({ content: `❌ Server matching "${query}" was not found.`, ephemeral: true });
 
-    const appDir = path.join(config.appsDir, app.id);
+    const appDir = supervisor.getAppDir(app);
     const targetFile = path.normalize(path.join(appDir, filePath));
     if (!targetFile.startsWith(appDir)) {
       return interaction.reply({ content: '❌ Access denied: Path traversal detected.', ephemeral: true });
@@ -1064,7 +1060,7 @@ class DiscordBotService {
     const app = db.prepare('SELECT * FROM apps WHERE id = ? OR LOWER(name) = LOWER(?)').get(query, query);
     if (!app) return interaction.reply({ content: `❌ Server matching "${query}" was not found.`, ephemeral: true });
 
-    const appDir = path.join(config.appsDir, app.id);
+    const appDir = supervisor.getAppDir(app);
     const target = path.normalize(path.join(appDir, filePath));
     if (!target.startsWith(appDir) || target === appDir) {
       return interaction.reply({ content: '❌ Access denied: Cannot delete server root directory.', ephemeral: true });
@@ -1289,7 +1285,7 @@ class DiscordBotService {
       return interaction.reply({ content: `❌ Server matching "${query}" was not found.`, ephemeral: true });
     }
 
-    const appDir = path.join(config.appsDir, app.id);
+    const appDir = supervisor.getAppDir(app);
     const stats = getDirectoryStats(appDir);
     const embed = this.buildServerInfoEmbed(app, stats);
 
@@ -1505,11 +1501,16 @@ class DiscordBotService {
     if (!app) return;
 
     await supervisor.killApp(appId);
-    const appDir = path.join(config.appsDir, appId);
+    const appDir = supervisor.getAppDir(app);
     if (fs.existsSync(appDir)) {
       try {
         fs.rmSync(appDir, { recursive: true, force: true });
+        console.log(`[DiscordBot] 🗑️ Deleted server directory: ${appDir}`);
       } catch (e) {}
+    }
+    const legacyDir = path.join(config.appsDir, app.id);
+    if (fs.existsSync(legacyDir) && legacyDir !== appDir) {
+      try { fs.rmSync(legacyDir, { recursive: true, force: true }); } catch (e) {}
     }
     db.prepare('DELETE FROM apps WHERE id = ?').run(appId);
   }
@@ -1821,7 +1822,7 @@ class DiscordBotService {
 
     // Quick info button
     if (action === 'info') {
-      const stats = getDirectoryStats(path.join(config.appsDir, appId));
+      const stats = getDirectoryStats(supervisor.getAppDir(app || appId));
       const embed = this.buildServerInfoEmbed(app, stats);
       return interaction.reply({ embeds: [embed], ephemeral: true });
     }

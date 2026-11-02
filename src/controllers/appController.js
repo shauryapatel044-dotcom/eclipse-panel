@@ -184,25 +184,26 @@ export class AppController {
       const reqFile = requirements_file || 'requirements.txt';
       const nPackages = node_packages || '';
       const nArgs = node_args || '';
+      const safeFolder = supervisor.sanitizeFolderName(name.trim(), appId);
 
       // Insert into database with initial status 'stopped'
       const insertStmt = db.prepare(`
         INSERT INTO apps (
           id, name, type, user_id, entrypoint, port, env_vars, auto_restart, 
           memory_limit, cpu_limit, disk_limit, primary_ip, domain, runtime_version, 
-          startup_cmd, main_file, node_packages, node_args, requirements_file, status
+          startup_cmd, main_file, node_packages, node_args, requirements_file, status, folder_name
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'stopped')
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'stopped', ?)
       `);
       insertStmt.run(
         appId, name.trim(), normalizedType, req.user.id, defaultEntry, appPort, envJson, autoRestartVal,
         memLimit, cpLimit, diskLimit, serverIp, serverDomain, rVersion,
-        startCmd, defaultEntry, nPackages, nArgs, reqFile
+        startCmd, defaultEntry, nPackages, nArgs, reqFile, safeFolder
       );
 
-      // Create clean, empty app directory (no default files)
-      const appDir = supervisor.getAppDir(appId);
-      logStreamer.append(appId, 'system', `[Eclipse Daemon] Container directory initialized (clean empty directory). Upload your project files or connect Git to begin.`);
+      // Create clean, empty app directory using server name
+      const appDir = supervisor.getAppDir({ id: appId, name: name.trim(), folder_name: safeFolder });
+      logStreamer.append(appId, 'system', `[Eclipse Daemon] Container directory initialized at "${safeFolder}" (clean empty directory). Upload your project files or connect Git to begin.`);
 
       return res.status(201).json({
         message: 'Application created successfully',
@@ -290,19 +291,34 @@ export class AppController {
       const newReqs = requirements_file !== undefined ? requirements_file : (app.requirements_file || 'requirements.txt');
       const newEnv = env_vars !== undefined ? (typeof env_vars === 'object' ? JSON.stringify(env_vars) : env_vars) : app.env_vars;
 
+      let newFolder = app.folder_name || supervisor.sanitizeFolderName(app.name);
+      if (newName && newName.trim() !== app.name) {
+        const oldDir = supervisor.getAppDir(app);
+        newFolder = supervisor.sanitizeFolderName(newName.trim());
+        const newDir = path.join(config.appsDir, newFolder);
+        if (fs.existsSync(oldDir) && oldDir !== newDir && !fs.existsSync(newDir)) {
+          try {
+            fs.renameSync(oldDir, newDir);
+            console.log(`[AppController] 📁 Renamed server directory from ${oldDir} -> ${newDir}`);
+          } catch (e) {
+            console.warn(`[AppController] Could not rename folder: ${e.message}`);
+          }
+        }
+      }
+
       const updateStmt = db.prepare(`
         UPDATE apps
         SET name = ?, type = ?, entrypoint = ?, port = ?, env_vars = ?, auto_restart = ?, 
             memory_limit = ?, cpu_limit = ?, disk_limit = ?, primary_ip = ?, domain = ?,
             runtime_version = ?, startup_cmd = ?, main_file = ?, node_packages = ?,
-            unnode_packages = ?, node_args = ?, requirements_file = ?, updated_at = CURRENT_TIMESTAMP
+            unnode_packages = ?, node_args = ?, requirements_file = ?, folder_name = ?, updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
       `);
       updateStmt.run(
         newName, newType, newEntrypoint, newPort, newEnv, newAutoRestart, 
         newMem, newCpu, newDisk, newIp, newDomain,
         newRVersion, newStartupCmd, newMainFile, newPackages,
-        newUnPackages, newArgs, newReqs, id
+        newUnPackages, newArgs, newReqs, newFolder, id
       );
 
       logStreamer.append(id, 'system', `[Config Updated] Specs updated: Port=${newPort}, RAM=${newMem}MB, CPU=${newCpu}%, Disk=${newDisk}MB, IP=${newIp}, Domain=${newDomain}`);
@@ -446,11 +462,22 @@ export class AppController {
       }
 
       // Clean directory from disk
-      const appDir = supervisor.getAppDir(id);
+      const appDir = supervisor.getAppDir(app);
       try {
-        fs.rmSync(appDir, { recursive: true, force: true });
+        if (fs.existsSync(appDir)) {
+          fs.rmSync(appDir, { recursive: true, force: true });
+          console.log(`[AppController] 🗑️ Deleted server directory: ${appDir}`);
+        }
       } catch (e) {
         console.warn(`Could not delete app folder: ${e.message}`);
+      }
+
+      // Also clean legacy ID directory if it exists and differs
+      if (app.id) {
+        const idDir = path.join(config.appsDir, app.id);
+        if (fs.existsSync(idDir) && idDir !== appDir) {
+          try { fs.rmSync(idDir, { recursive: true, force: true }); } catch (e) {}
+        }
       }
 
       // Delete from DB
