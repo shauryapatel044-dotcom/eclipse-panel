@@ -810,7 +810,7 @@ class DiscordBotService {
     const appDir = supervisor.getAppDir({ id: appId, name: name.trim(), folder_name: safeFolder });
 
     if (isMc) {
-      MinecraftRunner.configureServerFiles({ id: appId, name: name.trim(), port }, appDir);
+      MinecraftRunner.setupMinecraftServer({ id: appId, name: name.trim(), port, engine, game_version: gameVersion }, appDir).catch(e => console.error('[DiscordBot MC Provision]', e.message));
     } else if (isDb) {
       DatabaseRunner.setupDatabase({ id: appId, name: name.trim(), port, engine, db_password: dbPassword, db_name: dbName, memory_limit: safeRam }, appDir);
     }

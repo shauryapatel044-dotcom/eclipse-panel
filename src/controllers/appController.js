@@ -268,8 +268,10 @@ export class AppController {
       const appDir = supervisor.getAppDir({ id: appId, name: name.trim(), folder_name: safeFolder });
 
       if (category === 'minecraft') {
-        MinecraftRunner.configureServerFiles({ id: appId, name: name.trim(), port: appPort }, appDir);
-        logStreamer.append(appId, 'system', `[Minecraft Server] Provisioned directory "${safeFolder}" on port ${appPort}. Engine: ${finalEngine.toUpperCase()} (${finalGameVersion}). Accepted eula.txt.`);
+        logStreamer.append(appId, 'system', `[Minecraft Server] Provisioning server container "${safeFolder}" on port ${appPort}...`);
+        logStreamer.append(appId, 'system', `[Minecraft Server] Selected Engine: ${finalEngine.toUpperCase()} (MC ${finalGameVersion})`);
+        await MinecraftRunner.setupMinecraftServer({ id: appId, name: name.trim(), port: appPort, engine: finalEngine, game_version: finalGameVersion }, appDir);
+        logStreamer.append(appId, 'system', `[Minecraft Server] ✅ Default files auto-provisioned: server.jar, eula.txt, server.properties, ops.json, whitelist.json.`);
       } else if (category === 'database') {
         DatabaseRunner.setupDatabase({ id: appId, name: name.trim(), port: appPort, engine: finalEngine, db_password: finalDbPass, db_name: finalDbName, memory_limit: memLimit }, appDir);
         logStreamer.append(appId, 'system', `[Database Server] Provisioned ${finalEngine.toUpperCase()} on port ${appPort}. Connection configuration written.`);
@@ -540,6 +542,15 @@ export class AppController {
           SET engine = ?, game_version = ?, updated_at = CURRENT_TIMESTAMP
           WHERE id = ?
         `).run(newEngine, newGameVersion, id);
+
+        if (newEngine !== app.engine || newGameVersion !== app.game_version) {
+          const appDir = supervisor.getAppDir(app);
+          const jarPath = path.join(appDir, 'server.jar');
+          try { if (fs.existsSync(jarPath)) fs.unlinkSync(jarPath); } catch (e) {}
+          MinecraftRunner.setupMinecraftServer({ ...app, engine: newEngine, game_version: newGameVersion }, appDir)
+            .then(() => logStreamer.append(id, 'system', `[Minecraft Startup] Re-provisioned server.jar for ${newEngine.toUpperCase()} ${newGameVersion}`))
+            .catch(err => logStreamer.append(id, 'stderr', `[Minecraft Startup] Error provisioning new JAR: ${err.message}`));
+        }
 
         logStreamer.append(id, 'system', `[Startup Updated] Minecraft engine updated to ${newEngine.toUpperCase()} (MC ${newGameVersion})`);
         recordAuditLog({

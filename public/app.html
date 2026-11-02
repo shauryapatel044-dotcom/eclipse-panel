@@ -1344,6 +1344,7 @@
                       <option value="paper">Paper (Recommended - High Performance Plugins)</option>
                       <option value="purpur">Purpur (Customizable Paper Fork)</option>
                       <option value="fabric">Fabric (Modern Modded Loader)</option>
+                      <option value="spigot">Spigot (Classic Bukkit Engine)</option>
                       <option value="neoforge">NeoForge (Modern Community Mod Loader)</option>
                       <option value="forge">Forge (Classic Modded)</option>
                       <option value="vanilla">Vanilla (Official Mojang)</option>
@@ -1352,19 +1353,80 @@
                   <div>
                     <label style="font-size: 11px; font-weight: 700; color: #CBD5E1; display: block; margin-bottom: 6px;">Game Version</label>
                     <select id="mc-version-select" class="form-control" style="font-size: 13px; font-weight: 600;" onchange="saveMinecraftStartup()">
-                      <option value="1.21.4">1.21.4 (Latest)</option>
-                      <option value="1.21.3">1.21.3</option>
-                      <option value="1.21.1">1.21.1 (Stable LTS)</option>
-                      <option value="1.20.6">1.20.6</option>
-                      <option value="1.20.4">1.20.4</option>
-                      <option value="1.20.2">1.20.2</option>
-                      <option value="1.20.1">1.20.1 (Popular Mods)</option>
-                      <option value="1.19.4">1.19.4</option>
-                      <option value="1.19.2">1.19.2</option>
-                      <option value="1.18.2">1.18.2</option>
-                      <option value="1.16.5">1.16.5 (Combat / Legacy Modded)</option>
-                      <option value="1.12.2">1.12.2 (Classic 1.12 Mods)</option>
-                      <option value="1.8.8">1.8.8 (Competitive PvP)</option>
+                      <optgroup label="1.21 Series (Tricky Trials)">
+                        <option value="1.21.4">1.21.4 (Latest)</option>
+                        <option value="1.21.3">1.21.3</option>
+                        <option value="1.21.2">1.21.2</option>
+                        <option value="1.21.1">1.21.1 (Stable LTS)</option>
+                        <option value="1.21">1.21</option>
+                      </optgroup>
+                      <optgroup label="1.20 Series (Trails & Tales)">
+                        <option value="1.20.6">1.20.6</option>
+                        <option value="1.20.5">1.20.5</option>
+                        <option value="1.20.4">1.20.4</option>
+                        <option value="1.20.3">1.20.3</option>
+                        <option value="1.20.2">1.20.2</option>
+                        <option value="1.20.1">1.20.1 (Popular Mods)</option>
+                        <option value="1.20">1.20</option>
+                      </optgroup>
+                      <optgroup label="1.19 Series (The Wild Update)">
+                        <option value="1.19.4">1.19.4</option>
+                        <option value="1.19.3">1.19.3</option>
+                        <option value="1.19.2">1.19.2</option>
+                        <option value="1.19.1">1.19.1</option>
+                        <option value="1.19">1.19</option>
+                      </optgroup>
+                      <optgroup label="1.18 Series (Caves & Cliffs II)">
+                        <option value="1.18.2">1.18.2</option>
+                        <option value="1.18.1">1.18.1</option>
+                        <option value="1.18">1.18</option>
+                      </optgroup>
+                      <optgroup label="1.17 Series (Caves & Cliffs I)">
+                        <option value="1.17.1">1.17.1</option>
+                        <option value="1.17">1.17</option>
+                      </optgroup>
+                      <optgroup label="1.16 Series (Nether Update)">
+                        <option value="1.16.5">1.16.5 (Modded Standard)</option>
+                        <option value="1.16.4">1.16.4</option>
+                        <option value="1.16.3">1.16.3</option>
+                        <option value="1.16.2">1.16.2</option>
+                        <option value="1.16.1">1.16.1</option>
+                        <option value="1.16">1.16</option>
+                      </optgroup>
+                      <optgroup label="1.15 Series (Buzzy Bees)">
+                        <option value="1.15.2">1.15.2</option>
+                        <option value="1.15.1">1.15.1</option>
+                        <option value="1.15">1.15</option>
+                      </optgroup>
+                      <optgroup label="1.14 Series (Village & Pillage)">
+                        <option value="1.14.4">1.14.4</option>
+                        <option value="1.14.3">1.14.3</option>
+                        <option value="1.14">1.14</option>
+                      </optgroup>
+                      <optgroup label="1.13 Series (Update Aquatic)">
+                        <option value="1.13.2">1.13.2</option>
+                        <option value="1.13">1.13</option>
+                      </optgroup>
+                      <optgroup label="1.12 Series (World of Color)">
+                        <option value="1.12.2">1.12.2 (Classic 1.12 Mods)</option>
+                        <option value="1.12.1">1.12.1</option>
+                        <option value="1.12">1.12</option>
+                      </optgroup>
+                      <optgroup label="1.11 - 1.9 Series (Legacy Era)">
+                        <option value="1.11.2">1.11.2</option>
+                        <option value="1.10.2">1.10.2</option>
+                        <option value="1.9.4">1.9.4</option>
+                      </optgroup>
+                      <optgroup label="1.8 Series (Bountiful Update)">
+                        <option value="1.8.9">1.8.9 (PvP Standard)</option>
+                        <option value="1.8.8">1.8.8 (Classic PvP)</option>
+                        <option value="1.8">1.8</option>
+                      </optgroup>
+                      <optgroup label="1.7 Series (Vintage Era)">
+                        <option value="1.7.10">1.7.10 (Vintage Modded)</option>
+                        <option value="1.7.9">1.7.9</option>
+                        <option value="1.7.2">1.7.2</option>
+                      </optgroup>
                     </select>
                   </div>
                 </div>
@@ -2953,7 +3015,7 @@
           const javaInfo = document.getElementById('mc-java-info');
           if (javaInfo) {
             const ver = startup.game_version || '1.21.1';
-            javaInfo.innerText = (ver.startsWith('1.21') || ver.startsWith('1.20.5') || ver.startsWith('1.20.6')) ? 'OpenJDK 21 LTS (Headless)' : 'OpenJDK 17 LTS (Headless)';
+            javaInfo.innerText = getJavaRuntimeLabel(ver);
           }
         } else if (category === 'database') {
           if (viewDb) viewDb.style.display = 'block';
@@ -3031,6 +3093,19 @@
       }
     }
 
+    function getJavaRuntimeLabel(ver) {
+      const match = String(ver || '1.21.1').match(/^1\.(\d+)(?:\.(\d+))?/);
+      const minor = match ? parseInt(match[1], 10) : 21;
+      const patch = match && match[2] ? parseInt(match[2], 10) : 0;
+      if (minor > 20 || (minor === 20 && patch >= 5)) {
+        return 'OpenJDK 21 LTS (Headless Active)';
+      } else if (minor >= 17) {
+        return 'OpenJDK 17 LTS (Headless Active)';
+      } else {
+        return 'OpenJDK 8 JRE (Headless Legacy Active)';
+      }
+    }
+
     async function saveMinecraftStartup() {
       if (!currentAppId) return;
       const engine = document.getElementById('mc-engine-select')?.value || 'paper';
@@ -3048,6 +3123,9 @@
 
         const pill = document.getElementById('hero-runtime-pill');
         if (pill) pill.innerHTML = `⛏️ MINECRAFT · ${engine.toUpperCase()} ${game_version}`;
+
+        const javaInfo = document.getElementById('mc-java-info');
+        if (javaInfo) javaInfo.innerText = getJavaRuntimeLabel(game_version);
       } catch (e) {
         notify(e.message, 'error');
       }

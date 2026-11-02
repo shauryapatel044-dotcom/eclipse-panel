@@ -376,13 +376,23 @@
               <!-- Minecraft Version Picker -->
               <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
                 <span style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Minecraft Version</span>
-                <span style="font-size: 11px; color: #22C55E;" id="mc-version-label">1.21.1 (Stable LTS)</span>
+                <span style="font-size: 11px; color: #22C55E; font-weight: 700;" id="mc-version-label">1.21.1 (Stable LTS)</span>
               </div>
-              <div class="version-pill-group" id="mc-version-pill-container">
+
+              <!-- Quick Version Filter & Custom Input -->
+              <div style="display: flex; gap: 8px; margin-bottom: 8px; align-items: center;">
+                <div style="position: relative; flex: 1;">
+                  <i class="bi bi-search" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 11px; color: #64748B;"></i>
+                  <input type="text" id="mc-version-search" placeholder="Filter version (e.g. 1.20, 1.16, 1.8)..." oninput="filterMcVersions(this.value)" style="width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 6px 10px 6px 28px; color: #FFF; font-size: 11.5px; outline: none; box-sizing: border-box;">
+                </div>
+                <input type="text" id="mc-version-custom" placeholder="Or custom..." oninput="setCustomMcVersion(this.value)" title="Type any custom version or snapshot" style="width: 105px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 6px 10px; color: #22D3EE; font-size: 11.5px; outline: none; box-sizing: border-box; font-family: var(--font-mono);">
+              </div>
+
+              <div class="version-pill-group" id="mc-version-pill-container" style="max-height: 140px; overflow-y: auto; padding: 4px; border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; background: rgba(0,0,0,0.15);">
                 <!-- Rendered dynamically -->
               </div>
-              <div style="font-size: 11px; color: #64748B; margin-top: -10px; margin-bottom: 14px;">
-                <i class="bi bi-check-circle-fill" style="color: #22C55E;"></i> Auto-accepts Minecraft EULA & provisions server.properties on port 25565.
+              <div style="font-size: 11px; color: #64748B; margin-top: 6px; margin-bottom: 14px;">
+                <i class="bi bi-check-circle-fill" style="color: #22C55E;"></i> Auto-downloads <strong>server.jar</strong>, accepts EULA, and sets up server.properties, ops.json, and whitelist.json.
               </div>
             </div>
 
@@ -813,16 +823,106 @@
     };
 
     const MINECRAFT_VERSIONS = [
+      // 1.21 Series
       { ver: '1.21.4', label: '1.21.4 (Latest)' },
+      { ver: '1.21.3', label: '1.21.3' },
+      { ver: '1.21.2', label: '1.21.2' },
       { ver: '1.21.1', label: '1.21.1 (Stable LTS)', recommended: true },
+      { ver: '1.21', label: '1.21' },
+
+      // 1.20 Series
+      { ver: '1.20.6', label: '1.20.6' },
+      { ver: '1.20.5', label: '1.20.5' },
       { ver: '1.20.4', label: '1.20.4' },
-      { ver: '1.20.1', label: '1.20.1' },
+      { ver: '1.20.3', label: '1.20.3' },
+      { ver: '1.20.2', label: '1.20.2' },
+      { ver: '1.20.1', label: '1.20.1 (Popular Mods)' },
+      { ver: '1.20', label: '1.20' },
+
+      // 1.19 Series
       { ver: '1.19.4', label: '1.19.4' },
+      { ver: '1.19.3', label: '1.19.3' },
+      { ver: '1.19.2', label: '1.19.2' },
+      { ver: '1.19.1', label: '1.19.1' },
+      { ver: '1.19', label: '1.19' },
+
+      // 1.18 Series
       { ver: '1.18.2', label: '1.18.2' },
-      { ver: '1.16.5', label: '1.16.5' },
-      { ver: '1.12.2', label: '1.12.2' },
-      { ver: '1.8.8', label: '1.8.8' }
+      { ver: '1.18.1', label: '1.18.1' },
+      { ver: '1.18', label: '1.18' },
+
+      // 1.17 Series
+      { ver: '1.17.1', label: '1.17.1' },
+      { ver: '1.17', label: '1.17' },
+
+      // 1.16 Series
+      { ver: '1.16.5', label: '1.16.5 (Standard Modded)' },
+      { ver: '1.16.4', label: '1.16.4' },
+      { ver: '1.16.3', label: '1.16.3' },
+      { ver: '1.16.2', label: '1.16.2' },
+      { ver: '1.16.1', label: '1.16.1' },
+      { ver: '1.16', label: '1.16' },
+
+      // 1.15 Series
+      { ver: '1.15.2', label: '1.15.2' },
+      { ver: '1.15.1', label: '1.15.1' },
+      { ver: '1.15', label: '1.15' },
+
+      // 1.14 Series
+      { ver: '1.14.4', label: '1.14.4' },
+      { ver: '1.14.3', label: '1.14.3' },
+      { ver: '1.14.2', label: '1.14.2' },
+      { ver: '1.14', label: '1.14' },
+
+      // 1.13 Series
+      { ver: '1.13.2', label: '1.13.2' },
+      { ver: '1.13', label: '1.13' },
+
+      // 1.12 Series
+      { ver: '1.12.2', label: '1.12.2 (Classic Mods)' },
+      { ver: '1.12.1', label: '1.12.1' },
+      { ver: '1.12', label: '1.12' },
+
+      // 1.11 Series
+      { ver: '1.11.2', label: '1.11.2' },
+      { ver: '1.11', label: '1.11' },
+
+      // 1.10 Series
+      { ver: '1.10.2', label: '1.10.2' },
+      { ver: '1.10', label: '1.10' },
+
+      // 1.9 Series
+      { ver: '1.9.4', label: '1.9.4' },
+      { ver: '1.9', label: '1.9' },
+
+      // 1.8 Series
+      { ver: '1.8.9', label: '1.8.9 (PvP Standard)' },
+      { ver: '1.8.8', label: '1.8.8 (Classic PvP)' },
+      { ver: '1.8', label: '1.8' },
+
+      // 1.7 Series
+      { ver: '1.7.10', label: '1.7.10 (Vintage Modded)' },
+      { ver: '1.7.9', label: '1.7.9' },
+      { ver: '1.7.2', label: '1.7.2' }
     ];
+
+    let currentMcFilter = '';
+
+    function filterMcVersions(q) {
+      currentMcFilter = (q || '').trim().toLowerCase();
+      renderMcVersionPills();
+    }
+
+    function setCustomMcVersion(customVer) {
+      const trimmed = (customVer || '').trim();
+      if (!trimmed) return;
+      selectedMcVersion = trimmed;
+      const label = document.getElementById('mc-version-label');
+      if (label) label.innerText = `${trimmed} (Custom)`;
+      const pills = document.querySelectorAll('#mc-version-pill-container .version-pill');
+      pills.forEach(p => p.classList.remove('active'));
+      updateDeployPreview();
+    }
 
     const RANDOM_NAMES = [
       'eclipse-core', 'quantum-express', 'stellar-api', 'hyperion-bot', 'apex-worker',
@@ -886,10 +986,22 @@
       if (!container) return;
 
       const defaultVer = MINECRAFT_VERSIONS.find(v => v.recommended) || MINECRAFT_VERSIONS[0];
-      selectedMcVersion = defaultVer.ver;
-      if (label) label.innerText = defaultVer.label;
+      if (!selectedMcVersion) {
+        selectedMcVersion = defaultVer.ver;
+        if (label) label.innerText = defaultVer.label;
+      }
 
-      container.innerHTML = MINECRAFT_VERSIONS.map(v => {
+      const list = MINECRAFT_VERSIONS.filter(v => {
+        if (!currentMcFilter) return true;
+        return v.ver.toLowerCase().includes(currentMcFilter) || v.label.toLowerCase().includes(currentMcFilter);
+      });
+
+      if (list.length === 0) {
+        container.innerHTML = `<div style="padding: 10px; color: #94A3B8; font-size: 11px; text-align: center; width: 100%;">No listed release matches "${escapeHtml(currentMcFilter)}". Enter it in the "Or custom..." box!</div>`;
+        return;
+      }
+
+      container.innerHTML = list.map(v => {
         const isAct = v.ver === selectedMcVersion;
         return `<button type="button" class="version-pill ${isAct ? 'active' : ''}" onclick="selectMcVersionPill('${v.ver}', '${v.label}')">${v.label}</button>`;
       }).join('');
@@ -899,6 +1011,9 @@
       selectedMcVersion = ver;
       const label = document.getElementById('mc-version-label');
       if (label) label.innerText = labelText;
+
+      const customInput = document.getElementById('mc-version-custom');
+      if (customInput) customInput.value = '';
 
       const pills = document.querySelectorAll('#mc-version-pill-container .version-pill');
       pills.forEach(p => p.classList.toggle('active', p.innerText === labelText));
