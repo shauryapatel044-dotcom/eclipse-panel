@@ -1616,7 +1616,7 @@
                 </div>
 
                 <!-- SFTP Details -->
-                <div style="background: #121422; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 14px; padding: 22px 24px;">
+                <div id="settings-sftp-card" style="background: #121422; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 14px; padding: 22px 24px;">
                   <h3 style="font-size: 15px; font-weight: 700; color: #FFF; margin: 0 0 16px 0;">SFTP Remote Access</h3>
                   <div style="margin-bottom: 12px;">
                     <span style="font-size: 10px; font-weight: 700; color: #94A3B8; text-transform: uppercase;">SERVER ADDRESS</span>
@@ -1654,7 +1654,7 @@
                 </div>
 
                 <!-- Danger Zone: Reinstall Server -->
-                <div style="background: #121422; border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 14px; padding: 22px 24px;">
+                <div id="settings-reinstall-card" style="background: #121422; border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 14px; padding: 22px 24px;">
                   <h3 style="font-size: 15px; font-weight: 700; color: #EF4444; margin: 0 0 8px 0;">Reinstall Server</h3>
                   <p style="font-size: 12px; color: #94A3B8; margin: 0 0 14px 0; line-height: 1.5;">
                     Reinstalling this container resets dependencies and reruns the runtime bootstrap. Existing code will remain intact.
@@ -1997,7 +1997,77 @@
 
     let currentActiveTab = 'console';
 
+    function isTabAllowedForApp(tab, app) {
+      if (!app) return true;
+      const isMc = app.server_category === 'minecraft' || app.type === 'minecraft';
+      const isDb = app.server_category === 'database' || app.type === 'database';
+
+      if (isDb && ['files', 'databases', 'schedules', 'backups', 'network'].includes(tab)) {
+        return false;
+      }
+      if (isMc && ['databases'].includes(tab)) {
+        return false;
+      }
+      return true;
+    }
+
+    function updateCategoryTabVisibility(app) {
+      if (!app) return;
+      const isMc = app.server_category === 'minecraft' || app.type === 'minecraft';
+      const isDb = app.server_category === 'database' || app.type === 'database';
+
+      const sideFiles = document.getElementById('side-nav-files');
+      const sideDb = document.getElementById('side-nav-databases');
+      const sideSchedules = document.getElementById('side-nav-schedules');
+      const sideBackups = document.getElementById('side-nav-backups');
+      const sideNetwork = document.getElementById('side-nav-network');
+      const sftpCard = document.getElementById('settings-sftp-card');
+      const reinstallCard = document.getElementById('settings-reinstall-card');
+
+      if (isDb) {
+        // Database Server: Keep Terminal, Startup, Users, Settings, Activity
+        // Hide redundant pages: Files, Databases, Schedules, Backups, Network, SFTP Card, Reinstall Card
+        if (sideFiles) sideFiles.style.display = 'none';
+        if (sideDb) sideDb.style.display = 'none';
+        if (sideSchedules) sideSchedules.style.display = 'none';
+        if (sideBackups) sideBackups.style.display = 'none';
+        if (sideNetwork) sideNetwork.style.display = 'none';
+        if (sftpCard) sftpCard.style.display = 'none';
+        if (reinstallCard) reinstallCard.style.display = 'none';
+
+        if (!isTabAllowedForApp(currentActiveTab, app)) {
+          switchConsoleTab('console');
+        }
+      } else if (isMc) {
+        // Minecraft Server: Keep Terminal, Files, Schedules, Users, Backups, Network, Startup, Settings, Activity
+        // Hide redundant page: Databases
+        if (sideFiles) sideFiles.style.display = 'flex';
+        if (sideDb) sideDb.style.display = 'none';
+        if (sideSchedules) sideSchedules.style.display = 'flex';
+        if (sideBackups) sideBackups.style.display = 'flex';
+        if (sideNetwork) sideNetwork.style.display = 'flex';
+        if (sftpCard) sftpCard.style.display = 'block';
+        if (reinstallCard) reinstallCard.style.display = 'block';
+
+        if (!isTabAllowedForApp(currentActiveTab, app)) {
+          switchConsoleTab('console');
+        }
+      } else {
+        // Software Server (Node.js / Python): Show all tabs
+        if (sideFiles) sideFiles.style.display = 'flex';
+        if (sideDb) sideDb.style.display = 'flex';
+        if (sideSchedules) sideSchedules.style.display = 'flex';
+        if (sideBackups) sideBackups.style.display = 'flex';
+        if (sideNetwork) sideNetwork.style.display = 'flex';
+        if (sftpCard) sftpCard.style.display = 'block';
+        if (reinstallCard) reinstallCard.style.display = 'block';
+      }
+    }
+
     function switchConsoleTab(tab) {
+      if (currentAppObj && !isTabAllowedForApp(tab, currentAppObj)) {
+        tab = 'console';
+      }
       currentActiveTab = tab;
       const allTabs = ['console', 'files', 'databases', 'backups', 'schedules', 'network', 'team', 'startup', 'settings', 'config', 'activity'];
       
@@ -2126,6 +2196,9 @@
         const isMc = app.server_category === 'minecraft' || app.type === 'minecraft';
         const isDb = app.server_category === 'database' || app.type === 'database';
 
+        // Dynamically show/hide tabs based on category
+        updateCategoryTabVisibility(app);
+
         const runtimePill = document.getElementById('hero-runtime-pill');
         if (runtimePill) {
           if (isMc) {
@@ -2171,9 +2244,19 @@
 
         const serverDesc = document.getElementById('hero-server-desc');
         if (serverDesc) {
-          serverDesc.innerText = isRunning 
-            ? `Dedicated ${app.type || 'Node.js'} instance active on port ${app.port || 3000}`
-            : 'High-performance container environment & process supervisor.';
+          if (isDb) {
+            serverDesc.innerText = isRunning
+              ? `Dedicated ${(app.engine || 'Database').toUpperCase()} daemon active on port ${app.port || 6379}`
+              : 'High-performance managed database daemon & persistence store.';
+          } else if (isMc) {
+            serverDesc.innerText = isRunning
+              ? `Dedicated ${(app.engine || 'Paper').toUpperCase()} server online on port ${app.port || 25565}`
+              : 'High-performance Minecraft game server & console environment.';
+          } else {
+            serverDesc.innerText = isRunning 
+              ? `Dedicated ${app.type || 'Node.js'} instance active on port ${app.port || 3000}`
+              : 'High-performance container environment & process supervisor.';
+          }
         }
 
         // Toggle Installing Alert Banner
@@ -3077,7 +3160,7 @@
     function updateDbConnectionUriDisplay(engine, pass, dbName) {
       const uriBox = document.getElementById('db-connection-uri');
       if (!uriBox) return;
-      const host = (currentAppObj?.primary_ip && currentAppObj.primary_ip !== '0.0.0.0') ? currentAppObj.primary_ip : (window.location.hostname || '127.0.0.1');
+      const host = getEffectiveHostIp(currentAppObj);
       const port = currentAppObj?.port || (engine === 'redis' ? 6379 : (engine === 'postgres' ? 5432 : (engine === 'mariadb' ? 3306 : 27017)));
       const p = pass || document.getElementById('db-pass-input')?.value || 'password';
       const d = dbName || document.getElementById('db-name-input')?.value || 'app_db';
